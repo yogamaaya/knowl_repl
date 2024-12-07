@@ -32,22 +32,32 @@ async function submitMessage(event) {
     }
 }
 
+let currentPageMessages = []; // Store messages for current session only
+
 function updateChat(messages) {
     const chatBox = document.getElementById('chatBox');
     chatBox.innerHTML = '';  // Clear existing messages
-    console.log(messages);
-    console.log("FROM FRONTEND ");
-    for (let i = 0; i < messages.length; i++) {
-        let msg = messages[i];
+
+    // Update current page messages
+    currentPageMessages = messages;
+
+    // Display messages for current session only
+    for (let i = 0; i < currentPageMessages.length; i++) {
+        let msg = currentPageMessages[i];
         if (i % 2 == 0){
             msg = '<li style="color:#103356;"><b> You: </b>' + msg + '</li>';
         }
         else{
             msg = '<li style="color:#740476;"><b> Text: </b>' + msg + '</li>';
         }
-        console.log(msg);
         const messageElement = document.createElement('p');
         messageElement.innerHTML = msg;
         chatBox.appendChild(messageElement);
     }
 }
+
+// Clear messages when page loads
+window.addEventListener('load', function() {
+    currentPageMessages = [];
+    updateChat([]);
+});

@@ -18,26 +18,63 @@ h1 {
   width: 100%;
   background-color: #020d0c;
   color: #ffffff;
-  padding: 15px 0;
+  padding: 10px 5px;
   text-align: center;
   z-index: 1000;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.description {
+h1 {
   margin: 0;
-  font-size: 16px;
-  background-color: rgb(69, 10, 97, 0.7);
-  padding: 15px;
-  border-radius: 50px;
-  width: fit-content;
-  position: relative;
-  align-content: end;
-  display: inline-table;
+  font-size: clamp(1.5rem, 4vw, 3.5rem);  /* Responsive font size */
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  padding: 0.1em 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.description p {
-  font-size: 0.8em;  /* Reduces the font size */
+.description {
+  margin: 0;
+  font-size: clamp(14px, 3vw, 16px);
+  background-color: rgb(69, 10, 97, 0.7);
+  padding: 10px;
+  border-radius: 25px;
+  width: 90%;
+  max-width: 600px;
+  margin: 10px auto;
+  position: relative;
+}
+
+/* Mobile-specific adjustments */
+@media screen and (max-width: 768px) {
+  .sticky-header {
+      padding: 8px 2px;
+  }
+
+  .description {
+      width: 95%;
+      padding: 8px;
+      border-radius: 20px;
+      font-size: 1em;
+  }
+
+  .description p {
+      font-size: 0.8em;
+      margin: 5px 0;
+  }
+}
+
+/* Small mobile devices */
+@media screen and (max-width: 480px) {
+  .sticky-header {
+      padding: 5px 2px;
+  }
+
+  .description {
+      width: 98%;
+      padding: 5px;
+      font-size: 1em;
+  }
 }
 
 #descriptionContent.collapse.show .description {

@@ -8,6 +8,7 @@ def receive_message():
     if request.content_type == 'application/json':
         data = request.get_json()
         message = data.get('message', '')
+        messages = []
         if message:
             messages.append(message)
             reply = on_submit(message)
