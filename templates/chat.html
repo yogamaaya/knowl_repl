@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <title>Chat</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+</head>
+<body>
+<div class="sticky-header">
+    <h1>Talk to your Knowledge</h1>
+    <div class="description">
+
+        <div class="collapseBtn">
+        <button id="tips" class="btn btn-primary" type="button" value="Show Tips!" data-toggle="collapse" data-target="#descriptionContent" aria-expanded="false" aria-controls="descriptionContent" onclick="change()">How To Use?
+        </button>
+        </div>
+        <div id="descriptionContent" class="collapse">
+        <div class="tips">
+            <p>Update the text corpus to talk to <a href="https://textdoc.co/fCAmzT1RyWtlN9qj" target="_blank" rel="noopener noreferrer"> here!</a> </p>
+                <p>Default text: Summary of Bhagawad Gita</p>
+                <div class="descPara">
+        <li> <br>If you wish to ask the knowledge body questions,  try prefacing them with "In this context", "According to this text" etc.!</li>
+            <li><br> Whenever you paste new text, please ask <b>new and specific questions to get new answers</b>!</li>
+
+            <li><br> Try to use keywords of the text, and reference the current context as much as possible.</li>
+
+            <li> <br>General summary style questions are not recommened due to the text base being variable, as the Answering Model retains all information.</li>
+
+        <br><p> PS: Please give this little baby some time to think as responses might be slowwww~</p>
+                </div>
+        </div>
+    </div>
+    </div>
+    <form class="input-form"  id="messageForm" onsubmit="submitMessage(event)">
+        <input class="input-field" placeholder="let your curiosity flow..." type="text" id="messageInput"  />
+        <button type="submit">Send</button>
+    </form>
+</div>
+
+    <div class="chatBox" id="chatBox">
+        <div class="chat-container">
+        <div class="chat-box">
+            <ul class="messages">
+        <!-- Messages will be inserted here by JavaScript -->
+            </ul>
+        </div>
+        </div>
+    </div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</body>
+</html>

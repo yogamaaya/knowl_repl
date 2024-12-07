@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "chat-knowledge-base"
+version = "0.1.0"
+description = "A Flask application for chatting with a knowledge base using LangChain"
+authors = ["motadaka"]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+flask = "^3.0.0"
+gunicorn = "^21.2.0"
+langchain-huggingface = "^0.1.2"
+langchain = "^0.3.10"
+langchain-openai = "^0.2.11"
+langchain-chroma = "^0.1.4"
+bs4 = "^0.0.2"
+langchain-core = "^0.3.22"
+python-dotenv = "^1.0.1"
+requests = "^2.32.3"
+transformers = "^4.47.0"
+beautifulsoup4 = "^4.12.3"
+
+[[tool.poetry.source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
