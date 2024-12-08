@@ -4,7 +4,7 @@ function change() // no ';' here
     var elem = document.getElementById("tips");
     if (elem.value=="Show Tips!") {elem.value = "Close";
         elem.innerHTML = "Close";}
-    else {elem.value = "Show Tips!"; elem.innerHTML = "How to Use?"; };
+    else {elem.value = "Show Tips!"; elem.innerHTML = "Show"; };
 }
 
 async function submitMessage(event) {
