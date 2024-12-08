@@ -4,34 +4,37 @@ body {
   padding: 0;
 }
 
-h1 {
-  margin: 0;
-  font-size: clamp(2rem, 5vw, 3.5rem);  /* Responsive font size */
-  font-weight: 500;
-  letter-spacing: 1px;
-  padding: 0.1em 0;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);  /* Subtle text shadow */
-}
+/* Header styles */
 .sticky-header {
-  position: sticky;
-  top: 0;
-  width: 100%;
-  background-color: #020d0c;
-  color: #ffffff;
-  padding: 10px 5px;
-  text-align: center;
-  z-index: 1000;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    width: 100%;
+    background-color: #020d0c;
+    color: #ffffff;
+    padding: min(2vh, 20px) min(2vw, 20px);
+    text-align: center;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 h1 {
-  margin: 0;
-  font-size: clamp(1.5rem, 4vw, 3.5rem);  /* Responsive font size */
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  padding: 0.1em 0;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    margin: 0;
+    /* Responsive font size that scales with viewport */
+    font-size: clamp(5rem, 4vw + 1rem, 5rem);
+    font-weight: 500;
+    letter-spacing: calc(0.5px + 0.05vw);
+    line-height: 1.2;
+    padding: min(1vh, 10px) 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    overflow-wrap: break-word;
+    hyphens: auto;
 }
+
+
 
 .description {
   margin: 0;
@@ -40,41 +43,9 @@ h1 {
   padding: 10px;
   border-radius: 25px;
   width: 90%;
-  max-width: 600px;
+  max-width: 900px;
   margin: 10px auto;
   position: relative;
-}
-
-/* Mobile-specific adjustments */
-@media screen and (max-width: 768px) {
-  .sticky-header {
-      padding: 8px 2px;
-  }
-
-  .description {
-      width: 95%;
-      padding: 8px;
-      border-radius: 20px;
-      font-size: 1em;
-  }
-
-  .description p {
-      font-size: 0.8em;
-      margin: 5px 0;
-  }
-}
-
-/* Small mobile devices */
-@media screen and (max-width: 480px) {
-  .sticky-header {
-      padding: 5px 2px;
-  }
-
-  .description {
-      width: 98%;
-      padding: 5px;
-      font-size: 1em;
-  }
 }
 
 #descriptionContent.collapse.show .description {
@@ -136,19 +107,21 @@ button[type="submit"]:active {
   font-weight: 500;
   transition: all 0.3s ease;
   box-shadow: 0 0 10px rgba(116, 4, 118, 0.3);
-  font-size: 0.9em;
+  font-size: 35px;
 }
+
 .btn-primary:hover {
   background-color: #8a0589;
   box-shadow: 0 0 20px rgb(242, 69, 153, 0.6);
   transform: translateY(-2px);
 }
+
 .btn-primary:active {
   transform: translateY(0px);
 }
 
 .tips {
-  font-size: 1em;
+  font-size: 2em;
   text-align:  -webkit-center;
   /* Adjust the font size as needed */
 }
@@ -181,3 +154,86 @@ button[type="submit"]:active {
   margin-bottom: 10px;
   text-align: left;
 }
+
+/* Large screens (1200px and up) */
+@media screen and (min-width: 1200px) {
+    h1 {
+        font-size: clamp(3rem, 4vw + 1rem, 3rem);
+    }
+
+    .btn-primary {
+        font-size: clamp(1.8rem, 2vw, 2.5rem);
+        padding: 8px 20px;
+    }
+    .tips{
+      font-size: clamp(1.2rem, 2vw, 1.2rem)
+    }
+}
+
+/* Medium screens (768px to 1199px) */
+@media screen and (max-width: 1199px) {
+    h1 {
+        font-size: clamp(3rem, 4vw + 1rem, 3rem);
+    }
+
+    .btn-primary {
+        font-size: clamp(1.5rem, 1.8vw, 2rem);
+        padding: 6px 16px;
+    }
+  .tips{
+    font-size: clamp(2rem, 2vw, 2rem)
+  }
+  .input-field {
+      font-size: 2rem;
+  }
+  .chatBox {
+    font-size: xx-large;
+  }
+}
+
+/* Small screens (481px to 767px) */
+@media screen and (max-width: 767px) {
+    h1 {
+        font-size: clamp(3rem, 4vw + 1rem, 3rem);
+    }
+
+    .btn-primary {
+        font-size: clamp(1.2rem, 1.5vw, 1.8rem);
+        padding: 5px 14px;
+    }
+  .tips{
+    font-size: clamp(1.2rem, 2vw, 1.2rem)
+  }
+}
+
+/* Extra small screens (480px and below) */
+@media screen and (max-width: 480px) {
+    h1 {
+        font-size: clamp(3rem, 4vw + 1rem, 3rem);
+        letter-spacing: 0.5px;
+    }
+
+    .btn-primary {
+        font-size: clamp(1rem, 1.2vw, 1.5rem);
+        padding: 4px 12px;
+    }
+  .tips{
+    font-size: clamp(1.2rem, 2vw, 1.2rem)
+  }
+}
+
+/* Very small screens (320px and below) */
+@media screen and (max-width: 320px) {
+    h1 {
+        font-size: clamp(1.2rem, 2vw, 2rem);
+    }
+
+    .btn-primary {
+        font-size: clamp(0.9rem, 1vw, 1.2rem);
+        padding: 3px 10px;
+    }
+  .tips{
+    font-size: clamp(1.2rem, 2vw, 1.2rem)
+  }
+}
+
