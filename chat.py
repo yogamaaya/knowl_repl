@@ -21,13 +21,6 @@ openai_api_key = os.getenv('OPENAI_API_KEY')
 
 chat_history = []
 text = ''
-# Create a proper prompt template
-prompt_template = PromptTemplate(
-    input_variables=["question", "context"],
-    template=
-    """Preface with praise of the question. Then answer with well-structured and detailed responses based on current context only.
-    Question: {question}
-    Context: {context}""")
 
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
