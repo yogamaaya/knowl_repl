@@ -1,9 +1,13 @@
-body {
-  font-family: "Georgia", serif;
-  margin: 0;
-  padding: 0;
-}
 
+html, body {
+    font-family: "Georgia", serif;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
 .top-donate-bar {
     position: relative;
     width: 100%;
@@ -63,6 +67,8 @@ body {
     top: 0;
     width: 100%;
     background-color: #020d0c;
+    background: 
+    url('/static/starry.gif'); 
     color: #ffffff;
     padding: min(2vh, 20px) min(2vw, 20px);
     text-align: center;
@@ -73,11 +79,7 @@ body {
     align-items: center;
 }
 
-.logo {
-    height: 60px;
-    width: auto;
-    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
-}
+
 
 h1 {
     margin: 0;
@@ -87,29 +89,63 @@ h1 {
     letter-spacing: calc(0.5px + 0.05vw);
     line-height: 1.2;
     padding: min(1vh, 10px) 0;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    text-shadow: 0 0 10px rgb(231, 179, 255, 0.3);
     width: 100%;
     overflow-wrap: break-word;
     hyphens: auto;
 }
 
 
-
+/* Minimalist with subtle hover effect */
 .description {
-  margin: 0;
-  font-size: clamp(14px, 3vw, 16px);
-  background-color: rgb(69, 10, 97, 0.7);
-  padding: 10px;
-  border-radius: 25px;
-  width: 90%;
-  max-width: 900px;
-  margin: 10px auto;
-  position: relative;
+    margin: 0px auto;
+    max-width: 800px;
+    background: linear-gradient(145deg, rgba(116, 4, 118, 0.1), rgba(116, 4, 118, 0.2));
+    backdrop-filter: blur(5px);
+    border-radius: 15px;
+    padding: 10px;
+    transition: all 0.5s ease-in-out; /* Increased duration for smoother transition */
 }
 
-#descriptionContent.collapse.show .description {
-  /* Custom styles for expanded state */
-  margin-top: 10px;
+#tips.btn-primary {
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 25px;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    border-radius: 25px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Added smooth easing */
+    box-shadow: none;
+}
+
+#tips.btn-primary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Remove fade animation and use smooth height transition instead */
+#descriptionContent {
+    transition: height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    opacity: 1;
+}
+
+#descriptionContent.collapse:not(.show) {
+    display: block;
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
+}
+
+#descriptionContent.collapsing {
+    height: 0;
+    opacity: 0;
+    transition: height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+#descriptionContent.collapse.show {
+    height: auto;
+    opacity: 1;
 }
 
 /* Add new styles for the submit button */
@@ -211,18 +247,33 @@ button[type="submit"]:active {
 }
 
 .chatBox {
-  display: flex;
+  display: 1 0 auto;
   flex-direction: column;
   list-style-type: none;
   background-color: #ffffff; /* Pale violet color */
   padding: 15px;
   overflow-y: auto;
   border-radius: 8px;
-  border: 1px solid #ddd;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    margin-bottom: 60px;
+margin-bottom: 5px;
 }
 
+.logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain; /* This maintains aspect ratio */
+    vertical-align: middle; /* Aligns logo with text */
+    margin-right: 10px; /* Adds some space between logo and text */
+}
+/* Adjust the chat message container to align items properly */
+
+.chatBox p {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: rgba(116, 4, 118, 0.05);
+}
 .messages {
   list-style-type: none;
   padding: 0;
@@ -271,23 +322,63 @@ button[type="submit"]:active {
   }
 }
 
-.footer {
-    position: absolute; 
-    bottom: 0;
-    left: 0;
+.change-text {
+    position: relative; /* Change to relative positioning */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 9px 0;
     width: 100%;
-    background-color: #020d0c;
-    color: #ffffff;
-    text-align: center;
-    font-size: 0.9rem;
-    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    margin-top: auto;
+    background-color: rgb(49 13 72);
+    z-index: 999; /* Keep below sticky header */
+    margin-top: 0; /* Remove any top margin */
 }
 
+/* Add space between header content and change-text button */
+.input-form {
+    margin-bottom: 20px; /* Add some space after the input form */
+}
+
+.change-text-btn {
+    background-color: rgba(116, 4, 118, 0.8); /* Semi-transparent purple */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(116, 4, 118, 0.3);
+    font-size: 1.1rem;
+    backdrop-filter: blur(5px); /* Add blur effect */
+}
+
+.change-text-btn:hover {
+    background-color: rgba(138, 5, 137, 0.9); /* More opaque on hover */
+    box-shadow: 0 0 20px rgba(242, 69, 153, 0.6);
+    transform: translateY(-2px);
+}
+
+.change-text-btn span {
+    background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent white */
+    padding: 5px 10px;
+    border-radius: 3px;
+    margin: 0 5px;
+}
+
+.footer {
+    flex-shrink: 0; /* Prevent footer from shrinking */
+    width: 100%;
+    background-color: #1e1650;
+    color: #ffffff;
+    text-align: center;
+    padding: 0px 0;
+    margin-top: auto; /* Push footer to bottom */
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+}
 .footer p {
     margin: 0;
-    padding: 0;
+    padding: 0px 0;
 }
 .footer a {
     color: #ffffff;

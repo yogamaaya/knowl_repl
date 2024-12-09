@@ -76,5 +76,10 @@ window.addEventListener('load', function() {
 
 function handleDonate() {
     // Open donation page in new tab
-    window.open('https://www.buymeacoffee.com/knowl', '_blank');
+window.open('https://www.buymeacoffee.com/knowl', '_blank');
+}
+
+function handleChangeText() {
+    // Open text update page in new tab
+    window.open('https://docs.google.com/document/d/1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A/edit?usp=sharing', '_blank');
 }
