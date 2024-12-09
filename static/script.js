@@ -11,23 +11,34 @@ async function submitMessage(event) {
     event.preventDefault();
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value;
+    const loadingElement = document.getElementById('loading');
 
     if (message) {
-        const response = await fetch('/submit', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ message: message })
-        });
+        try {
+            // Show loading spinner
+            loadingElement.style.display = 'block';
 
-        const data = await response.json();
-        if (response.ok) {
-            console.log('Success: ', data.messages);
-            updateChat(data.messages);
-            messageInput.value = ''; // clear the input field after sending message
-        } else {
-            console.error('Error:', data.error);
+            const response = await fetch('/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: message })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                console.log('Success: ', data.messages);
+                updateChat(data.messages);
+                messageInput.value = ''; // clear the input field
+            } else {
+                console.error('Error:', data.error);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            // Hide loading spinner
+            loadingElement.style.display = 'none';
         }
     }
 }
@@ -45,10 +56,10 @@ function updateChat(messages) {
     for (let i = 0; i < currentPageMessages.length; i++) {
         let msg = currentPageMessages[i];
         if (i % 2 == 0){
-            msg = '<li style="color:#103356;"><b> You: </b>' + msg + '</li>';
+            msg = `<img src="/static/user_logo.png" alt="Knowl Logo" class="logo"> ${msg}</li>`;
         }
         else{
-            msg = '<li style="color:#740476;"><b> Text: </b>' + msg + '</li>';
+            msg = `<img src="/static/knowl_logo.png" alt="Knowl Logo" class="logo"> ${msg}</li>`;
         }
         const messageElement = document.createElement('p');
         messageElement.innerHTML = msg;
@@ -61,3 +72,9 @@ window.addEventListener('load', function() {
     currentPageMessages = [];
     updateChat([]);
 });
+
+
+function handleDonate() {
+    // Open donation page in new tab
+    window.open('https://www.buymeacoffee.com/knowl', '_blank');
+}

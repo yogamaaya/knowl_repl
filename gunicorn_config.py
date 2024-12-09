@@ -6,3 +6,4 @@ keepalive = 65
 worker_class = "gthread"
 max_requests = 3000
 max_requests_jitter = 50
+loglevel = "warning"

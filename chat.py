@@ -7,8 +7,13 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain_chroma import Chroma
 from dotenv import load_dotenv
 import os
-import requests
-from bs4 import BeautifulSoup
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+import json
+from langchain.prompts import PromptTemplate
+
+# import requests
+# from bs4 import BeautifulSoup
 
 # Load environment variables
 load_dotenv()
@@ -16,19 +21,37 @@ openai_api_key = os.getenv('OPENAI_API_KEY')
 
 chat_history = []
 text = ''
+# Create a proper prompt template
+prompt_template = PromptTemplate(
+    input_variables=["question", "context"],
+    template=
+    """Preface with praise of the question. Then answer with well-structured and detailed responses based on current context only.
+    Question: {question}
+    Context: {context}""")
+
+SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
+creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 
 
-# Get contents in webpage from URL with requests and BeautifulSoup
+# Get contents in webpage from GDocs
 def updateText():
-    url = "https://textdoc.co/fCAmzT1RyWtlN9qj"
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, "html.parser")
-    text = soup.get_text(strip=True)
-    text = text.replace(
-        "Online Text Editor - Create, Edit, Share and Save Text FilesTextdocZipdocWriteurlTxtshareOnline CalcLoading…Open FileSave to Drive",
-        "")
-    text = text.replace("/ Drive Add-on", "")
-    return text
+    doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
+    try:
+        credentials = service_account.Credentials.from_service_account_info(
+            creds, scopes=SCOPES)
+        service = build('docs', 'v1', credentials=credentials)
+        document = service.documents().get(documentId=doc_id).execute()
+        text = ''
+        # Changed doc_content to document.get('body', {}).get('content', [])
+        for element in document.get('body', {}).get('content', []):
+            if 'paragraph' in element:
+                for para_element in element['paragraph']['elements']:
+                    if 'textRun' in para_element:
+                        text += para_element['textRun']['content']
+
+        return text
+    except Exception as e:
+        return str(e)
 
 
 # Handle user query submission
@@ -44,14 +67,14 @@ def on_submit(query):
         "distilbert-base-uncased")
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=512,
-        chunk_overlap=24,
+        chunk_overlap=20,
         length_function=lambda x: len(tokenizer.encode(x)))
 
     # Split text into chunks and create embeddings using a sentence transformer
     text_chunks = text_splitter.split_text(text)
-
     documents = [Document(page_content=chunk) for chunk in text_chunks]
 
+    # Load model and create embeddings
     model_name = "paraphrase-MiniLM-L3-v2"
     model_kwargs = {'device': 'cpu'}
     encode_kwargs = {'normalize_embeddings': False}
@@ -60,12 +83,42 @@ def on_submit(query):
                                                model_kwargs=model_kwargs,
                                                encode_kwargs=encode_kwargs)
 
+    # Configure OpenAI for fast, detailed responses
+    llm = OpenAI(
+        temperature=0.1,  # Fast response
+        max_tokens=300,  # Mid level length
+        model="gpt-3.5-turbo-instruct",  # Fast model
+        presence_penalty=0,  # Slight penalty to stay on topic
+    )
+
     # Create a new Chroma database and QA chain
     db = Chroma.from_documents(documents, embedding_function)
-    qa_chain = ConversationalRetrievalChain.from_llm(OpenAI(temperature=0.1),
-                                                     db.as_retriever())
+
+    # Optimize QA chain for speed and detail
+    retriever = db.as_retriever(search_kwargs={"k": 2})
+    prompt_template = PromptTemplate(
+        input_variables=["question", "context"],
+        template=
+        """As a kind, friendly and empathetic assistant, acknowledge the thoughtfulness of the question. 
+        Then provide a detailed response that:
+        1. Starts with a simple kind acknowledgement.
+        2. Stays strictly focused on the given context only.
+        3. Uses specific examples and references from the text.
+        4. Ends always with a concluding thank you.
+        Question: {question}
+        Context: {context}
+
+        """)
+
+    qa_chain = ConversationalRetrievalChain.from_llm(
+        llm=llm,
+        retriever=retriever,
+        chain_type="stuff",
+        return_source_documents=False,
+        memory=None,
+        combine_docs_chain_kwargs={'prompt': prompt_template})
 
     # Process the query
-    result = qa_chain({"question": query, "chat_history": chat_history})
+    result = qa_chain({"question": query, "chat_history": chat_history[-2:]})
     chat_history.append((query, result['answer']))
     return result["answer"]
