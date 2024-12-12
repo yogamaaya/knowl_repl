@@ -2,7 +2,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents.base import Document
 from transformers import DistilBertTokenizerFast
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains import ConversationalRetrievalChain
 from langchain_chroma import Chroma
 from dotenv import load_dotenv
@@ -17,7 +17,7 @@ from langchain.prompts import PromptTemplate
 
 # Load environment variables
 load_dotenv()
-openai_api_key = os.getenv('OPENAI_API_KEY')
+google_api_key = os.getenv('GOOGLE_API_KEY')
 
 chat_history = []
 text = ''
@@ -76,12 +76,12 @@ def on_submit(query):
                                                model_kwargs=model_kwargs,
                                                encode_kwargs=encode_kwargs)
 
-    # Configure OpenAI for fast, detailed responses
-    llm = OpenAI(
-        temperature=0.1,  # Fast response
-        max_tokens=300,  # Mid level length
-        model="gpt-3.5-turbo-instruct",  # Fast model
-        presence_penalty=0,  # Slight penalty to stay on topic
+    # Configure Gemini for fast, detailed responses
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-pro",
+        temperature=0.1,
+        max_output_tokens=300,
+        google_api_key=google_api_key,
     )
 
     # Create a new Chroma database and QA chain
