@@ -32,10 +32,11 @@ async function submitMessage(event) {
                 updateChat(data.messages);
                 messageInput.value = ''; // clear the input field
                 
-                // Play audio response
+                // Show play button when audio is available
                 if (data.audio_url) {
-                    const audio = new Audio(data.audio_url);
-                    audio.play();
+                    window.lastAudioUrl = data.audio_url;
+                    const playButton = document.getElementById('playAudioBtn');
+                    playButton.style.display = 'inline-block';
                 }
             } else {
                 console.error('Error:', data.error);
@@ -88,4 +89,10 @@ window.open('https://www.buymeacoffee.com/knowl', '_blank');
 function handleChangeText() {
     // Open text update page in new tab
     window.open('https://docs.google.com/document/d/1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A/edit?usp=sharing', '_blank');
+}
+function playLastResponse() {
+    if (window.lastAudioUrl) {
+        const audio = new Audio(window.lastAudioUrl);
+        audio.play();
+    }
 }
