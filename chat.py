@@ -2,7 +2,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents.base import Document
 from transformers import DistilBertTokenizerFast
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import OpenAI
 from langchain.chains import ConversationalRetrievalChain
 from langchain_chroma import Chroma
 from dotenv import load_dotenv
@@ -17,7 +17,7 @@ from langchain.prompts import PromptTemplate
 
 # Load environment variables
 load_dotenv()
-google_api_key = os.getenv('GOOGLE_API_KEY')
+openai_api_key = os.getenv('OPENAI_API_KEY')
 
 chat_history = []
 text = ''
@@ -76,12 +76,12 @@ def on_submit(query):
                                                model_kwargs=model_kwargs,
                                                encode_kwargs=encode_kwargs)
 
-    # Configure Gemini for fast, detailed responses
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-pro",
-        temperature=0.1,
-        max_output_tokens=300,
-        google_api_key=google_api_key,
+    # Configure OpenAI for fast, detailed responses
+    llm = OpenAI(
+        temperature=0.1,  # Fast response
+        max_tokens=300,  # Mid level length
+        model="gpt-3.5-turbo-instruct",  # Fast model
+        presence_penalty=0,  # Slight penalty to stay on topic
     )
 
     # Create a new Chroma database and QA chain
@@ -97,7 +97,8 @@ def on_submit(query):
         1. Starts with a simple kind acknowledgement.
         2. Stays strictly focused on the given context only.
         3. Uses specific examples and references from the text.
-        4. Ends always with a concluding thank you.
+        4. Has long explanation based on direct excerpts from the text.
+        5. Ends always with a concluding thank you.
         Question: {question}
         Context: {context}
 
@@ -113,5 +114,15 @@ def on_submit(query):
 
     # Process the query
     result = qa_chain({"question": query, "chat_history": chat_history[-2:]})
-    chat_history.append((query, result['answer']))
-    return result["answer"]
+    answer = result['answer']
+    chat_history.append((query, answer))
+    
+    # Generate audio from response
+    from gtts import gTTS
+    import os
+    
+    audio_path = "static/response.mp3"
+    tts = gTTS(text=answer, lang='en')
+    tts.save(audio_path)
+    
+    return {"text": answer, "audio_url": "/static/response.mp3"}

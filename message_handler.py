@@ -12,11 +12,12 @@ def receive_message():
         if message:
             messages.append(message)
             reply = on_submit(message)
-            messages.append(reply)
+            messages.append(reply['text'])
             print("response: ", messages)
             return jsonify({
                 'message': message,
-                'reply': reply,
+                'reply': reply['text'],
+                'audio_url': reply['audio_url'],
                 'messages': messages
             })
         else:

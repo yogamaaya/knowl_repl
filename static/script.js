@@ -31,6 +31,12 @@ async function submitMessage(event) {
                 console.log('Success: ', data.messages);
                 updateChat(data.messages);
                 messageInput.value = ''; // clear the input field
+                
+                // Play audio response
+                if (data.audio_url) {
+                    const audio = new Audio(data.audio_url);
+                    audio.play();
+                }
             } else {
                 console.error('Error:', data.error);
             }
