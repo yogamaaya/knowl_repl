@@ -90,9 +90,29 @@ function handleChangeText() {
     // Open text update page in new tab
     window.open('https://docs.google.com/document/d/1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A/edit?usp=sharing', '_blank');
 }
-function playLastResponse() {
-    if (window.lastAudioUrl) {
-        const audio = new Audio(window.lastAudioUrl);
-        audio.play();
+let currentAudio = null;
+let isPlaying = false;
+
+function toggleAudio() {
+    const playButton = document.getElementById('playAudioBtn');
+    
+    if (!currentAudio && window.lastAudioUrl) {
+        currentAudio = new Audio(window.lastAudioUrl);
+        currentAudio.addEventListener('ended', () => {
+            playButton.textContent = 'Play Response 🔊';
+            isPlaying = false;
+        });
+    }
+    
+    if (currentAudio) {
+        if (isPlaying) {
+            currentAudio.pause();
+            playButton.textContent = 'Play Response 🔊';
+            isPlaying = false;
+        } else {
+            currentAudio.play();
+            playButton.textContent = 'Pause Response ⏸️';
+            isPlaying = true;
+        }
     }
 }
