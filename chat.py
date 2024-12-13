@@ -122,7 +122,7 @@ def on_submit(query):
     import os
     
     audio_path = "static/response.mp3"
-    tts = gTTS(text=answer, lang='en')
+    tts = gTTS(text=answer, lang='en-us', tld='com')  # Using US English voice
     tts.save(audio_path)
     
     return {"text": answer, "audio_url": "/static/response.mp3"}
