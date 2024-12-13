@@ -116,13 +116,20 @@ def on_submit(query):
     result = qa_chain({"question": query, "chat_history": chat_history[-2:]})
     answer = result['answer']
     chat_history.append((query, answer))
-    
-    # Generate audio from response
+
+    # Generate audio from response with natural voice
     from gtts import gTTS
-    import os
-    
+    import re
+
+    def add_speech_pauses(text):
+        # Add pauses after punctuation for more natural speech
+        text = re.sub(r'([.!?])', r'\1... ', text)
+        text = re.sub(r'([,:])', r'\1.. ', text)
+        return text
+
     audio_path = "static/response.mp3"
-    tts = gTTS(text=answer, lang='en-us', tld='com')  # Using US English voice
+    processed_text = add_speech_pauses(answer)
+    tts = gTTS(text=processed_text, lang='en-us', tld='com', slow=False)
     tts.save(audio_path)
-    
+
     return {"text": answer, "audio_url": "/static/response.mp3"}
