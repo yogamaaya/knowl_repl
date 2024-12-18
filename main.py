@@ -1,11 +1,11 @@
-
 from flask import Flask, render_template
 from message_handler import receive_message
-from chat import initialize_embeddings, create_doc, get_text_from_doc, create_embeddings, change_text_source
+from chat import initialize_embeddings, create_doc, get_text_from_doc, create_embeddings, change_text_source, get_doc_title
 from flask import jsonify, request
 
 app = Flask(__name__)
 messages = []
+
 
 @app.route('/')
 def chat():
@@ -14,12 +14,14 @@ def chat():
     initialize_embeddings()
     return render_template('chat.html')
 
+
 @app.route('/submit', methods=['POST', 'GET'])
 def submit_message():
     new_messages = receive_message()
     global messages
     messages = new_messages
     return new_messages
+
 
 @app.route('/create_doc', methods=['POST'])
 def new_doc():
@@ -28,6 +30,7 @@ def new_doc():
     if doc_id:
         return jsonify({"doc_id": doc_id})
     return jsonify({"error": "Failed to create document"}), 500
+
 
 @app.route('/check_doc_content', methods=['POST'])
 def check_doc_content():
@@ -38,6 +41,7 @@ def check_doc_content():
         return jsonify({"has_content": bool(text and len(text.strip()) > 0)})
     return jsonify({"has_content": False})
 
+
 @app.route('/update_embeddings', methods=['POST'])
 def update_embeddings():
     data = request.get_json()
@@ -45,25 +49,15 @@ def update_embeddings():
     if doc_id:
         print(f"Updating embeddings for document: {doc_id}")
         if change_text_source(doc_id):
-            # Get document title
             title = get_doc_title(doc_id)
             print("Embeddings updated successfully")
             return jsonify({"success": True, "title": title})
         else:
-            return jsonify({"success": False}), 400
-    return jsonify({"error": "No document ID provided"}), 400
-def update_embeddings():
-    data = request.get_json()
-    doc_id = data.get('doc_id')
-    if doc_id:
-        print(f"Updating embeddings for document: {doc_id}")
-        if change_text_source(doc_id):
-            print("Embeddings updated successfully")
-            return jsonify({"success": True})
-        else:
             print("Failed to get text from document")
             return jsonify({"success": False, "error": "No text found"}), 400
     return jsonify({"success": False, "error": "No document ID provided"}), 400
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)

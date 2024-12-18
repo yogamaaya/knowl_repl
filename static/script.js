@@ -143,7 +143,7 @@ async function handleChangeText() {
         const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
         window.open(docUrl, '_blank');
         creatingToast.remove();
-        const loadingToast = showPersistentToast('Updating embeddings...', true);
+        const loadingToast = showPersistentToast('Updating source. Please wait...', true);
         
         const checkAndUpdate = async () => {
             const checkResponse = await fetch('/check_doc_content', {
@@ -169,7 +169,7 @@ async function handleChangeText() {
                 loadingToast.remove(); // Remove the updating embeddings toast
                 
                 if (updateResponse.ok && updateData.success) {
-                    showToast('Knowledge base updated successfully!', 'success');
+                    showToast(`Current source: ${updateData.title}`, 'success');
                 } else {
                     showToast('Failed to update knowledge base. Please try again.', 'error');
                 }
