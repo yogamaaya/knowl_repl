@@ -447,13 +447,18 @@ margin-bottom: 5px;
 .toast {
     background: rgba(116, 4, 118, 0.95);
     color: white;
-    padding: 15px 25px;
+    padding: 20px 15px;
     border-radius: 8px;
     margin-bottom: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transform: translateX(120%);
     transition: transform 0.3s ease-in-out;
     backdrop-filter: blur(5px);
+    max-width: 250px;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    word-wrap: break-word;
 }
 
 .toast.show {
