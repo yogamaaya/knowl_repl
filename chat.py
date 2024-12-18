@@ -1,4 +1,3 @@
-
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents.base import Document
 from transformers import DistilBertTokenizerFast
@@ -12,29 +11,68 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import json
 from langchain.prompts import PromptTemplate
-from datetime import datetime
 
+# import requests
+# from bs4 import BeautifulSoup
+
+# Load environment variables
 load_dotenv()
 openai_api_key = os.getenv('OPENAI_API_KEY')
 
 chat_history = []
 text = ''
-doc_id = ''
-qa_chain = None
+
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 
-def create_embeddings(text):
-    global qa_chain
-    tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
+
+# Get contents in webpage from GDocs
+def updateText():
+    doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
+    try:
+        credentials = service_account.Credentials.from_service_account_info(
+            creds, scopes=SCOPES)
+        service = build('docs', 'v1', credentials=credentials)
+        document = service.documents().get(documentId=doc_id).execute()
+        text = []
+        line_number = 1
+        # Changed doc_content to document.get('body', {}).get('content', [])
+        for element in document.get('body', {}).get('content', []):
+            if 'paragraph' in element:
+                line_content = ''
+                for para_element in element['paragraph']['elements']:
+                    if 'textRun' in para_element:
+                        line_content += para_element['textRun']['content']
+                if line_content.strip():  # Only add non-empty lines
+                    text.append(f"[L{line_number}] {line_content}")
+                    line_number += 1
+
+        return '\n'.join(text)
+    except Exception as e:
+        return str(e)
+
+
+# Handle user query submission
+def on_submit(query):
+    global chat_history, text
+
+    # Refresh and update the text from URL
+    text = updateText()
+    print("Updated text:", text[:100])
+
+    # Create new tokenizer and text splitter using DistilBERT
+    tokenizer = DistilBertTokenizerFast.from_pretrained(
+        "distilbert-base-uncased")
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=512,
         chunk_overlap=20,
         length_function=lambda x: len(tokenizer.encode(x)))
 
+    # Split text into chunks and create embeddings using a sentence transformer
     text_chunks = text_splitter.split_text(text)
     documents = [Document(page_content=chunk) for chunk in text_chunks]
 
+    # Load model and create embeddings
     model_name = "paraphrase-MiniLM-L3-v2"
     model_kwargs = {'device': 'cpu'}
     encode_kwargs = {'normalize_embeddings': False}
@@ -43,29 +81,33 @@ def create_embeddings(text):
                                                model_kwargs=model_kwargs,
                                                encode_kwargs=encode_kwargs)
 
+    # Configure OpenAI for fast, detailed responses
     llm = OpenAI(
-        temperature=0.1,
-        max_tokens=300,
-        model="gpt-3.5-turbo-instruct",
-        presence_penalty=0,
+        temperature=0.1,  # Fast response
+        max_tokens=300,  # Mid level length
+        model="gpt-3.5-turbo-instruct",  # Fast model
+        presence_penalty=0,  # Slight penalty to stay on topic
     )
 
+    # Create a new Chroma database and QA chain
     db = Chroma.from_documents(documents, embedding_function)
+
+    # Optimize QA chain for speed and detail
     retriever = db.as_retriever(search_kwargs={"k": 2})
     prompt_template = PromptTemplate(
         input_variables=["question", "context"],
-        template="""As a kind, friendly and empathetic assistant, acknowledge the thoughtfulness of the question. 
-        Then provide a long and detailed response that:
+        template=
+        """As a kind, friendly and empathetic assistant, acknowledge the thoughtfulness of the question. 
+        Then provide a detailed response that:
         1. Starts with a simple kind acknowledgement.
         2. Stays strictly focused on the given context only.
-        3. Includes a few direct quote sentences within the long answer, enclosed within ''.
-        5. Provides explanation and analysis after each quote.
-        6. Ends always with a concluding thank you and a full stop.
-
-        Remember: Every fact or claim must be supported by a direct quote from the text.
-
+        3. Uses specific examples and references from the text, including line numbers [L#] when quoting.
+        4. Has long explanation based on direct excerpts from the text, always citing the line numbers.
+        5. Ends always with a concluding thank you.
         Question: {question}
         Context: {context}
+
+        When referencing text, always include the line number in [L#] format.
         """)
 
     qa_chain = ConversationalRetrievalChain.from_llm(
@@ -76,103 +118,42 @@ def create_embeddings(text):
         memory=None,
         combine_docs_chain_kwargs={'prompt': prompt_template})
 
-def create_new_doc():
-    global doc_id
-    try:
-        credentials = service_account.Credentials.from_service_account_info(
-            creds,
-            scopes=[
-                'https://www.googleapis.com/auth/drive.file',
-                'https://www.googleapis.com/auth/documents',
-                'https://www.googleapis.com/auth/drive'
-            ])
-        service = build('docs', 'v1', credentials=credentials)
-        drive_service = build('drive', 'v3', credentials=credentials)
-
-        doc = drive_service.files().create(
-            body={
-                'name': f'Knowl Text Source {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
-                'mimeType': 'application/vnd.google-apps.document'
-            }).execute()
-
-        drive_service.permissions().create(
-            fileId=doc['id'],
-            body={
-                'type': 'anyone',
-                'role': 'writer',
-                'allowFileDiscovery': False
-            }).execute()
-        
-        doc_id = doc['id']
-        return doc_id
-    except Exception as e:
-        print(f"Error creating doc: {e}")
-        return None
-
-def updateText():
-    global doc_id, text
-    if not doc_id:
-        doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
-    try:
-        credentials = service_account.Credentials.from_service_account_info(
-            creds, scopes=SCOPES)
-        service = build('docs', 'v1', credentials=credentials)
-        document = service.documents().get(documentId=doc_id).execute()
-        text = ''
-        content = document.get('body', {}).get('content', [])
-        if not content:
-            return "Please paste your text into the Google Doc and try again."
-
-        for element in content:
-            if 'paragraph' in element:
-                for para_element in element['paragraph']['elements']:
-                    if 'textRun' in para_element:
-                        text += para_element['textRun']['content']
-
-        if not text.strip():
-            return "Please paste your text into the Google Doc and try again."
-
-        create_embeddings(text)
-        return text
-    except Exception as e:
-        return str(e)
-
-def on_submit(query):
-    global chat_history, text, qa_chain
-
-    if not qa_chain or query == 'CREATE_NEW_DOC':
-        text = updateText()
-        if isinstance(text, str) and text.startswith("Please paste your text"):
-            return {'text': text, 'audio_url': None}
-
-    if query == 'CREATE_NEW_DOC':
-        doc_id = create_new_doc()
-        return {'doc_id': doc_id}
-
+    # Process the query
     result = qa_chain({"question": query, "chat_history": chat_history[-2:]})
     answer = result['answer']
     chat_history.append((query, answer))
 
+    # Generate audio using Google Cloud Text-to-Speech
     from google.cloud import texttospeech
+    import json
+    import os
+
+    # Initialize Text-to-Speech client
     credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
     client = texttospeech.TextToSpeechClient.from_service_account_info(credentials_dict)
 
     synthesis_input = texttospeech.SynthesisInput(text=answer)
+
+    # Configure voice parameters
     voice = texttospeech.VoiceSelectionParams(
         language_code="en-US",
-        name="en-US-Studio-O",
-        ssml_gender=texttospeech.SsmlVoiceGender.FEMALE)
+        name="en-US-Studio-O",  # A natural-sounding female voice
+        ssml_gender=texttospeech.SsmlVoiceGender.FEMALE
+    )
 
+    # Select the type of audio file
     audio_config = texttospeech.AudioConfig(
         audio_encoding=texttospeech.AudioEncoding.MP3,
         speaking_rate=1.0,
-        pitch=0.0)
+        pitch=0.0
+    )
 
+    # Perform the text-to-speech request
     response = client.synthesize_speech(
-        input=synthesis_input,
-        voice=voice,
-        audio_config=audio_config)
+        input=synthesis_input, voice=voice, audio_config=audio_config
+    )
 
+    # Save the audio file
     audio_path = "static/response.mp3"
     with open(audio_path, "wb") as out:
         out.write(response.audio_content)

@@ -116,21 +116,3 @@ function toggleAudio() {
         }
     }
 }
-function handleChangeText() {
-    fetch('/submit', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            message: 'CREATE_NEW_DOC'
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.doc_id) {
-            window.open(`https://docs.google.com/document/d/${data.doc_id}/edit`, '_blank');
-        }
-    })
-    .catch(error => console.error('Error:', error));
-}
