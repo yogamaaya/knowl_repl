@@ -442,6 +442,8 @@ margin-bottom: 5px;
     top: 60px;
     right: 20px;
     z-index: 1000;
+    display: flex;
+    flex-direction: column-reverse;
 }
 
 .toast {
