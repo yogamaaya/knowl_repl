@@ -447,7 +447,7 @@ margin-bottom: 5px;
 .toast {
     background: rgba(116, 4, 118, 0.95);
     color: white;
-    padding: 20px 15px;
+    padding: 6px 6px 6px 15px;
     border-radius: 8px;
     margin-bottom: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -463,6 +463,7 @@ margin-bottom: 5px;
 
 .toast.show {
     transform: translateX(0);
+    display: table-cell;
 }
 
 .toast.success {
