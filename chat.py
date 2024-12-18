@@ -35,18 +35,12 @@ def updateText():
         service = build('docs', 'v1', credentials=credentials)
         document = service.documents().get(documentId=doc_id).execute()
         text = ''
-        line_number = 1
-        doc_url = f"https://docs.google.com/document/d/{doc_id}/edit"
-        
+        # Changed doc_content to document.get('body', {}).get('content', [])
         for element in document.get('body', {}).get('content', []):
             if 'paragraph' in element:
-                paragraph_text = ''
                 for para_element in element['paragraph']['elements']:
                     if 'textRun' in para_element:
-                        paragraph_text += para_element['textRun']['content']
-                if paragraph_text.strip():
-                    text += f'<a href="{doc_url}#heading={line_number}" target="_blank">[L{line_number}]</a> {paragraph_text}\n'
-                    line_number += 1
+                        text += para_element['textRun']['content']
 
         return text
     except Exception as e:
@@ -158,4 +152,4 @@ def on_submit(query):
     with open(audio_path, "wb") as out:
         out.write(response.audio_content)
 
-    return {"text": answer, "audio_url": "/static/response.mp3", "html": True}
+    return {"text": answer, "audio_url": "/static/response.mp3"}
