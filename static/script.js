@@ -169,7 +169,18 @@ async function handleChangeText() {
                 loadingToast.remove(); // Remove the updating embeddings toast
                 
                 if (updateResponse.ok && updateData.success) {
-                    showToast(`Current source: ${updateData.title}`, 'success');
+                    // Show success toast
+                    showToast('Knowledge base updated successfully', 'success');
+                    
+                    // Create persistent source title toast
+                    const sourceToast = showPersistentToast(`Current source: ${updateData.title}`, true);
+                    
+                    // Add close button to source toast
+                    const closeBtn = document.createElement('button');
+                    closeBtn.innerHTML = '×';
+                    closeBtn.style.cssText = 'margin-left: 10px; background: none; border: none; color: white; font-size: 20px; cursor: pointer;';
+                    closeBtn.onclick = () => sourceToast.remove();
+                    sourceToast.appendChild(closeBtn);
                 } else {
                     showToast('Failed to update knowledge base. Please try again.', 'error');
                 }
