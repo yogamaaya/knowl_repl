@@ -81,8 +81,8 @@ def on_submit(query):
 
     # Configure OpenAI for fast, detailed responses
     llm = OpenAI(
-        temperature=0.1,
-        max_tokens=700,  # Increased for longer essays
+        temperature=0.2,
+        max_tokens=1500,  # Increased for longer essays
         model="gpt-3.5-turbo-instruct",  # Fast model
         presence_penalty=0.0,  # Small increase to encourage diverse content
     )
@@ -95,8 +95,8 @@ def on_submit(query):
     prompt_template = PromptTemplate(
         input_variables=["question", "context"],
         template=
-        """As a kind, friendly and empathetic assistant, write a comprehensive essay (minimum 500 words) that:
-        1. Opens with an engaging introduction acknowledging the question
+        """As a kind, friendly and empathetic assistant, write an insightful summary essay (minimum 300 words) that:
+        1. Opens with an engaging introduction acknowledging the thoughtfulness of the question
         2. Develops at least 3-4 main points with detailed explanations
         3. Uses multiple direct quotes from the text, always enclosed in single quotes ''
         4. Provides thorough analysis (100-150 words) after each quote
