@@ -95,10 +95,11 @@ def reset_qa_chain():
     chat_history = []
 
 
-def change_text_source(doc_id):
+def change_text_source(new_doc_id):
     """Handle text source change and create new embeddings"""
-    global text
+    global text, doc_id
     try:
+        doc_id = new_doc_id  # Update the global doc_id
         new_text = get_text_from_doc(doc_id)
         if new_text:
             text = new_text
@@ -183,7 +184,7 @@ def create_embeddings(text):
 
 def initialize_embeddings():
     print("\n=== Initializing Default Embeddings ===")
-    global text
+    global text, doc_id
     doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
     print(f"Using default doc_id: {doc_id}")
     text = get_text_from_doc(doc_id)
