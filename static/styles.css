@@ -541,13 +541,21 @@ margin-bottom: 5px;
 }
 
 .doc-preview {
-    padding: 20px;
+    padding: 0;
     line-height: 1.6;
     color: #333;
+    max-height: 1000px;
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
 }
 
 .doc-preview.collapsed {
-    display: none;
+    max-height: 0;
+    padding: 0 20px;
+}
+
+.doc-preview:not(.collapsed) {
+    padding: 20px;
 }
 
 .read-more {
