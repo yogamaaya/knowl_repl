@@ -327,6 +327,7 @@ margin-bottom: 5px;
     display: flex;
     justify-content: center;
     align-items: center;
+    gap: 20px;
     padding: 9px 0;
     width: 100%;
     background-color: rgb(49 13 72);
