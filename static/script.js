@@ -130,7 +130,7 @@ function showPersistentToast(message, isPersistent = false) {
 
 async function handleChangeText() {
     try {
-        const creatingToast = showPersistentToast('Creating new source...', true);
+        const creatingToast = showPersistentToast('Please have text ready to paste into source...', true);
         const response = await fetch('/create_doc', {
             method: 'POST',
         });
@@ -143,6 +143,7 @@ async function handleChangeText() {
         const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
         window.open(docUrl, '_blank');
         creatingToast.remove();
+        const loadingToast = showPersistentToast('Updating embeddings...', true);
         
         const checkAndUpdate = async () => {
             const checkResponse = await fetch('/check_doc_content', {
@@ -156,8 +157,6 @@ async function handleChangeText() {
             const checkData = await checkResponse.json();
             
             if (checkData.has_content) {
-                const loadingToast = showPersistentToast('Updating embeddings...', true);
-                
                 const updateResponse = await fetch('/update_embeddings', {
                     method: 'POST',
                     headers: {
