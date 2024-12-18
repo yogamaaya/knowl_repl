@@ -11,6 +11,10 @@ messages = []
 def history():
     return render_template('history.html')
 
+@app.route('/source')
+def source():
+    return render_template('source.html')
+
 @app.route('/')
 def chat():
     print("\n=== Starting Chat Application ===")

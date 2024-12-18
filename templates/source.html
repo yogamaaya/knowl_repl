@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Knowl - Change Source</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="source-container">
+        <h1>Change Text Source 📚</h1>
+        <div class="source-options">
+            <button onclick="createNewDoc()" class="source-btn">Create New Document</button>
+            <div class="or-divider">OR</div>
+            <div class="existing-doc">
+                <input type="text" id="docInput" placeholder="Paste Google Doc URL or ID" class="doc-input">
+                <button onclick="validateAndUpdate()" class="source-btn">Use Existing Document</button>
+            </div>
+        </div>
+        <div id="status" class="status-message"></div>
+        <a href="/" class="back-button">Back to Chat</a>
+    </div>
+    <script>
+        function extractDocId(url) {
+            const patterns = [
+                /\/d\/([a-zA-Z0-9-_]+)/,
+                /^[a-zA-Z0-9-_]{25,}$/
+            ];
+            
+            for (let pattern of patterns) {
+                const match = url.match(pattern);
+                if (match) return match[1];
+            }
+            return null;
+        }
+
+        async function validateAndUpdate() {
+            const input = document.getElementById('docInput').value.trim();
+            const status = document.getElementById('status');
+            const docId = extractDocId(input);
+            
+            if (!docId) {
+                status.innerHTML = "Invalid document URL or ID";
+                status.className = "status-message error";
+                return;
+            }
+
+            status.innerHTML = "Checking document...";
+            try {
+                const checkResponse = await fetch('/check_doc_content', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ doc_id: docId })
+                });
+                
+                const checkData = await checkResponse.json();
+                if (!checkData.has_content) {
+                    status.innerHTML = "Document is empty or inaccessible";
+                    status.className = "status-message error";
+                    return;
+                }
+
+                const updateResponse = await fetch('/update_embeddings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ doc_id: docId })
+                });
+                
+                const updateData = await updateResponse.json();
+                if (updateData.success) {
+                    localStorage.setItem('currentSourceTitle', updateData.title);
+                    localStorage.setItem('currentDocId', docId);
+                    window.location.href = '/';
+                } else {
+                    throw new Error(updateData.error || 'Failed to update source');
+                }
+            } catch (error) {
+                status.innerHTML = error.message;
+                status.className = "status-message error";
+            }
+        }
+
+        async function createNewDoc() {
+            const status = document.getElementById('status');
+            status.innerHTML = "Creating new document...";
+            
+            try {
+                const response = await fetch('/create_doc', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.doc_id) {
+                    const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
+                    window.open(docUrl, '_blank');
+                    status.innerHTML = "Document created! Paste your text in the opened tab.";
+                    
+                    // Start checking for content
+                    checkForContent(data.doc_id);
+                } else {
+                    throw new Error('Failed to create document');
+                }
+            } catch (error) {
+                status.innerHTML = error.message;
+                status.className = "status-message error";
+            }
+        }
+
+        async function checkForContent(docId) {
+            const status = document.getElementById('status');
+            const maxAttempts = 30;
+            let attempts = 0;
+
+            const checkInterval = setInterval(async () => {
+                attempts++;
+                try {
+                    const checkResponse = await fetch('/check_doc_content', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ doc_id: docId })
+                    });
+                    
+                    const checkData = await checkResponse.json();
+                    if (checkData.has_content) {
+                        clearInterval(checkInterval);
+                        const updateResponse = await fetch('/update_embeddings', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ doc_id: docId })
+                        });
+                        
+                        const updateData = await updateResponse.json();
+                        if (updateData.success) {
+                            localStorage.setItem('currentSourceTitle', updateData.title);
+                            localStorage.setItem('currentDocId', docId);
+                            window.location.href = '/';
+                        }
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(checkInterval);
+                        status.innerHTML = "Timeout waiting for content. Please paste your text and try again.";
+                        status.className = "status-message error";
+                    }
+                } catch (error) {
+                    clearInterval(checkInterval);
+                    status.innerHTML = error.message;
+                    status.className = "status-message error";
+                }
+            }, 10000);
+        }
+    </script>
+</body>
+</html>
