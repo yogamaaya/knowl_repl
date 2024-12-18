@@ -76,10 +76,41 @@ function updateChat(messages) {
     }
 }
 
-// Clear messages when page loads
-window.addEventListener('load', function() {
+// Handle page load
+window.addEventListener('load', async function() {
     currentPageMessages = [];
     updateChat([]);
+    
+    // Reset to default doc
+    const defaultDocId = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A';
+    
+    // Update embeddings with default doc
+    const updateResponse = await fetch('/update_embeddings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ doc_id: defaultDocId })
+    });
+    
+    const updateData = await updateResponse.json();
+    if (updateResponse.ok && updateData.success) {
+        const docUrl = `https://docs.google.com/document/d/${defaultDocId}/edit`;
+        localStorage.setItem('currentSourceTitle', updateData.title);
+        localStorage.setItem('currentDocId', defaultDocId);
+        
+        // Show source toast
+        const sourceToast = document.createElement('div');
+        sourceToast.className = 'toast persistent';
+        const link = document.createElement('a');
+        link.href = docUrl;
+        link.target = '_blank';
+        link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
+        link.textContent = `Current source: ${updateData.title}`;
+        sourceToast.appendChild(link);
+        document.getElementById('toastContainer').appendChild(sourceToast);
+        setTimeout(() => sourceToast.classList.add('show'), 10);
+    }
 });
 
 
