@@ -96,9 +96,13 @@ def on_submit(query):
         Then provide a detailed response that:
         1. Starts with a simple kind acknowledgement.
         2. Stays strictly focused on the given context only.
-        3. Uses specific examples and references from the text.
-        4. Has long explanation based on direct excerpts from the text.
-        5. Ends always with a concluding thank you.
+        3. Always uses direct quotes from the text enclosed in quotation marks ("").
+        4. Includes the line reference [L#] before each quote.
+        5. Provides explanation and analysis after each quote.
+        6. Ends always with a concluding thank you.
+        
+        Remember: Every fact or claim must be supported by a direct quote from the text with its line reference.
+        
         Question: {question}
         Context: {context}
 
