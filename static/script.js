@@ -86,9 +86,16 @@ function handleDonate() {
 window.open('https://www.buymeacoffee.com/knowl', '_blank');
 }
 
-function handleChangeText() {
-    // Open text update page in new tab
-    window.open('https://docs.google.com/document/d/1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A/edit?usp=sharing', '_blank');
+async function handleChangeText() {
+    try {
+        const response = await fetch('/create_doc', { method: 'POST' });
+        const data = await response.json();
+        if (data.doc_id) {
+            window.open(`https://docs.google.com/document/d/${data.doc_id}/edit?usp=sharing`, '_blank');
+        }
+    } catch (error) {
+        console.error('Error creating new doc:', error);
+    }
 }
 let currentAudio = null;
 let isPlaying = false;
