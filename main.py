@@ -28,6 +28,15 @@ def new_doc():
         return jsonify({"doc_id": doc_id})
     return jsonify({"error": "Failed to create document"}), 500
 
+@app.route('/check_doc_content', methods=['POST'])
+def check_doc_content():
+    data = request.get_json()
+    doc_id = data.get('doc_id')
+    if doc_id:
+        text = get_text_from_doc(doc_id)
+        return jsonify({"has_content": bool(text and len(text.strip()) > 0)})
+    return jsonify({"has_content": False})
+
 @app.route('/update_embeddings', methods=['POST'])
 def update_embeddings():
     data = request.get_json()
@@ -36,6 +45,8 @@ def update_embeddings():
         print(f"Updating embeddings for document: {doc_id}")
         text = get_text_from_doc(doc_id)
         if text:
+            print(f"New document ID: {doc_id}")
+            print(f"First 100 characters of new text: {text[:100]}")
             create_embeddings(text)
             print("Embeddings updated successfully")
             return jsonify({"success": True})

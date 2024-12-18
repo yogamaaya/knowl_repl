@@ -100,24 +100,43 @@ async function handleChangeText() {
         const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
         window.open(docUrl, '_blank');
         
-        alert('A new Google Doc has been created and opened. Please paste your text and save it. Then click OK to update the knowledge base.');
+        const checkAndUpdate = async () => {
+            const checkResponse = await fetch('/check_doc_content', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ doc_id: data.doc_id })
+            });
+            
+            const checkData = await checkResponse.json();
+            
+            if (checkData.has_content) {
+                const updateResponse = await fetch('/update_embeddings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ doc_id: data.doc_id })
+                });
+                
+                const updateData = await updateResponse.json();
+                
+                if (updateResponse.ok && updateData.success) {
+                    alert('Knowledge base updated successfully!');
+                } else {
+                    alert('Failed to update knowledge base. Please try again.');
+                }
+            } else {
+                if (confirm('No content detected in the document. Would you like to wait for content to be added?')) {
+                    setTimeout(checkAndUpdate, 10000); // Check again after 10 seconds
+                }
+            }
+        };
         
-        const updateResponse = await fetch('/update_embeddings', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ doc_id: data.doc_id })
-        });
+        alert('A new Google Doc has been created and opened. Please paste your text and save it.');
+        setTimeout(checkAndUpdate, 10000); // Initial check after 10 seconds
         
-        const updateData = await updateResponse.json();
-        
-        if (updateResponse.ok && updateData.success) {
-            alert('Knowledge base updated successfully!');
-        } else {
-            const errorMsg = updateData.error || 'Failed to update knowledge base';
-            alert(`Error: ${errorMsg}. Please try again.`);
-        }
     } catch (error) {
         console.error('Error:', error);
         alert(`An error occurred: ${error.message}`);
