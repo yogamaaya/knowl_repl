@@ -1,4 +1,6 @@
 
+
+
 function change() // no ';' here
 {
     var elem = document.getElementById("tips");
@@ -18,26 +20,7 @@ async function submitMessage(event) {
             // Show loading spinner
             loadingElement.style.display = 'block';
 
-function showToast(message, type = '') {
-    const container = document.getElementById('toastContainer');
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
-    
-    container.appendChild(toast);
-    
-    // Trigger reflow to enable animation
-    toast.offsetHeight;
-    
-    // Show toast
-    setTimeout(() => toast.classList.add('show'), 10);
-    
-    // Remove toast after 3 seconds
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => container.removeChild(toast), 300);
-    }, 3000);
-}
+
 
 
             const response = await fetch('/submit', {
