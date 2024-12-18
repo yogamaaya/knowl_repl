@@ -117,19 +117,39 @@ def on_submit(query):
     answer = result['answer']
     chat_history.append((query, answer))
 
-    # Generate audio from response with natural voice
-    from gtts import gTTS
-    import re
+    # Generate audio using Google Cloud Text-to-Speech
+    from google.cloud import texttospeech
+    import json
+    import os
 
-    def add_speech_pauses(text):
-        # Add pauses after punctuation for more natural speech
-        text = re.sub(r'([.!?])', r'\1... ', text)
-        text = re.sub(r'([,:])', r'\1.. ', text)
-        return text
+    # Initialize Text-to-Speech client
+    credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
+    client = texttospeech.TextToSpeechClient.from_service_account_info(credentials_dict)
 
+    synthesis_input = texttospeech.SynthesisInput(text=answer)
+
+    # Configure voice parameters
+    voice = texttospeech.VoiceSelectionParams(
+        language_code="en-US",
+        name="en-US-Studio-O",  # A natural-sounding female voice
+        ssml_gender=texttospeech.SsmlVoiceGender.FEMALE
+    )
+
+    # Select the type of audio file
+    audio_config = texttospeech.AudioConfig(
+        audio_encoding=texttospeech.AudioEncoding.MP3,
+        speaking_rate=1.0,
+        pitch=0.0
+    )
+
+    # Perform the text-to-speech request
+    response = client.synthesize_speech(
+        input=synthesis_input, voice=voice, audio_config=audio_config
+    )
+
+    # Save the audio file
     audio_path = "static/response.mp3"
-    processed_text = add_speech_pauses(answer)
-    tts = gTTS(text=processed_text, lang='en-us', tld='com', slow=False)
-    tts.save(audio_path)
+    with open(audio_path, "wb") as out:
+        out.write(response.audio_content)
 
     return {"text": answer, "audio_url": "/static/response.mp3"}
