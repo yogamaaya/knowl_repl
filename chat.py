@@ -35,7 +35,6 @@ def updateText():
         service = build('docs', 'v1', credentials=credentials)
         document = service.documents().get(documentId=doc_id).execute()
         text = []
-        line_number = 1
         # Changed doc_content to document.get('body', {}).get('content', [])
         for element in document.get('body', {}).get('content', []):
             if 'paragraph' in element:
@@ -44,8 +43,7 @@ def updateText():
                     if 'textRun' in para_element:
                         line_content += para_element['textRun']['content']
                 if line_content.strip():  # Only add non-empty lines
-                    text.append(f"[L{line_number}] {line_content}")
-                    line_number += 1
+                    text.append(line_content)
 
         return '\n'.join(text)
     except Exception as e:
@@ -83,10 +81,10 @@ def on_submit(query):
 
     # Configure OpenAI for fast, detailed responses
     llm = OpenAI(
-        temperature=0.2,  # Slightly more creative
-        max_tokens=1000,  # Increased for longer essays
+        temperature=0.1,
+        max_tokens=700,  # Increased for longer essays
         model="gpt-3.5-turbo-instruct",  # Fast model
-        presence_penalty=0.1,  # Small increase to encourage diverse content
+        presence_penalty=0.0,  # Small increase to encourage diverse content
     )
 
     # Create a new Chroma database and QA chain
@@ -108,11 +106,12 @@ def on_submit(query):
 
         Important:
         - Ensure the response is at least 500 words
+        - Add appropiate line breaks to separate paragraphs
         - Include at least 4-5 relevant quotes from the text
         - Support each main point with detailed analysis
         - Use clear topic sentences and transitions between paragraphs
         - Provide comprehensive explanations and examples
-        - End with a well-developed conclusion
+        - End with a well-developed conclusion that is complete and ends in a full stop
 
         Question: {question}
         Context: {context}
