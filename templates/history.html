@@ -1,0 +1,33 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Knowl History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="history-container">
+        <h1>Document History 📚</h1>
+        <div id="docList" class="doc-list"></div>
+        <a href="/" class="back-button">Back to Chat</a>
+    </div>
+    <script>
+        window.onload = function() {
+            const docHistory = JSON.parse(localStorage.getItem('docHistory') || '[]');
+            const docList = document.getElementById('docList');
+            
+            docHistory.forEach(doc => {
+                const docItem = document.createElement('div');
+                docItem.className = 'doc-item';
+                const link = document.createElement('a');
+                link.href = `https://docs.google.com/document/d/${doc.id}/edit`;
+                link.target = '_blank';
+                link.textContent = doc.title;
+                docItem.appendChild(link);
+                docList.appendChild(docItem);
+            });
+        };
+    </script>
+</body>
+</html>

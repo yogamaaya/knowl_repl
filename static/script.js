@@ -204,6 +204,13 @@ async function handleChangeText() {
                     localStorage.setItem('currentSourceTitle', updateData.title);
                     localStorage.setItem('currentDocId', data.doc_id);
                     
+                    // Store in history
+                    const docHistory = JSON.parse(localStorage.getItem('docHistory') || '[]');
+                    if (!docHistory.find(doc => doc.id === data.doc_id)) {
+                        docHistory.push({ id: data.doc_id, title: updateData.title });
+                        localStorage.setItem('docHistory', JSON.stringify(docHistory));
+                    }
+                    
                     // Remove existing source toast if present
                     const existingToasts = document.querySelectorAll('.toast.persistent');
                     existingToasts.forEach(toast => toast.remove());

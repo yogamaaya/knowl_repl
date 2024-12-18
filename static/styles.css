@@ -480,3 +480,38 @@ margin-bottom: 5px;
     background: rgba(116, 4, 118, 0.95);
     border-left: 4px solid white;
 }
+.history-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.doc-list {
+    margin-top: 20px;
+}
+
+.doc-item {
+    padding: 15px;
+    margin: 10px 0;
+    background: rgba(116, 4, 118, 0.1);
+    border-radius: 8px;
+}
+
+.doc-item a {
+    color: #740476;
+    text-decoration: none;
+}
+
+.doc-item:hover {
+    background: rgba(116, 4, 118, 0.2);
+}
+
+.back-button {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: #740476;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+}

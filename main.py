@@ -7,6 +7,10 @@ app = Flask(__name__)
 messages = []
 
 
+@app.route('/history')
+def history():
+    return render_template('history.html')
+
 @app.route('/')
 def chat():
     print("\n=== Starting Chat Application ===")
