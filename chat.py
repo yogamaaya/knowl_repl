@@ -32,11 +32,7 @@ creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 def create_new_doc():
     try:
         credentials = service_account.Credentials.from_service_account_info(
-            creds, scopes=[
-                'https://www.googleapis.com/auth/drive.file',
-                'https://www.googleapis.com/auth/documents',
-                'https://www.googleapis.com/auth/drive'
-            ])
+            creds, scopes=['https://www.googleapis.com/auth/drive.file'])
         service = build('docs', 'v1', credentials=credentials)
         drive_service = build('drive', 'v3', credentials=credentials)
         
@@ -45,24 +41,13 @@ def create_new_doc():
             body={
                 'name': f'Knowl Text Source {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
                 'mimeType': 'application/vnd.google-docs.document'
-            },
-            fields='id'
-        ).execute()
-        
-        # Set permissions to anyone with the link can edit
-        drive_service.permissions().create(
-            fileId=doc['id'],
-            body={
-                'type': 'anyone',
-                'role': 'writer',
-                'allowFileDiscovery': False
             }
         ).execute()
         
         return doc['id']
     except Exception as e:
         print(f"Error creating doc: {e}")
-        return "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"  # Return default doc ID on error
+        return None
 
 def updateText():
     doc_id = create_new_doc()
