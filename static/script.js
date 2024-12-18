@@ -1,6 +1,3 @@
-
-
-
 function change() // no ';' here
 {
     var elem = document.getElementById("tips");
@@ -172,15 +169,22 @@ async function handleChangeText() {
                     // Show success toast
                     showToast('Knowledge base updated successfully', 'success');
                     
-                    // Create persistent source title toast
-                    const sourceToast = showPersistentToast(`Current source: ${updateData.title}`, true);
+                    // Save source info to localStorage
+                    localStorage.setItem('currentSourceTitle', updateData.title);
+                    localStorage.setItem('currentDocId', data.doc_id);
                     
-                    // Add close button to source toast
-                    const closeBtn = document.createElement('button');
-                    closeBtn.innerHTML = '×';
-                    closeBtn.style.cssText = 'margin-left: 10px; background: none; border: none; color: white; font-size: 20px; cursor: pointer;';
-                    closeBtn.onclick = () => sourceToast.remove();
-                    sourceToast.appendChild(closeBtn);
+                    // Create persistent source title toast
+                    const sourceToast = document.createElement('div');
+                    sourceToast.className = 'toast persistent';
+                    
+                    // Create link element
+                    const link = document.createElement('a');
+                    link.href = docUrl;
+                    link.target = '_blank';
+                    link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
+                    link.textContent = `Current source: ${updateData.title}`;
+                    sourceToast.appendChild(link);
+
                 } else {
                     showToast('Failed to update knowledge base. Please try again.', 'error');
                 }
