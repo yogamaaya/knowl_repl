@@ -34,15 +34,20 @@ def updateText():
             creds, scopes=SCOPES)
         service = build('docs', 'v1', credentials=credentials)
         document = service.documents().get(documentId=doc_id).execute()
-        text = ''
+        text = []
+        line_number = 1
         # Changed doc_content to document.get('body', {}).get('content', [])
         for element in document.get('body', {}).get('content', []):
             if 'paragraph' in element:
+                line_content = ''
                 for para_element in element['paragraph']['elements']:
                     if 'textRun' in para_element:
-                        text += para_element['textRun']['content']
+                        line_content += para_element['textRun']['content']
+                if line_content.strip():  # Only add non-empty lines
+                    text.append(f"[L{line_number}] {line_content}")
+                    line_number += 1
 
-        return text
+        return '\n'.join(text)
     except Exception as e:
         return str(e)
 
@@ -96,12 +101,13 @@ def on_submit(query):
         Then provide a detailed response that:
         1. Starts with a simple kind acknowledgement.
         2. Stays strictly focused on the given context only.
-        3. Uses specific examples and references from the text.
-        4. Has long explanation based on direct excerpts from the text.
+        3. Uses specific examples and references from the text, including line numbers [L#] when quoting.
+        4. Has long explanation based on direct excerpts from the text, always citing the line numbers.
         5. Ends always with a concluding thank you.
         Question: {question}
         Context: {context}
 
+        When referencing text, always include the line number in [L#] format.
         """)
 
     qa_chain = ConversationalRetrievalChain.from_llm(
