@@ -83,10 +83,10 @@ def on_submit(query):
 
     # Configure OpenAI for fast, detailed responses
     llm = OpenAI(
-        temperature=0.1,  # Fast response
-        max_tokens=300,  # Mid level length
+        temperature=0.2,  # Slightly more creative
+        max_tokens=1000,  # Increased for longer essays
         model="gpt-3.5-turbo-instruct",  # Fast model
-        presence_penalty=0,  # Slight penalty to stay on topic
+        presence_penalty=0.1,  # Small increase to encourage diverse content
     )
 
     # Create a new Chroma database and QA chain
@@ -97,19 +97,22 @@ def on_submit(query):
     prompt_template = PromptTemplate(
         input_variables=["question", "context"],
         template=
-        """As a kind, friendly and empathetic assistant, write a well-structured essay that:
-        1. Begins with a brief acknowledgment of the question
-        2. Uses multiple direct quotes from the text, always enclosed in single quotes ''
-        3. After each quote, provides detailed analysis and explanation
-        4. Maintains clear paragraph structure with one main point per paragraph
-        5. Uses transitional phrases between paragraphs for flow
-        6. Ends with a concluding paragraph and thank you
+        """As a kind, friendly and empathetic assistant, write a comprehensive essay (minimum 500 words) that:
+        1. Opens with an engaging introduction acknowledging the question
+        2. Develops at least 3-4 main points with detailed explanations
+        3. Uses multiple direct quotes from the text, always enclosed in single quotes ''
+        4. Provides thorough analysis (100-150 words) after each quote
+        5. Maintains clear paragraph structure with proper transitions
+        6. Includes examples and specific details from the text
+        7. Concludes with a substantive summary and thank you
 
         Important:
-        - Always use direct quotes from the text enclosed in single quotes ''
-        - Include line reference [L#] before each quote
-        - Support every major point with a relevant quote
-        - Provide context and analysis after each quote
+        - Ensure the response is at least 500 words
+        - Include at least 4-5 relevant quotes from the text
+        - Support each main point with detailed analysis
+        - Use clear topic sentences and transitions between paragraphs
+        - Provide comprehensive explanations and examples
+        - End with a well-developed conclusion
 
         Question: {question}
         Context: {context}
