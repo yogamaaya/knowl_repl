@@ -11,6 +11,7 @@ import os
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import json
+from datetime import datetime
 from langchain.prompts import PromptTemplate
 
 load_dotenv()
@@ -22,7 +23,9 @@ qa_chain = None
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 
-def create_doc(title="New Knowledge Source"):
+def create_doc(title=None):
+    if title is None:
+        title = f"Knowledge Source {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     try:
         credentials = service_account.Credentials.from_service_account_info(
             creds, scopes=['https://www.googleapis.com/auth/drive.file'])
