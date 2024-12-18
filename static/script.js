@@ -88,20 +88,20 @@ window.open('https://www.buymeacoffee.com/knowl', '_blank');
 
 async function handleChangeText() {
     try {
-        // Create new document
         const response = await fetch('/create_doc', {
             method: 'POST',
         });
         const data = await response.json();
         
-        // Open the new document
+        if (!data.doc_id) {
+            throw new Error('Failed to create document');
+        }
+        
         const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
         window.open(docUrl, '_blank');
         
-        // Show dialog to user
-        alert('Please paste your text in the new document and save it. Then click OK to update the knowledge base.');
+        alert('A new Google Doc has been created and opened. Please paste your text and save it. Then click OK to update the knowledge base.');
         
-        // Update embeddings with new document
         const updateResponse = await fetch('/update_embeddings', {
             method: 'POST',
             headers: {
@@ -110,14 +110,17 @@ async function handleChangeText() {
             body: JSON.stringify({ doc_id: data.doc_id })
         });
         
-        if (updateResponse.ok) {
+        const updateData = await updateResponse.json();
+        
+        if (updateResponse.ok && updateData.success) {
             alert('Knowledge base updated successfully!');
         } else {
-            alert('Failed to update knowledge base. Please try again.');
+            const errorMsg = updateData.error || 'Failed to update knowledge base';
+            alert(`Error: ${errorMsg}. Please try again.`);
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('An error occurred. Please try again.');
+        alert(`An error occurred: ${error.message}`);
     }
 }
 let currentAudio = null;

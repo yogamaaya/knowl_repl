@@ -9,6 +9,7 @@ messages = []
 
 @app.route('/')
 def chat():
+    print("Initializing embeddings with default document...")
     initialize_embeddings()
     return render_template('chat.html')
 
@@ -21,18 +22,27 @@ def submit_message():
 
 @app.route('/create_doc', methods=['POST'])
 def new_doc():
+    print("Creating new Google Doc...")
     doc_id = create_doc()
-    return jsonify({"doc_id": doc_id})
+    if doc_id:
+        return jsonify({"doc_id": doc_id})
+    return jsonify({"error": "Failed to create document"}), 500
 
 @app.route('/update_embeddings', methods=['POST'])
 def update_embeddings():
     data = request.get_json()
     doc_id = data.get('doc_id')
     if doc_id:
+        print(f"Updating embeddings for document: {doc_id}")
         text = get_text_from_doc(doc_id)
-        create_embeddings(text)
-        return jsonify({"success": True})
-    return jsonify({"success": False}), 400
+        if text:
+            create_embeddings(text)
+            print("Embeddings updated successfully")
+            return jsonify({"success": True})
+        else:
+            print("Failed to get text from document")
+            return jsonify({"success": False, "error": "No text found"}), 400
+    return jsonify({"success": False, "error": "No document ID provided"}), 400
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)

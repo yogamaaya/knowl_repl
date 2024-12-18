@@ -23,14 +23,37 @@ SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 
 def create_doc(title="New Knowledge Source"):
-    credentials = service_account.Credentials.from_service_account_info(
-        creds, scopes=['https://www.googleapis.com/auth/drive.file'])
-    service = build('docs', 'v1', credentials=credentials)
-    doc_body = {
-        'title': title
-    }
-    doc = service.documents().create(body=doc_body).execute()
-    return doc['documentId']
+    try:
+        credentials = service_account.Credentials.from_service_account_info(
+            creds, scopes=['https://www.googleapis.com/auth/drive.file'])
+        service = build('docs', 'v1', credentials=credentials)
+        drive_service = build('drive', 'v3', credentials=credentials)
+        
+        # Create document
+        doc_body = {
+            'title': title
+        }
+        doc = service.documents().create(body=doc_body).execute()
+        doc_id = doc['documentId']
+        
+        # Set public access
+        permission = {
+            'type': 'anyone',
+            'role': 'writer'
+        }
+        drive_service.permissions().create(
+            fileId=doc_id,
+            body=permission).execute()
+        
+        # Get initial content
+        initial_content = get_text_from_doc(doc_id)
+        print(f"Created new document with ID: {doc_id}")
+        print(f"Initial content (first 100 chars): {initial_content[:100]}")
+        
+        return doc_id
+    except Exception as e:
+        print(f"Error creating document: {str(e)}")
+        return None
 
 def get_text_from_doc(doc_id):
     try:
