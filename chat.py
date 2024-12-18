@@ -97,7 +97,7 @@ def reset_qa_chain():
 
 def change_text_source(new_doc_id):
     """Handle text source change and create new embeddings"""
-    global text, doc_id
+    global text, doc_id, qa_chain, chat_history
     try:
         doc_id = new_doc_id  # Update the global doc_id
         new_text = get_text_from_doc(doc_id)
@@ -105,7 +105,9 @@ def change_text_source(new_doc_id):
             text = new_text
             print(f"New document ID: {doc_id}")
             print(f"First 100 characters of new text: {text[:100]}")
-            reset_qa_chain()
+            # Ensure complete reset
+            qa_chain = None
+            chat_history = []
             create_embeddings(text)
             return True
         return False
@@ -119,11 +121,13 @@ def create_embeddings(text):
     print(f"Text preview (first 100 chars): {text[:100]}")
     global qa_chain, chat_history
     
-    # Reset context
+    # Reset context and QA chain
     chat_history = []
     qa_chain = None
     
-    print("Initializing tokenizer...")
+    # Ensure clean initialization
+    if text.strip():
+        print("Initializing tokenizer...")
     tokenizer = DistilBertTokenizerFast.from_pretrained(
         "distilbert-base-uncased")
     text_splitter = RecursiveCharacterTextSplitter(
