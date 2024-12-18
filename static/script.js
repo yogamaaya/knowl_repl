@@ -165,6 +165,7 @@ async function handleChangeText() {
                 });
                 
                 const updateData = await updateResponse.json();
+                loadingToast.remove(); // Remove the updating embeddings toast
                 
                 if (updateResponse.ok && updateData.success) {
                     showToast('Knowledge base updated successfully!', 'success');
