@@ -9,6 +9,7 @@ messages = []
 
 @app.route('/')
 def chat():
+    print("\n=== Starting Chat Application ===")
     print("Initializing embeddings with default document...")
     initialize_embeddings()
     return render_template('chat.html')

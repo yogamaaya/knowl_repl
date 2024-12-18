@@ -25,9 +25,11 @@ creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 
 
 def create_doc(title=None):
+    print("\n=== Creating New Document ===")
     global doc_id
     if title is None:
         title = f"Knowledge Source {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    print(f"Creating doc with title: {title}")
     try:
         credentials = service_account.Credentials.from_service_account_info(
             creds, scopes=['https://www.googleapis.com/auth/drive.file'])
@@ -99,8 +101,11 @@ def change_text_source(doc_id):
         return False
 
 def create_embeddings(text):
+    print("\n=== Creating Embeddings ===")
+    print(f"Text preview (first 100 chars): {text[:100]}")
     global qa_chain
 
+    print("Initializing tokenizer...")
     tokenizer = DistilBertTokenizerFast.from_pretrained(
         "distilbert-base-uncased")
     text_splitter = RecursiveCharacterTextSplitter(
@@ -164,16 +169,21 @@ def create_embeddings(text):
 
 
 def initialize_embeddings():
+    print("\n=== Initializing Default Embeddings ===")
     global text
     doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
+    print(f"Using default doc_id: {doc_id}")
     text = get_text_from_doc(doc_id)
+    print(f"Retrieved text (first 100 chars): {text[:100]}")
     create_embeddings(text)
 
 
 def on_submit(query):
+    print("\n=== Processing Query ===")
     global chat_history, qa_chain, text
-    print("getting answers based on doc ", doc_id)
-    print("text snippet ", text[0:100])
+    print(f"Current doc_id: {doc_id}")
+    print(f"Current text preview: {text[:100]}")
+    print(f"Received query: {query}")
     if qa_chain is None:
         initialize_embeddings()
 
