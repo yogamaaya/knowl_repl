@@ -18,6 +18,28 @@ async function submitMessage(event) {
             // Show loading spinner
             loadingElement.style.display = 'block';
 
+function showToast(message, type = '') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    container.appendChild(toast);
+    
+    // Trigger reflow to enable animation
+    toast.offsetHeight;
+    
+    // Show toast
+    setTimeout(() => toast.classList.add('show'), 10);
+    
+    // Remove toast after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => container.removeChild(toast), 300);
+    }, 3000);
+}
+
+
             const response = await fetch('/submit', {
                 method: 'POST',
                 headers: {
@@ -123,18 +145,18 @@ async function handleChangeText() {
                 const updateData = await updateResponse.json();
                 
                 if (updateResponse.ok && updateData.success) {
-                    alert('Knowledge base updated successfully!');
+                    showToast('Knowledge base updated successfully!', 'success');
                 } else {
-                    alert('Failed to update knowledge base. Please try again.');
+                    showToast('Failed to update knowledge base. Please try again.', 'error');
                 }
             } else {
-                if (confirm('No content detected in the document. Would you like to wait for content to be added?')) {
-                    setTimeout(checkAndUpdate, 10000); // Check again after 10 seconds
+                if (window.confirm('No content detected in the document. Would you like to wait for content to be added?')) {
+                    setTimeout(checkAndUpdate, 10000);
                 }
             }
         };
         
-        alert('A new Google Doc has been created and opened. Please paste your text and save it.');
+        showToast('A new Google Doc has been created and opened. Please paste your text and save it.');
         setTimeout(checkAndUpdate, 10000); // Initial check after 10 seconds
         
     } catch (error) {
