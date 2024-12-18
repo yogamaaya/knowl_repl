@@ -156,8 +156,96 @@ function showPersistentToast(message, isPersistent = false) {
     return toast;
 }
 
-function handleChangeText() {
-    window.location.href = '/source';
+async function handleChangeText() {
+    try {
+        const creatingToast = showPersistentToast('Please have text ready to paste into source...', true);
+        const response = await fetch('/create_doc', {
+            method: 'POST',
+        });
+        const data = await response.json();
+        
+        if (!data.doc_id) {
+            throw new Error('Failed to create document');
+        }
+        
+        const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
+        window.open(docUrl, '_blank');
+        creatingToast.remove();
+        const loadingToast = showPersistentToast('Updating source. Please wait...', true);
+        
+        const checkAndUpdate = async () => {
+            const checkResponse = await fetch('/check_doc_content', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ doc_id: data.doc_id })
+            });
+            
+            const checkData = await checkResponse.json();
+            
+            if (checkData.has_content) {
+                const updateResponse = await fetch('/update_embeddings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ doc_id: data.doc_id })
+                });
+                
+                const updateData = await updateResponse.json();
+                loadingToast.remove(); // Remove the updating embeddings toast
+                
+                if (updateResponse.ok && updateData.success) {
+                    // Show success toast
+                    showToast('Knowledge base updated successfully', 'success');
+                    
+                    // Save source info to localStorage
+                    localStorage.setItem('currentSourceTitle', updateData.title);
+                    localStorage.setItem('currentDocId', data.doc_id);
+                    
+                    // Store in history
+                    const docHistory = JSON.parse(localStorage.getItem('docHistory') || '[]');
+                    if (!docHistory.find(doc => doc.id === data.doc_id)) {
+                        docHistory.push({ id: data.doc_id, title: updateData.title });
+                        localStorage.setItem('docHistory', JSON.stringify(docHistory));
+                    }
+                    
+                    // Remove existing source toast if present
+                    const existingToasts = document.querySelectorAll('.toast.persistent');
+                    existingToasts.forEach(toast => toast.remove());
+                    
+                    // Create new persistent source title toast
+                    const sourceToast = document.createElement('div');
+                    sourceToast.className = 'toast persistent';
+                    
+                    // Create link element
+                    const link = document.createElement('a');
+                    link.href = docUrl;
+                    link.target = '_blank';
+                    link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
+                    link.textContent = `Current source: ${updateData.title}`;
+                    sourceToast.appendChild(link);
+                    document.getElementById('toastContainer').appendChild(sourceToast);
+                    setTimeout(() => sourceToast.classList.add('show'), 10);
+
+                } else {
+                    showToast('Failed to update knowledge base. Please try again.', 'error');
+                }
+            } else {
+                if (window.confirm('No content detected in the document. Would you like to wait for content to be added?')) {
+                    setTimeout(checkAndUpdate, 10000);
+                }
+            }
+        };
+        
+        showToast('A new Google Doc has been created and opened. Please paste your text and save it.');
+        setTimeout(checkAndUpdate, 10000); // Initial check after 10 seconds
+        
+    } catch (error) {
+        console.error('Error:', error);
+        alert(`An error occurred: ${error.message}`);
+    }
 }
 let currentAudio = null;
 let isPlaying = false;
