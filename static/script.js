@@ -204,7 +204,11 @@ async function handleChangeText() {
                     localStorage.setItem('currentSourceTitle', updateData.title);
                     localStorage.setItem('currentDocId', data.doc_id);
                     
-                    // Create persistent source title toast
+                    // Remove existing source toast if present
+                    const existingToasts = document.querySelectorAll('.toast.persistent');
+                    existingToasts.forEach(toast => toast.remove());
+                    
+                    // Create new persistent source title toast
                     const sourceToast = document.createElement('div');
                     sourceToast.className = 'toast persistent';
                     
@@ -215,6 +219,8 @@ async function handleChangeText() {
                     link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
                     link.textContent = `Current source: ${updateData.title}`;
                     sourceToast.appendChild(link);
+                    document.getElementById('toastContainer').appendChild(sourceToast);
+                    setTimeout(() => sourceToast.classList.add('show'), 10);
 
                 } else {
                     showToast('Failed to update knowledge base. Please try again.', 'error');
