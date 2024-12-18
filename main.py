@@ -43,11 +43,7 @@ def update_embeddings():
     doc_id = data.get('doc_id')
     if doc_id:
         print(f"Updating embeddings for document: {doc_id}")
-        text = get_text_from_doc(doc_id)
-        if text:
-            print(f"New document ID: {doc_id}")
-            print(f"First 100 characters of new text: {text[:100]}")
-            create_embeddings(text)
+        if change_text_source(doc_id):
             print("Embeddings updated successfully")
             return jsonify({"success": True})
         else:

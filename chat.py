@@ -1,4 +1,3 @@
-
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents.base import Document
 from transformers import DistilBertTokenizerFast
@@ -19,11 +18,14 @@ openai_api_key = os.getenv('OPENAI_API_KEY')
 
 chat_history = []
 text = ''
+doc_id = ''
 qa_chain = None
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 
+
 def create_doc(title=None):
+    global doc_id
     if title is None:
         title = f"Knowledge Source {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     try:
@@ -31,40 +33,35 @@ def create_doc(title=None):
             creds, scopes=['https://www.googleapis.com/auth/drive.file'])
         service = build('docs', 'v1', credentials=credentials)
         drive_service = build('drive', 'v3', credentials=credentials)
-        
+
         # Create document
-        doc_body = {
-            'title': title
-        }
+        doc_body = {'title': title}
         doc = service.documents().create(body=doc_body).execute()
         doc_id = doc['documentId']
-        
+
         # Set public access
-        permission = {
-            'type': 'anyone',
-            'role': 'writer'
-        }
-        drive_service.permissions().create(
-            fileId=doc_id,
-            body=permission).execute()
-        
+        permission = {'type': 'anyone', 'role': 'writer'}
+        drive_service.permissions().create(fileId=doc_id,
+                                           body=permission).execute()
+
         # Get initial content
         initial_content = get_text_from_doc(doc_id)
         print(f"Created new document with ID: {doc_id}")
         print(f"Initial content (first 100 chars): {initial_content[:100]}")
-        
         return doc_id
     except Exception as e:
         print(f"Error creating document: {str(e)}")
         return None
 
+
 def get_text_from_doc(doc_id):
+    global text
     try:
         credentials = service_account.Credentials.from_service_account_info(
             creds, scopes=SCOPES)
         service = build('docs', 'v1', credentials=credentials)
         document = service.documents().get(documentId=doc_id).execute()
-        text = []
+        textLst = []
         for element in document.get('body', {}).get('content', []):
             if 'paragraph' in element:
                 line_content = ''
@@ -72,15 +69,40 @@ def get_text_from_doc(doc_id):
                     if 'textRun' in para_element:
                         line_content += para_element['textRun']['content']
                 if line_content.strip():
-                    text.append(line_content)
-        return '\n'.join(text)
+                    textLst.append(line_content)
+        text = '\n'.join(textLst)
+        return text
     except Exception as e:
         return str(e)
 
+
+def reset_qa_chain():
+    global qa_chain, chat_history
+    qa_chain = None
+    chat_history = []
+
+def change_text_source(doc_id):
+    """Handle text source change and create new embeddings"""
+    global text
+    try:
+        new_text = get_text_from_doc(doc_id)
+        if new_text:
+            text = new_text
+            print(f"New document ID: {doc_id}")
+            print(f"First 100 characters of new text: {text[:100]}")
+            reset_qa_chain()
+            create_embeddings(text)
+            return True
+        return False
+    except Exception as e:
+        print(f"Error changing text source: {str(e)}")
+        return False
+
 def create_embeddings(text):
     global qa_chain
-    
-    tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
+
+    tokenizer = DistilBertTokenizerFast.from_pretrained(
+        "distilbert-base-uncased")
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=512,
         chunk_overlap=20,
@@ -93,10 +115,9 @@ def create_embeddings(text):
     model_kwargs = {'device': 'cpu'}
     encode_kwargs = {'normalize_embeddings': False}
 
-    embedding_function = HuggingFaceEmbeddings(
-        model_name=model_name,
-        model_kwargs=model_kwargs,
-        encode_kwargs=encode_kwargs)
+    embedding_function = HuggingFaceEmbeddings(model_name=model_name,
+                                               model_kwargs=model_kwargs,
+                                               encode_kwargs=encode_kwargs)
 
     llm = OpenAI(
         temperature=0.2,
@@ -107,7 +128,7 @@ def create_embeddings(text):
 
     db = Chroma.from_documents(documents, embedding_function)
     retriever = db.as_retriever(search_kwargs={"k": 2})
-    
+
     prompt_template = PromptTemplate(
         input_variables=["question", "context"],
         template=
@@ -141,15 +162,18 @@ def create_embeddings(text):
         memory=None,
         combine_docs_chain_kwargs={'prompt': prompt_template})
 
+
 def initialize_embeddings():
     global text
     doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
     text = get_text_from_doc(doc_id)
     create_embeddings(text)
 
-def on_submit(query):
-    global chat_history, qa_chain
 
+def on_submit(query):
+    global chat_history, qa_chain, text
+    print("getting answers based on doc ", doc_id)
+    print("text snippet ", text[0:100])
     if qa_chain is None:
         initialize_embeddings()
 
@@ -159,7 +183,8 @@ def on_submit(query):
 
     from google.cloud import texttospeech
     credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
-    client = texttospeech.TextToSpeechClient.from_service_account_info(credentials_dict)
+    client = texttospeech.TextToSpeechClient.from_service_account_info(
+        credentials_dict)
 
     synthesis_input = texttospeech.SynthesisInput(text=answer)
     voice = texttospeech.VoiceSelectionParams(
@@ -172,10 +197,9 @@ def on_submit(query):
         speaking_rate=1.0,
         pitch=0.0)
 
-    response = client.synthesize_speech(
-        input=synthesis_input,
-        voice=voice,
-        audio_config=audio_config)
+    response = client.synthesize_speech(input=synthesis_input,
+                                        voice=voice,
+                                        audio_config=audio_config)
 
     audio_path = "static/response.mp3"
     with open(audio_path, "wb") as out:
