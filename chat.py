@@ -7,10 +7,8 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain_chroma import Chroma
 from dotenv import load_dotenv
 import os
-from google.cloud import texttospeech
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-from datetime import datetime
 import json
 from langchain.prompts import PromptTemplate
 
@@ -29,30 +27,8 @@ creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 
 
 # Get contents in webpage from GDocs
-def create_new_doc():
-    try:
-        credentials = service_account.Credentials.from_service_account_info(
-            creds, scopes=['https://www.googleapis.com/auth/drive.file'])
-        service = build('docs', 'v1', credentials=credentials)
-        drive_service = build('drive', 'v3', credentials=credentials)
-        
-        # Create a new Google Doc
-        doc = drive_service.files().create(
-            body={
-                'name': f'Knowl Text Source {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
-                'mimeType': 'application/vnd.google-docs.document'
-            }
-        ).execute()
-        
-        return doc['id']
-    except Exception as e:
-        print(f"Error creating doc: {e}")
-        return None
-
 def updateText():
-    doc_id = create_new_doc()
-    if not doc_id:
-        doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"  # Fallback to default doc
+    doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
     try:
         credentials = service_account.Credentials.from_service_account_info(
             creds, scopes=SCOPES)
@@ -142,6 +118,9 @@ def on_submit(query):
     chat_history.append((query, answer))
 
     # Generate audio using Google Cloud Text-to-Speech
+    from google.cloud import texttospeech
+    import json
+    import os
 
     # Initialize Text-to-Speech client
     credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])

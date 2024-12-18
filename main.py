@@ -1,6 +1,5 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template
 from message_handler import receive_message
-from chat import create_new_doc
 
 app = Flask(__name__)
 # Simple storage to keep messages in memory
@@ -16,13 +15,6 @@ def chat():
 def submit_message():
     new_messages = receive_message()
     global messages
-
-
-@app.route('/create_doc', methods=['POST'])
-def create_doc():
-    doc_id = create_new_doc()
-    return jsonify({'doc_id': doc_id})
-
     messages = new_messages  # Update the messages with the latest messages
     return new_messages
 
