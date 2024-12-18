@@ -155,7 +155,6 @@ async function handleChangeText() {
             
             if (checkData.has_content) {
                 const loadingToast = showPersistentToast('Updating embeddings...', true);
-                document.getElementById('loading').style.display = 'block';
                 
                 const updateResponse = await fetch('/update_embeddings', {
                     method: 'POST',
