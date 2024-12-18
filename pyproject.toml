@@ -18,6 +18,7 @@ requests = "^2.32.3"
 transformers = "^4.47.0"
 google-auth = "^2.27.0" 
 google-api-python-client = "^2.120.0" 
+google-cloud-texttospeech = "^2.22.0"
 
 [[tool.poetry.source]]
 name = "pytorch"
