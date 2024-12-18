@@ -26,7 +26,7 @@ creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 
 def create_doc(title=None):
     print("\n=== Creating New Document ===")
-    global doc_id
+    global doc_id, text, qa_chain
     if title is None:
         title = f"Knowledge Source {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     print(f"Creating doc with title: {title}")
@@ -68,7 +68,7 @@ def get_doc_title(doc_id):
         return "Untitled Document"
 
 def get_text_from_doc(doc_id):
-    global text
+    global text, qa_chain
     try:
         credentials = service_account.Credentials.from_service_account_info(
             creds, scopes=SCOPES)
@@ -184,11 +184,12 @@ def create_embeddings(text):
 
 def initialize_embeddings():
     print("\n=== Initializing Default Embeddings ===")
-    global text, doc_id
+    global text, doc_id, qa_chain
     doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
     print(f"Using default doc_id: {doc_id}")
     text = get_text_from_doc(doc_id)
     print(f"Retrieved text (first 100 chars): {text[:100]}")
+    qa_chain = None
     create_embeddings(text)
 
 
