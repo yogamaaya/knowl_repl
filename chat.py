@@ -97,17 +97,22 @@ def on_submit(query):
     prompt_template = PromptTemplate(
         input_variables=["question", "context"],
         template=
-        """As a kind, friendly and empathetic assistant, acknowledge the thoughtfulness of the question. 
-        Then provide a detailed response that:
-        1. Starts with a simple kind acknowledgement.
-        2. Stays strictly focused on the given context only.
-        3. Uses specific examples and references from the text, including line numbers [L#] when quoting.
-        4. Has long explanation based on direct excerpts from the text, always citing the line numbers.
-        5. Ends always with a concluding thank you.
+        """As a kind, friendly and empathetic assistant, write a well-structured essay that:
+        1. Begins with a brief acknowledgment of the question
+        2. Uses multiple direct quotes from the text, always enclosed in single quotes ''
+        3. After each quote, provides detailed analysis and explanation
+        4. Maintains clear paragraph structure with one main point per paragraph
+        5. Uses transitional phrases between paragraphs for flow
+        6. Ends with a concluding paragraph and thank you
+
+        Important:
+        - Always use direct quotes from the text enclosed in single quotes ''
+        - Include line reference [L#] before each quote
+        - Support every major point with a relevant quote
+        - Provide context and analysis after each quote
+
         Question: {question}
         Context: {context}
-
-        When referencing text, always include the line number in [L#] format.
         """)
 
     qa_chain = ConversationalRetrievalChain.from_llm(
@@ -130,7 +135,8 @@ def on_submit(query):
 
     # Initialize Text-to-Speech client
     credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
-    client = texttospeech.TextToSpeechClient.from_service_account_info(credentials_dict)
+    client = texttospeech.TextToSpeechClient.from_service_account_info(
+        credentials_dict)
 
     synthesis_input = texttospeech.SynthesisInput(text=answer)
 
@@ -138,20 +144,18 @@ def on_submit(query):
     voice = texttospeech.VoiceSelectionParams(
         language_code="en-US",
         name="en-US-Studio-O",  # A natural-sounding female voice
-        ssml_gender=texttospeech.SsmlVoiceGender.FEMALE
-    )
+        ssml_gender=texttospeech.SsmlVoiceGender.FEMALE)
 
     # Select the type of audio file
     audio_config = texttospeech.AudioConfig(
         audio_encoding=texttospeech.AudioEncoding.MP3,
         speaking_rate=1.0,
-        pitch=0.0
-    )
+        pitch=0.0)
 
     # Perform the text-to-speech request
-    response = client.synthesize_speech(
-        input=synthesis_input, voice=voice, audio_config=audio_config
-    )
+    response = client.synthesize_speech(input=synthesis_input,
+                                        voice=voice,
+                                        audio_config=audio_config)
 
     # Save the audio file
     audio_path = "static/response.mp3"
