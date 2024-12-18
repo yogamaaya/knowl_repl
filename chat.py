@@ -11,6 +11,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import json
 from langchain.prompts import PromptTemplate
+from datetime import datetime
 
 # import requests
 # from bs4 import BeautifulSoup
@@ -30,54 +31,65 @@ creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 def create_new_doc():
     try:
         credentials = service_account.Credentials.from_service_account_info(
-            creds, scopes=[
+            creds,
+            scopes=[
                 'https://www.googleapis.com/auth/drive.file',
                 'https://www.googleapis.com/auth/documents',
                 'https://www.googleapis.com/auth/drive'
             ])
         service = build('docs', 'v1', credentials=credentials)
         drive_service = build('drive', 'v3', credentials=credentials)
-        
+
         # Create the document
         doc = drive_service.files().create(
             body={
-                'name': f'Knowl Text Source {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
+                'name':
+                f'Knowl Text Source {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
                 'mimeType': 'application/vnd.google-apps.document'
-            }
-        ).execute()
-        
+            }).execute()
+
         # Set permissions to allow editing by owner
-        drive_service.permissions().create(
-            fileId=doc['id'],
-            body={
-                'type': 'anyone',
-                'role': 'writer',
-                'allowFileDiscovery': False
-            }
-        ).execute()
-        
+        drive_service.permissions().create(fileId=doc['id'],
+                                           body={
+                                               'type': 'anyone',
+                                               'role': 'writer',
+                                               'allowFileDiscovery': False
+                                           }).execute()
+
         return doc['id']
     except Exception as e:
         print(f"Error creating doc: {e}")
         return None
 
+
 def updateText():
     doc_id = create_new_doc()
+    print("new doc made? " + str(doc_id))
     if not doc_id:
+        print("not new ? " + str(doc_id))
         doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"  # Fallback to default doc
     try:
+        print(" IS TRY BLOCK HITTING? ")
         credentials = service_account.Credentials.from_service_account_info(
             creds, scopes=SCOPES)
         service = build('docs', 'v1', credentials=credentials)
         document = service.documents().get(documentId=doc_id).execute()
         text = ''
         # Changed doc_content to document.get('body', {}).get('content', [])
-        for element in document.get('body', {}).get('content', []):
+        content = document.get('body', {}).get('content', [])
+        if not content:
+            return "Please paste your text into the Google Doc and try again."
+            
+        for element in content:
             if 'paragraph' in element:
                 for para_element in element['paragraph']['elements']:
                     if 'textRun' in para_element:
                         text += para_element['textRun']['content']
-
+        
+        if not text.strip():
+            return "Please paste your text into the Google Doc and try again."
+            
+        print("TEXT ADDED? ", text)
         return text
     except Exception as e:
         return str(e)
