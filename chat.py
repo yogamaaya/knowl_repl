@@ -117,8 +117,12 @@ def change_text_source(new_doc_id):
 def create_embeddings(text):
     print("\n=== Creating Embeddings ===")
     print(f"Text preview (first 100 chars): {text[:100]}")
-    global qa_chain
-
+    global qa_chain, chat_history
+    
+    # Reset context
+    chat_history = []
+    qa_chain = None
+    
     print("Initializing tokenizer...")
     tokenizer = DistilBertTokenizerFast.from_pretrained(
         "distilbert-base-uncased")
