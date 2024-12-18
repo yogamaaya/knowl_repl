@@ -91,6 +91,43 @@ function handleDonate() {
 window.open('https://www.buymeacoffee.com/knowl', '_blank');
 }
 
+function showToast(message, type = '') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+
+    container.appendChild(toast);
+
+    // Trigger reflow to enable animation
+    toast.offsetHeight;
+
+    // Show toast
+    setTimeout(() => toast.classList.add('show'), 10);
+
+    // Remove toast after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => container.removeChild(toast), 300);
+    }, 3000);
+}
+
+function showPersistentToast(message, isPersistent = false) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${isPersistent ? 'persistent' : ''}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    if (!isPersistent) {
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => container.removeChild(toast), 300);
+        }, 3000);
+    }
+    return toast;
+}
+
 async function handleChangeText() {
     try {
         const response = await fetch('/create_doc', {
@@ -117,6 +154,9 @@ async function handleChangeText() {
             const checkData = await checkResponse.json();
             
             if (checkData.has_content) {
+                const loadingToast = showPersistentToast('Updating embeddings...', true);
+                document.getElementById('loading').style.display = 'block';
+                
                 const updateResponse = await fetch('/update_embeddings', {
                     method: 'POST',
                     headers: {

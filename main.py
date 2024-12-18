@@ -45,6 +45,19 @@ def update_embeddings():
     if doc_id:
         print(f"Updating embeddings for document: {doc_id}")
         if change_text_source(doc_id):
+            # Get document title
+            title = get_doc_title(doc_id)
+            print("Embeddings updated successfully")
+            return jsonify({"success": True, "title": title})
+        else:
+            return jsonify({"success": False}), 400
+    return jsonify({"error": "No document ID provided"}), 400
+def update_embeddings():
+    data = request.get_json()
+    doc_id = data.get('doc_id')
+    if doc_id:
+        print(f"Updating embeddings for document: {doc_id}")
+        if change_text_source(doc_id):
             print("Embeddings updated successfully")
             return jsonify({"success": True})
         else:

@@ -467,3 +467,9 @@ margin-bottom: 5px;
 .toast.error {
     background: rgba(245, 101, 101, 0.95);
 }
+
+.toast.persistent {
+    transform: translateX(0);
+    background: rgba(116, 4, 118, 0.95);
+    border-left: 4px solid white;
+}

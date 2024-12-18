@@ -56,6 +56,17 @@ def create_doc(title=None):
         return None
 
 
+def get_doc_title(doc_id):
+    try:
+        credentials = service_account.Credentials.from_service_account_info(
+            creds, scopes=SCOPES)
+        service = build('docs', 'v1', credentials=credentials)
+        document = service.documents().get(documentId=doc_id).execute()
+        return document.get('title', 'Untitled Document')
+    except Exception as e:
+        print(f"Error getting document title: {str(e)}")
+        return "Untitled Document"
+
 def get_text_from_doc(doc_id):
     global text
     try:
@@ -83,6 +94,7 @@ def reset_qa_chain():
     qa_chain = None
     chat_history = []
 
+
 def change_text_source(doc_id):
     """Handle text source change and create new embeddings"""
     global text
@@ -99,6 +111,7 @@ def change_text_source(doc_id):
     except Exception as e:
         print(f"Error changing text source: {str(e)}")
         return False
+
 
 def create_embeddings(text):
     print("\n=== Creating Embeddings ===")
@@ -180,7 +193,7 @@ def initialize_embeddings():
 
 def on_submit(query):
     print("\n=== Processing Query ===")
-    global chat_history, qa_chain, text
+    global chat_history, qa_chain, text, doc_id
     print(f"Current doc_id: {doc_id}")
     print(f"Current text preview: {text[:100]}")
     print(f"Received query: {query}")
