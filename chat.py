@@ -19,18 +19,33 @@ openai_api_key = os.getenv('OPENAI_API_KEY')
 chat_history = []
 text = ''
 qa_chain = None
-SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
+SCOPES = ['https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/documents']
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 
 def create_doc(title="New Knowledge Source"):
-    credentials = service_account.Credentials.from_service_account_info(
-        creds, scopes=['https://www.googleapis.com/auth/drive.file'])
-    service = build('docs', 'v1', credentials=credentials)
-    doc_body = {
-        'title': title
-    }
-    doc = service.documents().create(body=doc_body).execute()
-    return doc['documentId']
+    try:
+        credentials = service_account.Credentials.from_service_account_info(
+            creds, scopes=SCOPES)
+        service = build('docs', 'v1', credentials=credentials)
+        doc_body = {
+            'title': title
+        }
+        doc = service.documents().create(body=doc_body).execute()
+        
+        # Make the document publicly editable
+        drive_service = build('drive', 'v3', credentials=credentials)
+        permission = {
+            'type': 'anyone',
+            'role': 'writer'
+        }
+        drive_service.permissions().create(
+            fileId=doc['documentId'],
+            body=permission).execute()
+            
+        return doc['documentId']
+    except Exception as e:
+        print(f"Error creating document: {str(e)}")
+        return None
 
 def get_text_from_doc(doc_id):
     try:

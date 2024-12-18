@@ -22,7 +22,9 @@ def submit_message():
 @app.route('/create_doc', methods=['POST'])
 def new_doc():
     doc_id = create_doc()
-    return jsonify({"doc_id": doc_id})
+    if doc_id:
+        return jsonify({"doc_id": doc_id})
+    return jsonify({"error": "Failed to create document. Please try again."}), 500
 
 @app.route('/update_embeddings', methods=['POST'])
 def update_embeddings():
