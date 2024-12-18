@@ -46,6 +46,17 @@ def check_doc_content():
     return jsonify({"has_content": False})
 
 
+@app.route('/get_doc_preview', methods=['POST'])
+def get_doc_preview():
+    data = request.get_json()
+    doc_id = data.get('doc_id')
+    if doc_id:
+        text = get_text_from_doc(doc_id)
+        # Get first 200 characters as preview
+        preview = text[:200] + "..." if len(text) > 200 else text
+        return jsonify({"preview": preview})
+    return jsonify({"preview": "Preview not available"}), 404
+
 @app.route('/update_embeddings', methods=['POST'])
 def update_embeddings():
     data = request.get_json()
