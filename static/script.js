@@ -70,6 +70,7 @@ function updateChat(messages) {
         }
         const messageElement = document.createElement('p');
         messageElement.innerHTML = msg;
+        messageElement.classList.add('chat-message');
         chatBox.appendChild(messageElement);
     }
 }
