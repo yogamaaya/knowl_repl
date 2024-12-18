@@ -9,7 +9,10 @@ def receive_message():
         data = request.get_json()
         message = data.get('message', '')
         messages = []
-        if message:
+        if message == 'CREATE_NEW_DOC':
+            doc_id = create_new_doc()
+            return jsonify({'doc_id': doc_id})
+        elif message:
             messages.append(message)
             reply = on_submit(message)
             messages.append(reply['text'])

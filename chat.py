@@ -27,8 +27,44 @@ creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 
 
 # Get contents in webpage from GDocs
+def create_new_doc():
+    try:
+        credentials = service_account.Credentials.from_service_account_info(
+            creds, scopes=[
+                'https://www.googleapis.com/auth/drive.file',
+                'https://www.googleapis.com/auth/documents',
+                'https://www.googleapis.com/auth/drive'
+            ])
+        service = build('docs', 'v1', credentials=credentials)
+        drive_service = build('drive', 'v3', credentials=credentials)
+        
+        # Create the document
+        doc = drive_service.files().create(
+            body={
+                'name': f'Knowl Text Source {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}',
+                'mimeType': 'application/vnd.google-apps.document'
+            }
+        ).execute()
+        
+        # Set permissions to allow editing by owner
+        drive_service.permissions().create(
+            fileId=doc['id'],
+            body={
+                'type': 'anyone',
+                'role': 'writer',
+                'allowFileDiscovery': False
+            }
+        ).execute()
+        
+        return doc['id']
+    except Exception as e:
+        print(f"Error creating doc: {e}")
+        return None
+
 def updateText():
-    doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
+    doc_id = create_new_doc()
+    if not doc_id:
+        doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"  # Fallback to default doc
     try:
         credentials = service_account.Credentials.from_service_account_info(
             creds, scopes=SCOPES)
@@ -93,15 +129,14 @@ def on_submit(query):
         input_variables=["question", "context"],
         template=
         """As a kind, friendly and empathetic assistant, acknowledge the thoughtfulness of the question. 
-        Then provide a detailed response that:
+        Then provide a long and detailed response that:
         1. Starts with a simple kind acknowledgement.
         2. Stays strictly focused on the given context only.
-        3. Always uses direct quotes from the text enclosed in quotation marks ("").
-        4. Includes the line reference [L#] before each quote.
+        3. Includes a few direct quote sentences within the long answer, enclosed within ''.
         5. Provides explanation and analysis after each quote.
-        6. Ends always with a concluding thank you.
+        6. Ends always with a concluding thank you and a full stop.
         
-        Remember: Every fact or claim must be supported by a direct quote from the text with its line reference.
+        Remember: Every fact or claim must be supported by a direct quote from the text.
         
         Question: {question}
         Context: {context}
@@ -128,7 +163,8 @@ def on_submit(query):
 
     # Initialize Text-to-Speech client
     credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
-    client = texttospeech.TextToSpeechClient.from_service_account_info(credentials_dict)
+    client = texttospeech.TextToSpeechClient.from_service_account_info(
+        credentials_dict)
 
     synthesis_input = texttospeech.SynthesisInput(text=answer)
 
@@ -136,20 +172,18 @@ def on_submit(query):
     voice = texttospeech.VoiceSelectionParams(
         language_code="en-US",
         name="en-US-Studio-O",  # A natural-sounding female voice
-        ssml_gender=texttospeech.SsmlVoiceGender.FEMALE
-    )
+        ssml_gender=texttospeech.SsmlVoiceGender.FEMALE)
 
     # Select the type of audio file
     audio_config = texttospeech.AudioConfig(
         audio_encoding=texttospeech.AudioEncoding.MP3,
         speaking_rate=1.0,
-        pitch=0.0
-    )
+        pitch=0.0)
 
     # Perform the text-to-speech request
-    response = client.synthesize_speech(
-        input=synthesis_input, voice=voice, audio_config=audio_config
-    )
+    response = client.synthesize_speech(input=synthesis_input,
+                                        voice=voice,
+                                        audio_config=audio_config)
 
     # Save the audio file
     audio_path = "static/response.mp3"
