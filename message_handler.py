@@ -10,21 +10,12 @@ logger = logging.getLogger(__name__)
 ip_messages = {}
 
 def receive_message():
-    try:
-        ip_address = request.remote_addr
-        if not ip_address:
-            logger.error("No IP address found in request")
-            return jsonify({'error': 'Invalid request'}), 400
-            
-        logger.info(f"Received message from IP: {ip_address}")
-        
-        if not request.is_json:
-            logger.error("Invalid content type received")
-            return jsonify({'error': 'Invalid Content-Type'}), 400
-            
-        if request.content_type != 'application/json':
-            logger.error("Invalid content type received")
-            return jsonify({'error': 'Invalid Content-Type'}), 400
+    ip_address = request.remote_addr
+    logger.info(f"Received message from IP: {ip_address}")
+    
+    if request.content_type != 'application/json':
+        logger.error("Invalid content type received")
+        return jsonify({'error': 'Invalid Content-Type'}), 400
         
     data = request.get_json()
     message = data.get('message', '')

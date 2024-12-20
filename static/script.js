@@ -6,6 +6,17 @@ let currentAudio = null;
 let isPlaying = false;
 let currentPageMessages = [];
 
+// Previous functions remain unchanged
+function change() {
+    var elem = document.getElementById("tips");
+    if (elem.value=="Show Tips!") {
+        elem.value = "Close";
+        elem.innerHTML = "Close";
+    } else {
+        elem.value = "Show Tips!";
+        elem.innerHTML = "Show";
+    }
+}
 
 async function submitMessage(event) {
     event.preventDefault();
@@ -269,41 +280,27 @@ function showPersistentToast(message, isPersistent = false) {
     return toast;
 }
 
-async function toggleAudio() {
-    try {
-        const playButton = document.getElementById('playAudioBtn');
-        
-        if (!currentAudio && window.lastAudioUrl) {
-            currentAudio = new Audio(window.lastAudioUrl);
-            currentAudio.addEventListener('ended', () => {
-                playButton.textContent = 'Play Response 🔊';
-                isPlaying = false;
-            });
-            currentAudio.addEventListener('error', (e) => {
-                console.error('Audio playback error:', e);
-                showToast('Error playing audio', 'error');
-            });
+function toggleAudio() {
+    const playButton = document.getElementById('playAudioBtn');
+    
+    if (!currentAudio && window.lastAudioUrl) {
+        currentAudio = new Audio(window.lastAudioUrl);
+        currentAudio.addEventListener('ended', () => {
+            playButton.textContent = 'Play Response 🔊';
+            isPlaying = false;
+        });
+    }
+    
+    if (currentAudio) {
+        if (isPlaying) {
+            currentAudio.pause();
+            playButton.textContent = 'Play Response 🔊';
+            isPlaying = false;
+        } else {
+            currentAudio.play();
+            playButton.textContent = 'Pause Response ⏸️';
+            isPlaying = true;
         }
-        
-        if (currentAudio) {
-            if (isPlaying) {
-                await currentAudio.pause();
-                playButton.textContent = 'Play Response 🔊';
-                isPlaying = false;
-            } else {
-                try {
-                    await currentAudio.play();
-                    playButton.textContent = 'Pause Response ⏸️';
-                    isPlaying = true;
-                } catch (error) {
-                    console.error('Playback failed:', error);
-                    showToast('Audio playback failed', 'error');
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Audio toggle error:', error);
-        showToast('Audio playback error', 'error');
     }
 }
 
