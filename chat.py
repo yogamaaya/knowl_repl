@@ -220,9 +220,10 @@ def on_submit(query, ip_address):
     if qa_chain is None:
         initialize_embeddings()
 
-    result = qa_chain({"question": query, "chat_history": chat_history[-2:]})
+    chat_history = chat_histories.get(ip_address, [])
+    result = qa_chain({"question": query, "chat_history": chat_history[-2:] if chat_history else []})
     answer = result['answer']
-    chat_history.append((query, answer))
+    chat_histories[ip_address] = chat_history + [(query, answer)]
 
     from google.cloud import texttospeech
     credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
