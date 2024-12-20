@@ -1,4 +1,15 @@
 
+function copyText(button) {
+    const messageDiv = button.closest('.chat-message');
+    const textToCopy = messageDiv.querySelector('p').textContent;
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        const icon = button.querySelector('.copy-icon');
+        icon.style.fill = '#4CAF50';
+        setTimeout(() => icon.style.fill = '#740476', 1000);
+    });
+}
+
+
 let currentDocCheck = null;
 let currentLoadingToast = null;
 let latestDocId = null;
@@ -6,17 +17,7 @@ let currentAudio = null;
 let isPlaying = false;
 let currentPageMessages = [];
 
-// Previous functions remain unchanged
-function change() {
-    var elem = document.getElementById("tips");
-    if (elem.value=="Show Tips!") {
-        elem.value = "Close";
-        elem.innerHTML = "Close";
-    } else {
-        elem.value = "Show Tips!";
-        elem.innerHTML = "Show";
-    }
-}
+
 
 async function submitMessage(event) {
     event.preventDefault();
@@ -77,16 +78,27 @@ function updateChat(messages) {
         const lastAnswerIndex = currentPageMessages.length - 1;
 
         // Display last question
-        const questionMsg = `<img src="/static/user_logo.png" alt="Knowl Logo" class="logo"> ${currentPageMessages[lastQuestionIndex]}</li>`;
-        const questionElement = document.createElement('p');
-        questionElement.innerHTML = questionMsg;
-        chatBox.appendChild(questionElement);
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'chat-message';
+        questionDiv.innerHTML = `
+            <img src="/static/user_logo.png" alt="User Logo" class="logo">
+            <p>${currentPageMessages[lastQuestionIndex]}</p>
+        `;
+        chatBox.appendChild(questionDiv);
 
         // Display last answer
-        const answerMsg = `<img src="/static/knowl_logo.png" alt="Knowl Logo" class="logo"> ${currentPageMessages[lastAnswerIndex]}</li>`;
-        const answerElement = document.createElement('p');
-        answerElement.innerHTML = answerMsg;
-        chatBox.appendChild(answerElement);
+        const answerDiv = document.createElement('div');
+        answerDiv.className = 'chat-message';
+        answerDiv.innerHTML = `
+            <img src="/static/knowl_logo.png" alt="Knowl Logo" class="logo">
+            <p>${currentPageMessages[lastAnswerIndex]}</p>
+            <button class="copy-btn" onclick="copyText(this)" title="Copy to clipboard">
+                <svg class="copy-icon" viewBox="0 0 24 24">
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                </svg>
+            </button>
+        `;
+        chatBox.appendChild(answerDiv);
     }
 }
 
@@ -302,15 +314,15 @@ function toggleAudio() {
 window.addEventListener('load', async function() {
     currentPageMessages = [
         "Who is Knowl and How to Use?",
-        `✨ Knowl is intented to be your fun partner to understand a text from a different perspective of your own ✨<br><br>
-        🌕 The way to helpful responses is in asking helpful questions. Here are some tips to ask effectively:<br><br>
-        🌖 Try prefacing questions with "In this context", "According to this text" etc!<br><br>
-        🌗 Whenever you paste new text, please ask <b>new and specific questions to get new answers.</b><br>
-        Knowl retains all information of text corpora given to date.<br><br>
-        🌘 You can try rephrasing the same question or command if a response doesn't please you!<br>
-        A starter question is "What is the main focus of this text?"<br><br>
-        🌑 Try to use keywords of the text, and reference the current context as much as possible.<br><br>
-        <p>PS: Please be patient with Knowl as she thinks~ 🦉</p>`
+        `✨ Knowl is intented to be your fun partner to understand a text from a different perspective of your own ✨
+        🌕 The way to helpful responses is in asking helpful questions. Here are some tips to ask effectively:
+        🌖 Try prefacing questions with "In this context", "According to this text" etc!
+        🌗 Whenever you paste new text, please ask <b>new and specific questions to get new answers.</b>
+        Knowl retains all information of text corpora given to date.<br>
+        🌘 You can try rephrasing the same question or command if a response doesn't please you!
+        A starter question is "What is the main focus of this text?"
+        🌑 Try to use keywords of the text, and reference the current context as much as possible.
+        PS: Please be patient with Knowl as she thinks~ 🦉`
     ];
     updateChat(currentPageMessages);
     
