@@ -221,7 +221,7 @@ async function handleChangeText() {
                             break;
                         }
                         
-                        await new Promise(resolve => setTimeout(resolve, 2000)); // Increased interval
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Check every second
                     } catch (error) {
                         if (error.name === 'AbortError') {
                             return false;

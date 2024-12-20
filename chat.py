@@ -72,6 +72,7 @@ def get_doc_title(doc_id):
 def get_text_from_doc(doc_id):
     global text, qa_chain
     try:
+        print(f"\nChecking content for doc_id: {doc_id}")
         credentials = service_account.Credentials.from_service_account_info(
             creds, scopes=SCOPES)
         service = build('docs', 'v1', credentials=credentials)
