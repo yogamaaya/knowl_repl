@@ -252,10 +252,11 @@ async function handleChangeText() {
                     
                     return true;
                 }
+            } catch (error) {
+                throw new Error('Failed to update knowledge base: ' + error.message);
             }
-            
-            return true;
-                }
+            return false;
+        }
                 
                 // Wait 1 second before next check
                 await new Promise(resolve => setTimeout(resolve, 1000));
