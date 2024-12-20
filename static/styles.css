@@ -65,11 +65,9 @@ html, body {
     position: sticky;
     top: 0;
     width: 100%;
-    background-color: #020d0c;
-    background: 
-    url('/static/starry.gif'); 
+    background: url('/static/starry.gif');
     color: #ffffff;
-    padding: min(2vh, 20px) min(2vw, 20px);
+    padding: 8px;
     text-align: center;
     z-index: 1000;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -82,16 +80,14 @@ html, body {
 
 h1 {
     margin: 0;
-    /* Responsive font size that scales with viewport */
-    font-size: clamp(5rem, 4vw + 1rem, 5rem);
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
     font-weight: 500;
-    letter-spacing: calc(0.5px + 0.05vw);
+    letter-spacing: 0.5px;
     line-height: 1.2;
-    padding: min(1vh, 10px) 0;
+    padding: 5px 0;
     text-shadow: 0 0 10px rgb(231, 179, 255, 0.3);
     width: 100%;
     overflow-wrap: break-word;
-    hyphens: auto;
 }
 
 
@@ -198,14 +194,13 @@ button[type="submit"]:active {
 }
 
 .chatBox {
-  display: 1 0 auto;
-  flex-direction: column;
+  display: flow-root;
   list-style-type: none;
-  background-color: #ffffff; /* Pale violet color */
-  padding: 15px;
+  background-color: #ffffff;
+  padding: 10px 5px;
   overflow-y: auto;
   border-radius: 8px;
-margin-bottom: 5px;
+  margin-bottom: 2px;
 }
 
 .logo {
@@ -302,16 +297,16 @@ margin-bottom: 5px;
 }
 
 .change-text {
-    position: relative; /* Change to relative positioning */
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 20px;
-    padding: 9px 0;
+    gap: 10px;
+    padding: 5px;
     width: 100%;
     background-color: rgb(49 13 72);
-    z-index: 999; /* Keep below sticky header */
-    margin-top: 0; /* Remove any top margin */
+    z-index: 999;
+    margin-top: 0;
 }
 
 /* Add space between header content and change-text button */
