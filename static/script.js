@@ -392,22 +392,15 @@ window.addEventListener('load', function() {
     updateChat(currentPageMessages);
     
     try {
-        const defaultDocId = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A';
-        const docUrl = `https://docs.google.com/document/d/${defaultDocId}/edit`;
-        localStorage.setItem('currentSourceTitle', 'Welcome to Knowl');
-        localStorage.setItem('currentDocId', defaultDocId);
+        // Get current document info from localStorage or initial doc data
+        const currentDocId = localStorage.getItem('currentDocId') || (window.initialDoc && window.initialDoc.doc_id);
+        const currentTitle = localStorage.getItem('currentSourceTitle') || (window.initialDoc && window.initialDoc.title);
         
-        const sourceToast = document.createElement('div');
-        sourceToast.className = 'toast persistent source-toast';
-        const link = document.createElement('a');
-        link.href = docUrl;
-        link.target = '_blank';
-        link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
-        link.textContent = `Current source: Welcome to Knowl`;
-        sourceToast.appendChild(link);
-        document.getElementById('toastContainer').appendChild(sourceToast);
-        setTimeout(() => sourceToast.classList.add('show'), 10);
+        if (currentDocId) {
+            const docUrl = `https://docs.google.com/document/d/${currentDocId}/edit`;
+            updateSourceToast(docUrl, currentTitle || 'Current Document');
+        }
     } catch (error) {
-        console.error('Error loading default document:', error);
+        console.error('Error loading document:', error);
     }
 });
