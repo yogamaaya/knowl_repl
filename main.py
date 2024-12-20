@@ -1,31 +1,15 @@
 from flask import Flask, render_template
 from message_handler import receive_message
-import chat
 from chat import initialize_embeddings, create_doc, get_text_from_doc, create_embeddings, change_text_source, get_doc_title
 from flask import jsonify, request
 
-from flask import Flask, session
-from datetime import timedelta
-import hashlib
-
 app = Flask(__name__)
-app.secret_key = hashlib.sha256().hexdigest()  # Generate random secret key
-app.permanent_session_lifetime = timedelta(days=30)
-messages = {}  # Store messages per session
+messages = []
 
 
 @app.route('/history')
 def history():
-    try:
-        ip_address = request.remote_addr
-        if not hasattr(chat, 'message_histories'):
-            chat.message_histories = {}
-        if ip_address not in chat.message_histories:
-            chat.message_histories[ip_address] = []
-        return render_template('history.html', history=chat.message_histories[ip_address])
-    except Exception as e:
-        print(f"Error in history route: {str(e)}")
-        return render_template('history.html', history=[])
+    return render_template('history.html')
 
 @app.route('/')
 def chat():

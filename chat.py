@@ -16,12 +16,10 @@ from langchain.prompts import PromptTemplate
 load_dotenv()
 openai_api_key = os.getenv('OPENAI_API_KEY')
 
-from flask import session
-chat_histories = {}  # Store histories per IP
-message_histories = {}  # Store message histories per IP
+chat_history = []
 text = ''
 doc_id = ''
-qa_chains = {}  # Store chains per IP
+qa_chain = None
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 
@@ -156,25 +154,25 @@ def create_embeddings(text):
     retriever = db.as_retriever(search_kwargs={"k": 2})
 
     prompt_template = """
-    You are a kind, egoless, humble, smart and helpful friend of the curious ask. Your name is Knowl because you are as wise as an owl. You are here to help people understand the current text better and gain deep insights. You are professional and knowledgeable who only gives accurate, long and detailed analytical responses related to the current text in complete sentences. You will get the person to be intersted in getting to know the current text as much as possible!
+    You are a kind, smart, helpful and empathetic friend of the user. Your name is Knowl because you are as wise as an owl. You are here to help users understand the current text better and gain deep insights. You are professional and knowledgeable who only answers questions related to the current text in complete sentences. 
 
     Context: {context}
     Question: {question}
 
-    All responses you give have at least 150 words based on the present context alone. You only respond with knowledge related to the current text with mutliple related direct quotes. All your responses are accurate, detailed, long and analytical which:
-    1) first charismatically express thanks for asking. 
-    2) have accurate details according to the current text, with 3-4 direct quotes from the current text enclosed in ''.
-    3) have direct excerpts from the text followed by a simple summary explanation.
-    4) invoke curiosity in the user to learn more about the current text.
-    5) have 3-4 main points directly from the text being highlighted.
-    6) apart from having direct quotes, are always paraphrased sentences of the current text only.
-    7) have only information present directly in the current text alone.
-    8) acknowledges if a question asked is not in the current text, and clarifies that the information is taken from outside the current context.
-    8) end with either a thought provoking question to keep the conversation going about the current topic or a gratitude filled closing statement.
+    All results you give are based on the present context. You only respond with knowledge related to the current text. All your responses:
+    1) first compliment the user for asking. 
+    2) are detailed and accurate, with direct quotes from the current text explained.
+    3) invoke curiosity in the user to learn more about the current text.
+    4) have 3-4 main points directly from the text being highlighted.
+    5) apart from having direct quotes, are always paraphrased sentences of the current text only.
+    6) have only information present directly in the current text alone.
+    7) end with gratitude and either a thought provoking question about the current topic or a closing statement.
     """
-
-    PROMPT = PromptTemplate(template=prompt_template,
-                            input_variables=["context", "question"])
+    
+    PROMPT = PromptTemplate(
+        template=prompt_template,
+        input_variables=["context", "question"]
+    )
 
     qa_chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
@@ -196,16 +194,9 @@ def initialize_embeddings():
     create_embeddings(text)
 
 
-def on_submit(query, ip_address):
+def on_submit(query):
     print("\n=== Processing Query ===")
-    if ip_address not in chat_histories:
-        chat_histories[ip_address] = []
-    if ip_address not in message_histories:
-        message_histories[ip_address] = []
-    if ip_address not in qa_chains:
-        qa_chains[ip_address] = None
-    
-    global text, doc_id
+    global chat_history, qa_chain, text, doc_id
     print(f"Current doc_id: {doc_id}")
     print(f"Current text preview: {text[:100]}")
     print(f"Received query: {query}")
