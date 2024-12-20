@@ -247,50 +247,61 @@ async function handleChangeText() {
         
         // Keep checking until content is found or user cancels
         let contentFound = false;
+        const currentDocId = data.doc_id;  // Store current doc ID for comparison
+        
         do {
+            // Only continue checking if this is still the latest document
+            if (currentDocId !== latestDocId) {
+                break;
+            }
+            
             contentFound = await checkContent();
             if (!contentFound) {
-                // Create overlay and custom alert
-                const container = document.createElement('div');
-                container.id = 'customAlertContainer';
-                const overlay = document.createElement('div');
-                overlay.className = 'overlay';
-                const customAlert = document.createElement('div');
-                customAlert.className = 'custom-alert';
-                customAlert.innerHTML = `
-                    <div>No content found after 60 seconds.</div>
-                    <div class="buttons">
-                        <button onclick="handleAlertResponse(true)">Continue Waiting</button>
-                        <button onclick="handleAlertResponse(false)">Cancel</button>
-                    </div>
-                `;
-                container.appendChild(overlay);
-                container.appendChild(customAlert);
-                const changeTextDiv = document.getElementById('changeText');
-                changeTextDiv.parentNode.insertBefore(container, changeTextDiv.nextSibling);
-                setTimeout(() => {
-                    overlay.classList.add('show');
-                    customAlert.classList.add('show');
-                }, 10);
+                // Create overlay and custom alert only for latest document
+                if (currentDocId === latestDocId) {
+                    const container = document.createElement('div');
+                    container.id = 'customAlertContainer';
+                    const overlay = document.createElement('div');
+                    overlay.className = 'overlay';
+                    const customAlert = document.createElement('div');
+                    customAlert.className = 'custom-alert';
+                    customAlert.innerHTML = `
+                        <div>No content found after 60 seconds.</div>
+                        <div class="buttons">
+                            <button onclick="handleAlertResponse(true)">Continue Waiting</button>
+                            <button onclick="handleAlertResponse(false)">Cancel</button>
+                        </div>
+                    `;
+                    container.appendChild(overlay);
+                    container.appendChild(customAlert);
+                    const changeTextDiv = document.getElementById('changeText');
+                    changeTextDiv.parentNode.insertBefore(container, changeTextDiv.nextSibling);
+                    setTimeout(() => {
+                        overlay.classList.add('show');
+                        customAlert.classList.add('show');
+                    }, 10);
 
-                // Wait for user response
-                const response = await new Promise(resolve => {
-                    window.handleAlertResponse = (shouldContinue) => {
-                        overlay.classList.remove('show');
-                        customAlert.classList.remove('show');
-                        setTimeout(() => {
-                            overlay.remove();
-                            customAlert.remove();
-                        }, 300);
-                        resolve(shouldContinue);
-                    };
-                });
-                
-                if (!response) {
-                    throw new Error('Document update cancelled by user');
+                    // Wait for user response
+                    const response = await new Promise(resolve => {
+                        window.handleAlertResponse = (shouldContinue) => {
+                            overlay.classList.remove('show');
+                            customAlert.classList.remove('show');
+                            setTimeout(() => {
+                                overlay.remove();
+                                customAlert.remove();
+                            }, 300);
+                            resolve(shouldContinue);
+                        };
+                    });
+                    
+                    if (!response) {
+                        throw new Error('Document update cancelled by user');
+                    }
+                } else {
+                    break;  // Stop checking if this is not the latest document
                 }
             }
-        } while (!contentFound);
+        } while (!contentFound && currentDocId === latestDocId);
         
         // Update knowledge base
         loadingToast.textContent = 'Updating knowledge base...';
