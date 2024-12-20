@@ -203,21 +203,20 @@ async function handleChangeText() {
         
         // Content checking function
         const checkContent = async () => {
+            currentDocCheck = new AbortController();
+            const startTime = Date.now();
+            let hasContent = false;
+            
             try {
-                currentDocCheck = new AbortController();
-                const startTime = Date.now();
-                let hasContent = false;
-                
                 while (!hasContent && (Date.now() - startTime) < (MAX_SECONDS * 1000) && !currentDocCheck.signal.aborted) {
-                    try {
-                        currentLoadingToast.textContent = `Checking for content... ${Math.floor((Date.now() - startTime) / 1000)}s`;
-                        
-                        const checkResponse = await fetch('/check_doc_content', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ doc_id: data.doc_id }),
-                            signal: currentDocCheck.signal
-                        });
+                    currentLoadingToast.textContent = `Checking for content... ${Math.floor((Date.now() - startTime) / 1000)}s`;
+                    
+                    const checkResponse = await fetch('/check_doc_content', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ doc_id: data.doc_id }),
+                        signal: currentDocCheck.signal
+                    });
                         
                         if (!checkResponse.ok) {
                             throw new Error('Failed to check document content');
