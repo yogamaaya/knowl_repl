@@ -67,6 +67,7 @@ def get_doc_title(doc_id):
         print(f"Error getting document title: {str(e)}")
         return "Untitled Document"
 
+
 def get_text_from_doc(doc_id):
     global text, qa_chain
     try:
@@ -105,9 +106,6 @@ def change_text_source(new_doc_id):
             text = new_text
             print(f"New document ID: {doc_id}")
             print(f"First 100 characters of new text: {text[:100]}")
-            # Ensure complete reset
-            qa_chain = None
-            chat_history = []
             create_embeddings(text)
             return True
         return False
@@ -120,11 +118,10 @@ def create_embeddings(text):
     print("\n=== Creating Embeddings ===")
     print(f"Text preview (first 100 chars): {text[:100]}")
     global qa_chain, chat_history
-    
+
     # Reset context and QA chain
-    chat_history = []
-    qa_chain = None
-    
+    reset_qa_chain()
+
     # Ensure clean initialization
     if text.strip():
         print("Initializing tokenizer...")
@@ -150,36 +147,32 @@ def create_embeddings(text):
         temperature=0.2,
         max_tokens=1500,
         model="gpt-3.5-turbo-instruct",
-        presence_penalty=0.0,
+        presence_penalty=0.1,
     )
 
     db = Chroma.from_documents(documents, embedding_function)
     retriever = db.as_retriever(search_kwargs={"k": 2})
 
-    prompt_template = PromptTemplate(
-        input_variables=["question", "context"],
-        template=
-        """As a kind, friendly and empathetic assistant, write an insightful summary essay (minimum 300 words) that:
-        1. Opens with an engaging introduction acknowledging the thoughtfulness of the question
-        2. Develops at least 3-4 main points with detailed explanations
-        3. Uses multiple direct quotes from the text, always enclosed in single quotes ''
-        4. Provides thorough analysis (100-150 words) after each quote
-        5. Maintains clear paragraph structure with proper transitions
-        6. Includes examples and specific details from the text
-        7. Concludes with a substantive summary and thank you
+    prompt_template = """
+    You are a kind, smart, helpful and empathetic friend of the user. Your name is Knowl because you are as wise as an owl. You are here to help users understand the current text better and gain deep insights. You are professional and knowledgeable who only answers questions related to the current text in complete sentences. 
 
-        Important:
-        - Ensure the response is at least 500 words
-        - Add appropiate line breaks to separate paragraphs
-        - Include at least 4-5 relevant quotes from the text
-        - Support each main point with detailed analysis
-        - Use clear topic sentences and transitions between paragraphs
-        - Provide comprehensive explanations and examples
-        - End with a well-developed conclusion that is complete and ends in a full stop
+    Context: {context}
+    Question: {question}
 
-        Question: {question}
-        Context: {context}
-        """)
+    All results you give are based on the present context. You only respond with knowledge related to the current text. All your responses:
+    1) first compliment the user for asking. 
+    2) are detailed and accurate, with direct quotes from the current text explained.
+    3) invoke curiosity in the user to learn more about the current text.
+    4) have 3-4 main points directly from the text being highlighted.
+    5) apart from having direct quotes, are always paraphrased sentences of the current text only.
+    6) have only information present directly in the current text alone.
+    7) end with gratitude and either a thought provoking question about the current topic or a closing statement.
+    """
+    
+    PROMPT = PromptTemplate(
+        template=prompt_template,
+        input_variables=["context", "question"]
+    )
 
     qa_chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
@@ -187,7 +180,7 @@ def create_embeddings(text):
         chain_type="stuff",
         return_source_documents=False,
         memory=None,
-        combine_docs_chain_kwargs={'prompt': prompt_template})
+        combine_docs_chain_kwargs={'prompt': PROMPT})
 
 
 def initialize_embeddings():
