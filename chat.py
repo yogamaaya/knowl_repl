@@ -111,7 +111,7 @@ def change_text_source(new_doc_id):
             text = new_text
             print(f"New document ID: {doc_id}")
             print(f"First 100 characters of new text: {text[:100]}")
-            create_embeddings(text)
+            create_embeddings(text, ip_address)
             return True
         return False
     except Exception as e:
@@ -119,13 +119,13 @@ def change_text_source(new_doc_id):
         return False
 
 
-def create_embeddings(text):
+def create_embeddings(text, ip_address=None):
     print("\n=== Creating Embeddings ===")
     print(f"Text preview (first 100 chars): {text[:100]}")
-    global qa_chain, chat_history
+    global qa_chains, chat_histories
 
-    # Reset context and QA chain
-    reset_qa_chain()
+    if ip_address is None:
+        return
 
     # Ensure clean initialization
     if text.strip():
@@ -182,7 +182,7 @@ def create_embeddings(text):
         input_variables=["context", "question"]
     )
 
-    qa_chain = ConversationalRetrievalChain.from_llm(
+    qa_chains[ip_address] = ConversationalRetrievalChain.from_llm(
         llm=llm,
         retriever=retriever,
         chain_type="stuff",
@@ -207,7 +207,7 @@ def initialize_embeddings(ip_address=None):
         qa_chains[ip_address] = None
         text = get_text_from_doc(doc_id)
         print(f"Retrieved text (first 100 chars): {text[:100]}")
-        create_embeddings(text)
+        create_embeddings(text, ip_address)
     elif ip_address:
         print(f"Using existing session for IP: {ip_address}")
 
