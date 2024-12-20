@@ -200,11 +200,19 @@ def initialize_embeddings(ip_address=None):
     if not chat_histories:
         chat_histories = {}
     
-    # Only initialize with default doc for new IP addresses
+    # Initialize with latest doc from history for new IP addresses
     if ip_address and ip_address not in qa_chains:
-        doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
-        print(f"New IP session, using default doc_id: {doc_id}")
-        text = get_text_from_doc(doc_id)
+        try:
+            with open('doc_history.txt', 'r') as f:
+                doc_history = json.load(f)
+                if doc_history:
+                    latest_doc = doc_history[-1]
+                    doc_id = latest_doc['id']
+                    print(f"Using latest doc from history: {doc_id}")
+                    text = get_text_from_doc(doc_id)
+                else:
+                    print("No document history found")
+                    return False
         print(f"Retrieved text (first 100 chars): {text[:100]}")
         if text:
             create_embeddings(text, ip_address)
