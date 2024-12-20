@@ -249,23 +249,3 @@ def on_submit(query, ip_address):
         out.write(response.audio_content)
 
     return {"text": answer, "audio_url": "/static/response.mp3"}
-@app.route('/save_doc_history', methods=['POST'])
-def save_doc_history():
-    try:
-        doc_history = request.json.get('docHistory', [])
-        with open('doc_history.txt', 'w') as f:
-            json.dump(doc_history, f)
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
-
-@app.route('/load_doc_history', methods=['GET'])
-def load_doc_history():
-    try:
-        if os.path.exists('doc_history.txt'):
-            with open('doc_history.txt', 'r') as f:
-                doc_history = json.load(f)
-            return jsonify({'success': True, 'docHistory': doc_history})
-        return jsonify({'success': True, 'docHistory': []})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
