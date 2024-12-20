@@ -159,19 +159,12 @@ async function submitMessage(event) {
 }
 
 // Initialize on page load
-window.addEventListener('load', async function() {
-    try {
-        const response = await fetch('/get_current_doc', { method: 'GET' });
-        const data = await response.json();
-        
-        if (data.success && data.doc_id) {
-            const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
-            updateSourceToast(docUrl, data.title);
-            localStorage.setItem('currentDocId', data.doc_id);
-            localStorage.setItem('currentSourceTitle', data.title);
-        }
-    } catch (error) {
-        console.error('Error loading document:', error);
+window.addEventListener('load', function() {
+    if (window.initialDoc && window.initialDoc.success && window.initialDoc.doc_id) {
+        const docUrl = `https://docs.google.com/document/d/${window.initialDoc.doc_id}/edit`;
+        updateSourceToast(docUrl, window.initialDoc.title);
+        localStorage.setItem('currentDocId', window.initialDoc.doc_id);
+        localStorage.setItem('currentSourceTitle', window.initialDoc.title);
     }
 });
 
