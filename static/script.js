@@ -299,7 +299,10 @@ async function handleChangeText() {
                         if (currentDocCheck) {
                             currentDocCheck.abort();
                         }
-                        showToast('Text source change cancelled by user', 'error');
+                        if (currentLoadingToast) {
+                            currentLoadingToast.remove();
+                        }
+                        showToast('Text source change cancelled - keeping previous source', 'error');
                         return;
                     }
                 } else {
