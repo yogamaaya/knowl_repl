@@ -67,16 +67,36 @@ def get_doc_preview():
 def update_embeddings():
     data = request.get_json()
     doc_id = data.get('doc_id')
-    if doc_id:
-        print(f"Updating embeddings for document: {doc_id}")
-        if change_text_source(doc_id):
-            title = get_doc_title(doc_id)
+    if not doc_id:
+        return jsonify({"success": False, "error": "No document ID provided"}), 400
+        
+    print(f"Updating embeddings for document: {doc_id}")
+    if change_text_source(doc_id):
+        title = get_doc_title(doc_id)
+        
+        # Update doc history with the latest successful document
+        try:
+            doc_history = []
+            if os.path.exists('doc_history.txt'):
+                with open('doc_history.txt', 'r') as f:
+                    doc_history = json.load(f)
+                    
+            # Only keep the new document if it has content
+            new_doc = {"id": doc_id, "title": title}
+            if not any(doc['id'] == doc_id for doc in doc_history):
+                doc_history.append(new_doc)
+                
+            with open('doc_history.txt', 'w') as f:
+                json.dump(doc_history, f)
+                
             print("Embeddings updated successfully")
             return jsonify({"success": True, "title": title})
-        else:
-            print("Failed to get text from document")
-            return jsonify({"success": False, "error": "No text found"}), 400
-    return jsonify({"success": False, "error": "No document ID provided"}), 400
+        except Exception as e:
+            print(f"Error updating doc history: {str(e)}")
+            return jsonify({"success": False, "error": "Failed to update history"}), 500
+    else:
+        print("Failed to get text from document")
+        return jsonify({"success": False, "error": "No text found"}), 400
 
 
 

@@ -296,21 +296,34 @@ async function handleChangeText() {
             currentLoadingToast.remove();
             showToast('Text Source Updated Successfully', 'success');
 
-            const container = document.getElementById('toastContainer');
-            const existingToast = container.querySelector('.source-toast');
-            if (existingToast) {
-                existingToast.remove();
-            }
+            // Update source toast
+            updateSourceToast(docUrl, updateData.title);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        if (currentLoadingToast) {
+            currentLoadingToast.remove();
+        }
+        showToast(error.message, 'error');
+    }
+}
 
-            const sourceToast = document.createElement('div');
-            sourceToast.className = 'toast persistent source-toast';
-            sourceToast.innerHTML = `
-                <a href="${docUrl}" target="_blank" style="color: white; text-decoration: underline;">
-                    Current source: ${updateData.title}
-                </a>
-            `;
-            container.appendChild(sourceToast);
-            setTimeout(() => sourceToast.classList.add('show'), 10);
+function updateSourceToast(docUrl, title) {
+    const container = document.getElementById('toastContainer');
+    // Remove any existing source toast
+    const existingToast = container.querySelector('.source-toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+
+    const sourceToast = document.createElement('div');
+    sourceToast.className = 'toast persistent source-toast show';
+    sourceToast.innerHTML = `
+        <a href="${docUrl}" target="_blank" style="color: white; text-decoration: underline;">
+            Current source: ${title}
+        </a>
+    `;
+    container.appendChild(sourceToast);
         }
     } catch (error) {
         console.error('Error:', error);
