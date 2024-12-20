@@ -106,12 +106,12 @@ def reset_qa_chain():
 def change_text_source(new_doc_id, ip_address=None):
     """Handle text source change and create new embeddings"""
     global text, doc_id, ip_documents
-    
+
     try:
         if not new_doc_id:
             print("Error: Invalid document ID")
             return False
-            
+
         # Get document text
         try:
             new_text = get_text_from_doc(new_doc_id)
@@ -121,7 +121,7 @@ def change_text_source(new_doc_id, ip_address=None):
         except Exception as e:
             print(f"Error getting text from new doc: {str(e)}")
             return False
-            
+
         # Update globals and IP document mapping
         doc_id = new_doc_id
         text = new_text
@@ -129,7 +129,7 @@ def change_text_source(new_doc_id, ip_address=None):
             ip_documents[ip_address] = new_doc_id
         print(f"New document ID: {doc_id}")
         print(f"First 100 characters of new text: {text[:100]}")
-        
+
         # Create embeddings if IP provided
         if ip_address:
             try:
@@ -140,9 +140,9 @@ def change_text_source(new_doc_id, ip_address=None):
             except Exception as e:
                 print(f"Error creating embeddings: {str(e)}")
                 return False
-                
+
         return True
-        
+
     except Exception as e:
         print(f"Error changing text source: {str(e)}")
         return False
@@ -205,11 +205,9 @@ def create_embeddings(text, ip_address=None):
 
     Remember: All responses should be long, minimum 150 words, story telling paraphrases of the current source text alone, with accurate details that make the text feel interesting. Ensure that the text is directly quoted multiple times!
     """
-    
-    PROMPT = PromptTemplate(
-        template=prompt_template,
-        input_variables=["context", "question"]
-    )
+
+    PROMPT = PromptTemplate(template=prompt_template,
+                            input_variables=["context", "question"])
 
     qa_chains[ip_address] = ConversationalRetrievalChain.from_llm(
         llm=llm,
@@ -223,19 +221,20 @@ def create_embeddings(text, ip_address=None):
 def initialize_embeddings(ip_address=None):
     print("\n=== Initializing Embeddings ===")
     global text, doc_id, qa_chains, chat_histories, ip_documents
-    
+
     try:
         # Initialize dictionaries if not exist or None
         qa_chains = qa_chains if isinstance(qa_chains, dict) else {}
-        chat_histories = chat_histories if isinstance(chat_histories, dict) else {}
+        chat_histories = chat_histories if isinstance(chat_histories,
+                                                      dict) else {}
         ip_documents = ip_documents if isinstance(ip_documents, dict) else {}
-            
+
         # Determine document source priority:
         # 1. IP's existing document
         # 2. Latest from history
         # 3. Default document
         selected_doc_id = None
-        
+
         if ip_address and ip_address in ip_documents:
             selected_doc_id = ip_documents[ip_address]
             print(f"Using IP's existing doc: {selected_doc_id}")
@@ -243,26 +242,30 @@ def initialize_embeddings(ip_address=None):
             try:
                 with open('doc_history.txt', 'r') as f:
                     doc_history = json.load(f)
-                    if doc_history and isinstance(doc_history, list) and len(doc_history) > 0:
+                    if doc_history and isinstance(
+                            doc_history, list) and len(doc_history) > 0:
                         latest_doc = doc_history[-1]
                         selected_doc_id = latest_doc.get('id')
-                        print(f"Using latest doc from history: {selected_doc_id}")
-            except (FileNotFoundError, json.JSONDecodeError, AttributeError, IndexError) as e:
+                        print(
+                            f"Using latest doc from history: {selected_doc_id}"
+                        )
+            except (FileNotFoundError, json.JSONDecodeError, AttributeError,
+                    IndexError) as e:
                 print(f"Error reading doc history: {str(e)}")
-                
+
             if not selected_doc_id:
                 selected_doc_id = DEFAULT_DOC_ID
                 print(f"Using default doc: {selected_doc_id}")
-                
+
         # Only update global doc_id if it's a new IP or doesn't have existing document
         if not (ip_address and ip_address in ip_documents):
             doc_id = selected_doc_id
             if ip_address:
                 ip_documents[ip_address] = selected_doc_id
-            
+
             if ip_address:
                 ip_documents[ip_address] = doc_id
-            
+
         # Get document text
         try:
             text = get_text_from_doc(doc_id)
@@ -273,13 +276,14 @@ def initialize_embeddings(ip_address=None):
         except Exception as e:
             print(f"Error getting text from doc: {str(e)}")
             return False
-            
+
         # Create embeddings for IP if needed
         if ip_address:
             if ip_address not in qa_chains:
                 try:
                     create_embeddings(text, ip_address)
-                    if ip_address not in qa_chains or qa_chains[ip_address] is None:
+                    if ip_address not in qa_chains or qa_chains[
+                            ip_address] is None:
                         print("Error: QA chain not properly initialized")
                         return False
                 except Exception as e:
@@ -287,9 +291,9 @@ def initialize_embeddings(ip_address=None):
                     return False
             else:
                 print(f"Using existing embeddings for IP: {ip_address}")
-                
+
         return True
-        
+
     except Exception as e:
         print(f"Initialization error: {str(e)}")
         return False
@@ -298,40 +302,64 @@ def initialize_embeddings(ip_address=None):
 def on_submit(query, ip_address):
     logger.info(f"\n=== Processing Query for IP: {ip_address} ===")
     global text, doc_id, qa_chains
-    
+
     # Ensure qa_chains exists
     if not isinstance(qa_chains, dict):
         qa_chains = {}
-        
+
     # Initialize or reinitialize if needed
     max_retries = 3
     retries = 0
-    
-    while (ip_address not in qa_chains or qa_chains[ip_address] is None) and retries < max_retries:
-        logger.info(f"Attempt {retries + 1}/{max_retries} to initialize QA chain for IP: {ip_address}")
+
+    while (ip_address not in qa_chains
+           or qa_chains[ip_address] is None) and retries < max_retries:
+        logger.info(
+            f"Attempt {retries + 1}/{max_retries} to initialize QA chain for IP: {ip_address}"
+        )
         success = initialize_embeddings(ip_address)
-        
-        if success and ip_address in qa_chains and qa_chains[ip_address] is not None:
+
+        if success and ip_address in qa_chains and qa_chains[
+                ip_address] is not None:
             break
-            
+
         retries += 1
         if retries == max_retries:
-            raise Exception("Failed to initialize QA chain after multiple attempts")
-            
+            raise Exception(
+                "Failed to initialize QA chain after multiple attempts")
+
     chat_histories.setdefault(ip_address, [])
-            
+
     print(f"Current doc_id: {doc_id}")
     print(f"Current text preview: {text[:100]}")
     print(f"Received query: {query}")
-    
+
     chat_history = chat_histories.get(ip_address, [])
-    result = qa_chains[ip_address]({"question": query, "chat_history": chat_history[-2:] if chat_history else []})
-    answer = result['answer']
-    
+    try:
+        if not qa_chains[ip_address]:
+            return {
+                "text":
+                "I apologize, but I'm having trouble processing your request. Please try changing the text source by clicking the 'Change Text Source' button above and paste your text into the Google Doc that opens.",
+                "audio_url": None
+            }
+        result = qa_chains[ip_address]({
+            "question":
+            query,
+            "chat_history":
+            chat_history[-2:] if chat_history else []
+        })
+        answer = result['answer']
+    except (TypeError, AttributeError) as e:
+        logger.error(f"QA chain error: {str(e)}")
+        return {
+            "text":
+            "I apologize, but I'm having trouble processing your request. Please try changing the text source by clicking the 'Change Text Source' button above and paste your text into the Google Doc that opens.",
+            "audio_url": None
+        }
+
     # Update chat history before TTS generation
     updated_history = chat_history + [(query, answer)]
     chat_histories[ip_address] = updated_history
-    
+
     # Only generate TTS for latest message
     from google.cloud import texttospeech
     credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
@@ -350,8 +378,8 @@ def on_submit(query, ip_address):
         pitch=0.0)
 
     response = client.synthesize_speech(input=synthesis_input,
-                                      voice=voice,
-                                      audio_config=audio_config)
+                                        voice=voice,
+                                        audio_config=audio_config)
 
     audio_path = "static/response.mp3"
     with open(audio_path, "wb") as out:
