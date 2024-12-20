@@ -225,33 +225,40 @@ def initialize_embeddings(ip_address=None):
     global text, doc_id, qa_chains, chat_histories, ip_documents
     
     try:
-        # Initialize dictionaries if not exist
-        if not qa_chains:
-            qa_chains = {}
-        if not chat_histories:
-            chat_histories = {}
-        if not ip_documents:
-            ip_documents = {}
+        # Initialize dictionaries if not exist or None
+        qa_chains = qa_chains if isinstance(qa_chains, dict) else {}
+        chat_histories = chat_histories if isinstance(chat_histories, dict) else {}
+        ip_documents = ip_documents if isinstance(ip_documents, dict) else {}
             
-        # Use IP's existing document if available
+        # Determine document source priority:
+        # 1. IP's existing document
+        # 2. Latest from history
+        # 3. Default document
+        selected_doc_id = None
+        
         if ip_address and ip_address in ip_documents:
-            doc_id = ip_documents[ip_address]
-            print(f"Using IP's existing doc: {doc_id}")
+            selected_doc_id = ip_documents[ip_address]
+            print(f"Using IP's existing doc: {selected_doc_id}")
         else:
-            # Try to load from history or use default
             try:
                 with open('doc_history.txt', 'r') as f:
                     doc_history = json.load(f)
-                    if doc_history:
+                    if doc_history and isinstance(doc_history, list) and len(doc_history) > 0:
                         latest_doc = doc_history[-1]
-                        doc_id = latest_doc['id']
-                        print(f"Using latest doc from history: {doc_id}")
-                    else:
-                        doc_id = DEFAULT_DOC_ID
-                        print(f"Using default doc: {doc_id}")
-            except (FileNotFoundError, json.JSONDecodeError) as e:
-                doc_id = DEFAULT_DOC_ID
-                print(f"Using default doc: {doc_id}")
+                        selected_doc_id = latest_doc.get('id')
+                        print(f"Using latest doc from history: {selected_doc_id}")
+            except (FileNotFoundError, json.JSONDecodeError, AttributeError, IndexError) as e:
+                print(f"Error reading doc history: {str(e)}")
+                
+            if not selected_doc_id:
+                selected_doc_id = DEFAULT_DOC_ID
+                print(f"Using default doc: {selected_doc_id}")
+                
+        # Only update global doc_id if it's a new IP or doesn't have existing document
+        if not (ip_address and ip_address in ip_documents):
+            doc_id = selected_doc_id
+            if ip_address:
+                ip_documents[ip_address] = selected_doc_id
             
             if ip_address:
                 ip_documents[ip_address] = doc_id
@@ -292,14 +299,24 @@ def on_submit(query, ip_address):
     logger.info(f"\n=== Processing Query for IP: {ip_address} ===")
     global text, doc_id
     
-    if ip_address not in qa_chains or qa_chains[ip_address] is None:
-        logger.info(f"Initializing new QA chain for IP: {ip_address}")
+    # Ensure qa_chains exists
+    if not isinstance(qa_chains, dict):
+        qa_chains = {}
+        
+    # Initialize or reinitialize if needed
+    max_retries = 3
+    retries = 0
+    
+    while (ip_address not in qa_chains or qa_chains[ip_address] is None) and retries < max_retries:
+        logger.info(f"Attempt {retries + 1}/{max_retries} to initialize QA chain for IP: {ip_address}")
         success = initialize_embeddings(ip_address)
-        if not success:
-            raise Exception("Failed to initialize QA chain")
-        # Double check initialization succeeded
-        if qa_chains[ip_address] is None:
-            raise Exception("QA chain initialization failed")
+        
+        if success and ip_address in qa_chains and qa_chains[ip_address] is not None:
+            break
+            
+        retries += 1
+        if retries == max_retries:
+            raise Exception("Failed to initialize QA chain after multiple attempts")
             
     chat_histories.setdefault(ip_address, [])
             
