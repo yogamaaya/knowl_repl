@@ -223,23 +223,38 @@ async function handleChangeText() {
             }
         }
 
-        if (contentFound && currentDocId === latestDocId) {
-            currentLoadingToast.textContent = 'Updating knowledge base...';
-            
-            const updateResponse = await fetch('/update_embeddings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ doc_id: data.doc_id })
-            });
+        async function updateKnowledgeBase(docId) {
+    try {
+        const updateResponse = await fetch('/update_embeddings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ doc_id: docId })
+        });
 
-            if (!updateResponse.ok) {
-                throw new Error('Failed to update knowledge base');
-            }
+        if (!updateResponse.ok) {
+            throw new Error('Failed to update knowledge base');
+        }
 
-            const updateData = await updateResponse.json();
-            if (!updateData.success) {
-                throw new Error('Failed to update knowledge base');
-            }
+        const updateData = await updateResponse.json();
+        if (!updateData.success) {
+            throw new Error(updateData.error || 'Failed to update knowledge base');
+        }
+        
+        updateSourceToast(`https://docs.google.com/document/d/${docId}/edit`, updateData.title);
+        return true;
+    } catch (error) {
+        console.error('Error updating knowledge base:', error);
+        showToast(error.message, 'error');
+        return false;
+    }
+}
+
+if (contentFound && currentDocId === latestDocId) {
+    currentLoadingToast.textContent = 'Updating knowledge base...';
+    const success = await updateKnowledgeBase(data.doc_id);
+    if (!success) {
+        throw new Error('Failed to update knowledge base');
+    }
 
             // Save current document info
             localStorage.setItem('currentSourceTitle', updateData.title);
