@@ -295,7 +295,12 @@ async function handleChangeText() {
                     });
                     
                     if (!response) {
-                        throw new Error('Document update cancelled by user');
+                        // Stop checking and show cancellation toast
+                        if (currentDocCheck) {
+                            currentDocCheck.abort();
+                        }
+                        showToast('Text source change cancelled by user', 'error');
+                        return;
                     }
                 } else {
                     break;  // Stop checking if this is not the latest document
