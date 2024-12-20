@@ -159,24 +159,170 @@ function showPersistentToast(message, isPersistent = false) {
 let currentDocCheck = null;
 let currentLoadingToast = null;
 let latestDocId = null;
-let previousDocIds = [];
 
 async function handleChangeText() {
-    // Clean up any existing check
-    if (currentDocCheck) {
-        currentDocCheck.abort();
-    }
-    
-    if (latestDocId) {
-        previousDocIds.push(latestDocId);
-    }
-    
-    if (currentLoadingToast) {
-        currentLoadingToast.remove();
-    }
+    try {
+        // Clean up existing check and overlay
+        if (currentDocCheck) {
+            currentDocCheck.abort();
+        }
+        if (currentLoadingToast) {
+            currentLoadingToast.remove();
+        }
+        const existingOverlay = document.getElementById('customAlertContainer');
+        if (existingOverlay) {
+            existingOverlay.remove();
+        }
 
-    const MAX_SECONDS = 60;
-    currentLoadingToast = showPersistentToast('Please have text ready to paste in a new document...', true);
+        // Show initial toast
+        currentLoadingToast = showPersistentToast('Please have text ready to paste into new document...', true);
+
+        // Create new document
+        const response = await fetch('/create_doc', {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to create document');
+        }
+
+        const data = await response.json();
+        if (!data.doc_id) {
+            throw new Error('No document ID received');
+        }
+
+        latestDocId = data.doc_id;
+
+        // Open document in new tab
+        const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
+        window.open(docUrl, '_blank');
+
+        // Content checking loop
+        const MAX_SECONDS = 60;
+        const CHECK_INTERVAL = 3000;
+        let contentFound = false;
+        const startTime = Date.now();
+        
+        currentDocCheck = new AbortController();
+        const currentDocId = data.doc_id;  // Store current doc ID for comparison
+
+        while (!contentFound && !currentDocCheck.signal.aborted) {
+            const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+            
+            if (elapsedSeconds >= MAX_SECONDS) {
+                // Show continue/cancel prompt only for latest document
+                if (currentDocId === latestDocId) {
+                    const shouldContinue = await new Promise(resolve => {
+                        const container = document.createElement('div');
+                        container.id = 'customAlertContainer';
+                        container.innerHTML = `
+                            <div class="overlay"></div>
+                            <div class="custom-alert">
+                                <div>No content found after 60 seconds.</div>
+                                <div class="buttons">
+                                    <button onclick="handleAlertResponse(true)">Continue Waiting</button>
+                                    <button onclick="handleAlertResponse(false)">Cancel</button>
+                                </div>
+                            </div>
+                        `;
+                        
+                        document.body.appendChild(container);
+                        window.handleAlertResponse = (response) => {
+                            container.remove();
+                            resolve(response);
+                        };
+                    });
+
+                    if (!shouldContinue) {
+                        currentDocCheck.abort();
+                        currentLoadingToast.remove();
+                        showToast('User cancelled updating text source', 'error');
+                        return;
+                    }
+                } else {
+                    break;  // Stop checking if not latest document
+                }
+            }
+
+            try {
+                currentLoadingToast.textContent = `Checking for content... ${elapsedSeconds}s`;
+                
+                const checkResponse = await fetch('/check_doc_content', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ doc_id: data.doc_id }),
+                    signal: currentDocCheck.signal
+                });
+
+                if (!checkResponse.ok) {
+                    throw new Error('Failed to check document content');
+                }
+
+                const checkData = await checkResponse.json();
+                if (checkData.has_content) {
+                    contentFound = true;
+                    break;
+                }
+
+                await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL));
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    return;
+                }
+                throw error;
+            }
+        }
+
+        if (contentFound && currentDocId === latestDocId) {
+            currentLoadingToast.textContent = 'Updating knowledge base...';
+            
+            const updateResponse = await fetch('/update_embeddings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ doc_id: data.doc_id })
+            });
+
+            if (!updateResponse.ok) {
+                throw new Error('Failed to update knowledge base');
+            }
+
+            const updateData = await updateResponse.json();
+            if (!updateData.success) {
+                throw new Error('Failed to update knowledge base');
+            }
+
+            // Update storage and UI only for successful update
+            localStorage.setItem('currentSourceTitle', updateData.title);
+            localStorage.setItem('currentDocId', data.doc_id);
+            
+            currentLoadingToast.remove();
+            showToast('Text Source Updated Successfully', 'success');
+
+            // Update source toast
+            const container = document.getElementById('toastContainer');
+            const existingToast = container.querySelector('.source-toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            const sourceToast = document.createElement('div');
+            sourceToast.className = 'toast persistent source-toast';
+            sourceToast.innerHTML = `
+                <a href="${docUrl}" target="_blank" style="color: white; text-decoration: underline;">
+                    Current source: ${updateData.title}
+                </a>
+            `;
+            container.appendChild(sourceToast);
+            setTimeout(() => sourceToast.classList.add('show'), 10);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        if (currentLoadingToast) {
+            currentLoadingToast.remove();
+        }
+        showToast(error.message, 'error');
+    }
+}
     
     try {
         
