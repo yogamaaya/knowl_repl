@@ -181,7 +181,7 @@ async function handleChangeText() {
         // Open document and update toast
         const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
         window.open(docUrl, '_blank');
-        showToast('Document created. Please paste your text and save.', 'success');
+        // showToast('Document created. Please paste your text and save.', 'success');
         
         // Content checking function
         const checkContent = async () => {
@@ -223,8 +223,29 @@ async function handleChangeText() {
         do {
             contentFound = await checkContent();
             if (!contentFound) {
-                const shouldContinue = confirm('No content found after 60 seconds. Continue waiting?');
-                if (!shouldContinue) {
+                // Create and show custom alert
+                const customAlert = document.createElement('div');
+                customAlert.className = 'custom-alert';
+                customAlert.innerHTML = `
+                    <div>No content found after 60 seconds.</div>
+                    <div class="buttons">
+                        <button onclick="handleAlertResponse(true)">Continue Waiting</button>
+                        <button onclick="handleAlertResponse(false)">Cancel</button>
+                    </div>
+                `;
+                document.body.appendChild(customAlert);
+                setTimeout(() => customAlert.classList.add('show'), 10);
+
+                // Wait for user response
+                const response = await new Promise(resolve => {
+                    window.handleAlertResponse = (shouldContinue) => {
+                        customAlert.classList.remove('show');
+                        setTimeout(() => customAlert.remove(), 300);
+                        resolve(shouldContinue);
+                    };
+                });
+                
+                if (!response) {
                     throw new Error('Document update cancelled by user');
                 }
             }
