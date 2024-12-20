@@ -200,8 +200,8 @@ def initialize_embeddings(ip_address=None):
     if not chat_histories:
         chat_histories = {}
     
-    # Initialize for any IP address that doesn't have a chain
-    if ip_address and (ip_address not in qa_chains or qa_chains[ip_address] is None):
+    # Only initialize with default doc for new IP addresses
+    if ip_address and ip_address not in qa_chains:
         doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
         print(f"New IP session, using default doc_id: {doc_id}")
         text = get_text_from_doc(doc_id)
@@ -214,6 +214,9 @@ def initialize_embeddings(ip_address=None):
         else:
             print("Error: No text retrieved from document")
             return False
+    elif ip_address and ip_address in qa_chains:
+        print(f"Using existing embeddings for IP: {ip_address}")
+        return True
     return True
 
 
