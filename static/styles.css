@@ -247,17 +247,14 @@ button[type="submit"]:active {
 }
 
 .chatBox {
-  display: flex;
+  display: 1 0 auto;
   flex-direction: column;
   list-style-type: none;
-  background: linear-gradient(145deg, #ffffff, #f9f3ff);
-  padding: 20px;
+  background-color: #ffffff; /* Pale violet color */
+  padding: 15px;
   overflow-y: auto;
-  border-radius: 15px;
-  margin: 20px auto;
-  max-width: 900px;
-  box-shadow: 0 4px 20px rgba(116, 4, 118, 0.08);
-  border: 1px solid rgba(116, 4, 118, 0.1);
+  border-radius: 8px;
+margin-bottom: 5px;
 }
 
 .logo {
@@ -272,18 +269,12 @@ button[type="submit"]:active {
 .chat-message {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
-    margin: 20px 0;
+    gap: 10px;
+    margin: 15px 0;
     padding: 0 15px;
-    max-width: 85%;
+    max-width: 90%;
     margin-left: auto;
     margin-right: auto;
-    animation: fadeIn 0.5s ease-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
 }
 
 .chat-message .logo {
@@ -295,18 +286,15 @@ button[type="submit"]:active {
 
 .chat-message .message-bubble {
     position: relative;
-    background-color: #fff;
-    padding: 18px 22px;
-    border-radius: 18px;
-    box-shadow: 0 2px 12px rgba(116, 4, 118, 0.06);
-    line-height: 1.7;
+    background-color: rgba(116, 4, 118, 0.05);
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 0 2px 8px rgba(116, 4, 118, 0.1);
+    line-height: 1.6;
     font-size: 1.1em;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.2px;
     transition: all 0.3s ease;
     flex-grow: 1;
-    border: 1px solid rgba(116, 4, 118, 0.08);
-    color: #2c2c2c;
-    font-family: 'Georgia', serif;
 }
 
 .chat-message .message-bubble:hover {
