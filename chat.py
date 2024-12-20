@@ -104,16 +104,41 @@ def reset_qa_chain():
 def change_text_source(new_doc_id, ip_address=None):
     """Handle text source change and create new embeddings"""
     global text, doc_id
+    
     try:
-        doc_id = new_doc_id  # Update the global doc_id
-        new_text = get_text_from_doc(doc_id)
-        if new_text:
-            text = new_text
-            print(f"New document ID: {doc_id}")
-            print(f"First 100 characters of new text: {text[:100]}")
-            create_embeddings(text, ip_address)
-            return True
-        return False
+        if not new_doc_id:
+            print("Error: Invalid document ID")
+            return False
+            
+        # Get document text
+        try:
+            new_text = get_text_from_doc(new_doc_id)
+            if not new_text:
+                print("Error: No text in new document")
+                return False
+        except Exception as e:
+            print(f"Error getting text from new doc: {str(e)}")
+            return False
+            
+        # Update globals
+        doc_id = new_doc_id
+        text = new_text
+        print(f"New document ID: {doc_id}")
+        print(f"First 100 characters of new text: {text[:100]}")
+        
+        # Create embeddings if IP provided
+        if ip_address:
+            try:
+                create_embeddings(text, ip_address)
+                if ip_address not in qa_chains or qa_chains[ip_address] is None:
+                    print("Error: QA chain not properly initialized")
+                    return False
+            except Exception as e:
+                print(f"Error creating embeddings: {str(e)}")
+                return False
+                
+        return True
+        
     except Exception as e:
         print(f"Error changing text source: {str(e)}")
         return False
@@ -195,13 +220,14 @@ def initialize_embeddings(ip_address=None):
     print("\n=== Initializing Embeddings ===")
     global text, doc_id, qa_chains, chat_histories
     
-    if not qa_chains:
-        qa_chains = {}
-    if not chat_histories:
-        chat_histories = {}
-    
-    # Initialize with latest doc from history for new IP addresses
-    if ip_address and ip_address not in qa_chains:
+    try:
+        # Initialize dictionaries if not exist
+        if not qa_chains:
+            qa_chains = {}
+        if not chat_histories:
+            chat_histories = {}
+            
+        # Always try to load latest doc from history
         try:
             with open('doc_history.txt', 'r') as f:
                 doc_history = json.load(f)
@@ -209,23 +235,43 @@ def initialize_embeddings(ip_address=None):
                     latest_doc = doc_history[-1]
                     doc_id = latest_doc['id']
                     print(f"Using latest doc from history: {doc_id}")
-                    text = get_text_from_doc(doc_id)
                 else:
                     print("No document history found")
                     return False
-        print(f"Retrieved text (first 100 chars): {text[:100]}")
-        if text:
-            create_embeddings(text, ip_address)
-            if ip_address not in qa_chains or qa_chains[ip_address] is None:
-                print("Error: QA chain not properly initialized")
-                return False
-        else:
-            print("Error: No text retrieved from document")
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"Error loading doc history: {str(e)}")
             return False
-    elif ip_address and ip_address in qa_chains:
-        print(f"Using existing embeddings for IP: {ip_address}")
+            
+        # Get document text
+        try:
+            text = get_text_from_doc(doc_id)
+            if not text:
+                print("Error: No text retrieved from document")
+                return False
+            print(f"Retrieved text (first 100 chars): {text[:100]}")
+        except Exception as e:
+            print(f"Error getting text from doc: {str(e)}")
+            return False
+            
+        # Create embeddings for IP if needed
+        if ip_address:
+            if ip_address not in qa_chains:
+                try:
+                    create_embeddings(text, ip_address)
+                    if ip_address not in qa_chains or qa_chains[ip_address] is None:
+                        print("Error: QA chain not properly initialized")
+                        return False
+                except Exception as e:
+                    print(f"Error creating embeddings: {str(e)}")
+                    return False
+            else:
+                print(f"Using existing embeddings for IP: {ip_address}")
+                
         return True
-    return True
+        
+    except Exception as e:
+        print(f"Initialization error: {str(e)}")
+        return False
 
 
 def on_submit(query, ip_address):
