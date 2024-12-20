@@ -197,9 +197,6 @@ def initialize_embeddings(ip_address=None):
     
     if ip_address and ip_address in qa_chains and qa_chains[ip_address] is not None:
         return {"success": True, "doc_id": doc_id, "title": get_doc_title(doc_id)}
-        
-    default_doc = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
-    doc_id = default_doc
     
     try:
         with open('doc_history.txt', 'r') as f:

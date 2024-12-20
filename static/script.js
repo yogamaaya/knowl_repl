@@ -394,19 +394,7 @@ window.addEventListener('load', async function() {
         <p>PS: Please be patient with Knowl as she thinks~ 🦉</p>`
     ];
     updateChat(currentPageMessages);
-    
-    try {
-        const defaultDocId = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A';
-        const updateResponse = await fetch('/update_embeddings', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ doc_id: defaultDocId })
-        });
-        
-        const updateData = await updateResponse.json();
-        if (updateResponse.ok && updateData.success) {
+});onse.ok && updateData.success) {
             const docUrl = `https://docs.google.com/document/d/${defaultDocId}/edit`;
             localStorage.setItem('currentSourceTitle', updateData.title);
             localStorage.setItem('currentDocId', defaultDocId);
