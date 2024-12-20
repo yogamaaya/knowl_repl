@@ -226,11 +226,8 @@ def on_submit(query, ip_address):
     print(f"Current doc_id: {doc_id}")
     print(f"Current text preview: {text[:100]}")
     print(f"Received query: {query}")
-    if qa_chain is None:
-        initialize_embeddings()
-
     chat_history = chat_histories.get(ip_address, [])
-    result = qa_chain({"question": query, "chat_history": chat_history[-2:] if chat_history else []})
+    result = qa_chains[ip_address]({"question": query, "chat_history": chat_history[-2:] if chat_history else []})
     answer = result['answer']
     chat_histories[ip_address] = chat_history + [(query, answer)]
 
