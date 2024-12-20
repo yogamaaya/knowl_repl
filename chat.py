@@ -297,7 +297,7 @@ def initialize_embeddings(ip_address=None):
 
 def on_submit(query, ip_address):
     logger.info(f"\n=== Processing Query for IP: {ip_address} ===")
-    global text, doc_id
+    global text, doc_id, qa_chains
     
     # Ensure qa_chains exists
     if not isinstance(qa_chains, dict):
