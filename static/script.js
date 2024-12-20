@@ -224,6 +224,8 @@ async function handleChangeText() {
             contentFound = await checkContent();
             if (!contentFound) {
                 // Create overlay and custom alert
+                const container = document.createElement('div');
+                container.id = 'customAlertContainer';
                 const overlay = document.createElement('div');
                 overlay.className = 'overlay';
                 const customAlert = document.createElement('div');
@@ -235,8 +237,10 @@ async function handleChangeText() {
                         <button onclick="handleAlertResponse(false)">Cancel</button>
                     </div>
                 `;
-                document.body.appendChild(overlay);
-                document.body.appendChild(customAlert);
+                container.appendChild(overlay);
+                container.appendChild(customAlert);
+                const changeTextDiv = document.getElementById('changeText');
+                changeTextDiv.parentNode.insertBefore(container, changeTextDiv.nextSibling);
                 setTimeout(() => {
                     overlay.classList.add('show');
                     customAlert.classList.add('show');
