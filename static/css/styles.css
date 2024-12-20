@@ -27,14 +27,16 @@
     left: 50%;
     transform: translate(-50%, -50%);
     background: rgba(116, 4, 118, 0.95);
-    padding: 20px;
-    border-radius: 8px;
+    padding: 30px;
+    border-radius: 4px;
     color: white;
     z-index: 1001;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    min-width: 300px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    width: 400px;
+    height: auto;
     text-align: center;
     animation: fadeIn 0.3s ease-out;
+    border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
 .custom-alert.show {
