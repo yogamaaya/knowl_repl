@@ -27,40 +27,42 @@
                 const docHistory = data.docHistory || [];
                 localStorage.setItem('docHistory', JSON.stringify(docHistory));
                 const docList = document.getElementById('docList');
-                docList.innerHTML = '';
                 
-                for (const doc of docHistory) {
-                    const docItem = document.createElement('article');
-                    docItem.className = 'doc-item';
-                    
-                    const title = document.createElement('h2');
-                    title.className = 'doc-title';
-                    title.textContent = doc.title;
-                    
-                    const preview = document.createElement('div');
-                    preview.className = 'doc-preview';
-                    
-                    docItem.appendChild(title);
-                    docItem.appendChild(preview);
-                    
-                    try {
-                        const response = await fetch('/get_doc_preview', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ doc_id: doc.id })
-                        });
-                        const data = await response.json();
-                        preview.innerHTML = `
-                            <p>${data.preview}</p>
-                            <a href="https://docs.google.com/document/d/${doc.id}/edit" target="_blank" class="read-more">Read More →</a>
-                        `;
-                    } catch (error) {
-                        console.error('Error fetching preview:', error);
+                // Only populate if empty
+                if (docList.children.length === 0) {
+                    for (const doc of docHistory) {
+                        const docItem = document.createElement('article');
+                        docItem.className = 'doc-item';
+                        
+                        const title = document.createElement('h2');
+                        title.className = 'doc-title';
+                        title.textContent = doc.title;
+                        
+                        const preview = document.createElement('div');
+                        preview.className = 'doc-preview';
+                        
+                        docItem.appendChild(title);
+                        docItem.appendChild(preview);
+                        
+                        try {
+                            const response = await fetch('/get_doc_preview', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ doc_id: doc.id })
+                            });
+                            const data = await response.json();
+                            preview.innerHTML = `
+                                <p>${data.preview}</p>
+                                <a href="https://docs.google.com/document/d/${doc.id}/edit" target="_blank" class="read-more">Read More →</a>
+                            `;
+                        } catch (error) {
+                            console.error('Error fetching preview:', error);
+                        }
+                        
+                        docList.appendChild(docItem);
                     }
-                    
-                    docList.appendChild(docItem);
                 }
             } catch (error) {
                 console.error('Error loading doc history:', error);
@@ -68,10 +70,13 @@
         }
 
         window.addEventListener('load', loadDocHistory);
-        setInterval(loadDocHistory, 5000);
+        
+        // Only refresh when explicitly requested
         window.addEventListener('message', (event) => {
             if (event.data === 'refreshHistory') {
-                loadDocHistory();
+                const docList = document.getElementById('docList');
+                docList.innerHTML = ''; // Clear existing content
+                loadDocHistory(); // Reload everything
             }
         });
     </script>
