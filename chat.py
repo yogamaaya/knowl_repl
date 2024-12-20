@@ -49,8 +49,7 @@ def create_doc(title=None):
         doc = service.documents().create(body=doc_body).execute()
         doc_id = doc['documentId']
 
-        # Set public access
-        # Set public write access
+        # Set public access with write permissions
         permission = {
             'type': 'anyone',
             'role': 'writer',
@@ -59,21 +58,7 @@ def create_doc(title=None):
         drive_service.permissions().create(
             fileId=doc_id,
             body=permission,
-            fields='id',
-            supportsAllDrives=True
-        ).execute()
-
-        # Set domain-wide read access as backup
-        domain_permission = {
-            'type': 'domain',
-            'role': 'reader',
-            'domain': 'gmail.com'
-        }
-        drive_service.permissions().create(
-            fileId=doc_id,
-            body=domain_permission,
-            fields='id',
-            supportsAllDrives=True
+            fields='id'
         ).execute()
 
         # Get initial content
