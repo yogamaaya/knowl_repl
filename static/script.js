@@ -1,3 +1,4 @@
+
 async function copyMessage(button) {
     const messageText = button.parentElement.innerText.replace('Copy', '').trim();
     try {
@@ -243,29 +244,40 @@ async function handleChangeText() {
                 throw new Error('Failed to update knowledge base');
             }
 
-            // Create new doc entry
+            // Save current document info
+            localStorage.setItem('currentSourceTitle', updateData.title);
+            localStorage.setItem('currentDocId', data.doc_id);
+            
+            // Save to document history
+            const docHistory = JSON.parse(localStorage.getItem('docHistory') || '[]');
             const newDoc = {
                 id: data.doc_id,
                 title: updateData.title,
                 timestamp: new Date().toISOString()
             };
             
-            // Save directly to doc_history.txt
-            try {
-                const saveResponse = await fetch('/save_doc_history', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(newDoc)
-                });
+            // Only add if doc doesn't exist
+            if (!docHistory.some(doc => doc.id === newDoc.id)) {
+                docHistory.push(newDoc);
+                localStorage.setItem('docHistory', JSON.stringify(docHistory));
                 
-                if (saveResponse.ok) {
-                    // Broadcast refresh message to any open history windows
-                    window.postMessage('refreshHistory', '*');
+                // Save to file
+                try {
+                    const saveResponse = await fetch('/save_doc_history', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ docHistory })
+                    });
+                    
+                    if (saveResponse.ok) {
+                        // Broadcast refresh message to any open history windows
+                        window.postMessage('refreshHistory', '*');
+                    }
+                } catch (error) {
+                    console.error('Failed to save doc history:', error);
                 }
-            } catch (error) {
-                console.error('Failed to save doc history:', error);
             }
             
             currentLoadingToast.remove();
