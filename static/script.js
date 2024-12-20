@@ -371,16 +371,15 @@ window.addEventListener('load', async function() {
     updateChat(currentPageMessages);
     
     const savedDocId = localStorage.getItem('currentDocId');
-    const defaultDocId = savedDocId || '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A';
-    
-    try {
-        const updateResponse = await fetch('/update_embeddings', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ doc_id: defaultDocId })
-        });
+    if (savedDocId) {
+        try {
+            const updateResponse = await fetch('/update_embeddings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ doc_id: savedDocId })
+            });
         
         const updateData = await updateResponse.json();
         if (updateResponse.ok && updateData.success) {

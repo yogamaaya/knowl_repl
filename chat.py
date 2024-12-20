@@ -195,25 +195,21 @@ def initialize_embeddings(ip_address=None):
     print("\n=== Initializing Embeddings ===")
     global text, doc_id, qa_chains, chat_histories
     
-    # Only initialize if no existing session
-    if ip_address and ip_address in qa_chains:
-        print(f"Using existing session for IP: {ip_address}")
-        return
-        
     if not qa_chains:
         qa_chains = {}
     if not chat_histories:
         chat_histories = {}
-        
-    if not doc_id:
+    
+    # Only use default doc_id for new IP sessions
+    if ip_address and ip_address not in qa_chains:
         doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
-        
-    print(f"Using doc_id: {doc_id}")
-    text = get_text_from_doc(doc_id)
-    print(f"Retrieved text (first 100 chars): {text[:100]}")
-    if ip_address:
+        print(f"New IP session, using default doc_id: {doc_id}")
         qa_chains[ip_address] = None
-    create_embeddings(text)
+        text = get_text_from_doc(doc_id)
+        print(f"Retrieved text (first 100 chars): {text[:100]}")
+        create_embeddings(text)
+    elif ip_address:
+        print(f"Using existing session for IP: {ip_address}")
 
 
 def on_submit(query, ip_address):
