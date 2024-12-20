@@ -1,15 +1,13 @@
 
 from flask import request, jsonify
-from chat import on_submit, session_manager
+from chat import on_submit
 import logging
-from functools import lru_cache
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-@lru_cache(maxsize=1000)
-def get_cached_response(message, ip_address):
-    return on_submit(message, ip_address)
+# Store messages per IP
+ip_messages = {}
 
 def receive_message():
     ip_address = request.remote_addr
@@ -20,20 +18,26 @@ def receive_message():
         return jsonify({'error': 'Invalid Content-Type'}), 400
         
     data = request.get_json()
-    message = data.get('message', '').strip()
+    message = data.get('message', '')
     
     if not message:
         logger.error("Empty message received")
         return jsonify({'error': 'Empty message'}), 400
 
-    try:
-        reply = get_cached_response(message, ip_address)
-        return jsonify({
-            'message': message,
-            'reply': reply['text'],
-            'audio_url': reply['audio_url'],
-            'messages': session_manager.chat_histories.get(ip_address, [])
-        })
-    except Exception as e:
-        logger.error(f"Error processing message: {str(e)}")
-        return jsonify({'error': 'Internal server error'}), 500
+    if ip_address not in ip_messages:
+        ip_messages[ip_address] = []
+        logger.info(f"Created new message history for IP: {ip_address}")
+
+    ip_messages[ip_address].append(message)
+    logger.info(f"Processing message: {message}")
+    
+    reply = on_submit(message, ip_address)
+    ip_messages[ip_address].append(reply['text'])
+    
+    logger.info(f"Sending response for IP: {ip_address}")
+    return jsonify({
+        'message': message,
+        'reply': reply['text'],
+        'audio_url': reply['audio_url'],
+        'messages': ip_messages[ip_address]
+    })
