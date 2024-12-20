@@ -1,5 +1,6 @@
 from flask import Flask, render_template
 from message_handler import receive_message
+import chat
 from chat import initialize_embeddings, create_doc, get_text_from_doc, create_embeddings, change_text_source, get_doc_title
 from flask import jsonify, request
 
@@ -16,8 +17,9 @@ messages = {}  # Store messages per session
 @app.route('/history')
 def history():
     ip_address = request.remote_addr
-    ip_history = chat.message_histories.get(ip_address, [])
-    return render_template('history.html', history=ip_history)
+    if ip_address not in chat.message_histories:
+        chat.message_histories[ip_address] = []
+    return render_template('history.html', history=chat.message_histories[ip_address])
 
 @app.route('/')
 def chat():
