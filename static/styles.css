@@ -567,19 +567,19 @@ button[type="submit"]:active {
     padding: 20px;
     line-height: 1.6;
     color: #333;
-    max-height: 1000px;
+    max-height: 2000px;
     overflow: hidden;
-    transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 1;
+    transform-origin: top;
+    transform: scaleY(1);
 }
 
 .doc-preview.collapsed {
     max-height: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-}
-
-.doc-preview:not(.collapsed) {
-    padding: 20px;
+    padding: 0 20px;
+    opacity: 0;
+    transform: scaleY(0);
 }
 
 .read-more {
