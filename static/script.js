@@ -157,15 +157,27 @@ function showPersistentToast(message, isPersistent = false) {
 }
 
 let currentChangeTextController = null;
-
 let currentLoadingToast = null;
+let checkContentInterval = null;
 
 async function handleChangeText() {
     try {
-        // Clean up any existing alerts
+        // Cleanup previous state
         const existingAlert = document.getElementById('customAlertContainer');
         if (existingAlert) {
             existingAlert.remove();
+        }
+        
+        if (checkContentInterval) {
+            clearInterval(checkContentInterval);
+        }
+
+        // Abort previous operation if exists
+        if (currentChangeTextController) {
+            currentChangeTextController.abort();
+            if (currentLoadingToast) {
+                currentLoadingToast.remove();
+            }
         }
         
         // Abort previous operation if exists
@@ -204,46 +216,53 @@ async function handleChangeText() {
         window.open(docUrl, '_blank');
         // showToast('Document created. Please paste your text and save.', 'success');
         
-        // Content checking function
-        const checkContent = async () => {
-            const startTime = Date.now();
-            let hasContent = false;
+        const startTime = Date.now();
+        let contentFound = false;
+
+        const checkContent = () => new Promise((resolve, reject) => {
+            let elapsedSeconds = 0;
             
-            while (!hasContent && (Date.now() - startTime) < (MAX_SECONDS * 1000)) {
+            checkContentInterval = setInterval(async () => {
                 try {
-                    loadingToast.textContent = `Checking for content... ${Math.floor((Date.now() - startTime) / 1000)}s`;
+                    elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
                     
+                    if (elapsedSeconds >= MAX_SECONDS) {
+                        clearInterval(checkContentInterval);
+                        resolve(false);
+                        return;
+                    }
+
+                    if (currentLoadingToast) {
+                        currentLoadingToast.textContent = `Checking for content... ${elapsedSeconds}s`;
+                    }
+
                     const checkResponse = await fetch('/check_doc_content', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ doc_id: data.doc_id }),
                         signal: currentChangeTextController.signal
                     });
-                    
+
                     if (!checkResponse.ok) {
                         throw new Error('Failed to check document content');
                     }
-                    
+
                     const checkData = await checkResponse.json();
                     if (checkData.has_content) {
-                        hasContent = true;
-                        break;
+                        clearInterval(checkContentInterval);
+                        resolve(true);
                     }
-                    
-                    await new Promise(resolve => setTimeout(resolve, 1000));
                 } catch (error) {
+                    if (error.name === 'AbortError') {
+                        clearInterval(checkContentInterval);
+                        reject(error);
+                    }
                     console.error('Content check error:', error);
-                    // Continue checking despite errors
                 }
-            }
-            
-            return hasContent;
-        };
-        
-        // Keep checking until content is found or user cancels
-        let contentFound = false;
-        do {
-            contentFound = await checkContent();
+            }, 1000);
+        });
+
+        contentFound = await checkContent();
             if (!contentFound) {
                 // Create overlay and custom alert
                 const container = document.createElement('div');
