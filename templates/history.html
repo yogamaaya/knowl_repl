@@ -42,16 +42,13 @@
                     preview.className = 'doc-preview collapsed';
                     
                     header.appendChild(titleButton);
-                    docItem.appendChild(header);
+                    docItem.appendChild(titleButton);
                     docItem.appendChild(preview);
                     
-                    const docState = {
-                        expanded: false,
-                        hasContent: false
-                    };
+                    let hasContent = false;
                     
                     titleButton.addEventListener('click', async function() {
-                        if (!docState.hasContent && !docState.expanded) {
+                        if (!hasContent) {
                             titleButton.disabled = true;
                             try {
                                 const response = await fetch('/get_doc_preview', {
@@ -66,7 +63,7 @@
                                     <p>${data.preview}</p>
                                     <a href="https://docs.google.com/document/d/${doc.id}/edit" target="_blank" class="read-more">Read More →</a>
                                 `;
-                                docState.hasContent = true;
+                                hasContent = true;
                             } catch (error) {
                                 console.error('Error fetching preview:', error);
                                 return;
@@ -75,8 +72,7 @@
                             }
                         }
                         
-                        docState.expanded = !docState.expanded;
-                        preview.classList.toggle('collapsed');
+                        preview.classList.toggle('show');
                         titleButton.classList.toggle('active');
                     });
                     
