@@ -17,8 +17,8 @@ def history():
 def chat():
     print("\n=== Starting Chat Application ===")
     print("Initializing embeddings with default document...")
-    initialize_embeddings(None)
-    return render_template('chat.html')
+    doc_info = initialize_embeddings(None)
+    return render_template('chat.html', initial_doc=doc_info)
 
 
 @app.route('/submit', methods=['POST', 'GET'])

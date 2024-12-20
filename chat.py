@@ -216,6 +216,10 @@ def initialize_embeddings(ip_address=None):
         qa_chains[ip_address] = None
     create_embeddings(text)
 
+    # Get document title and broadcast update
+    title = get_doc_title(doc_id)
+    return {"success": True, "doc_id": doc_id, "title": title}
+
 
 def on_submit(query, ip_address):
     logger.info(f"\n=== Processing Query for IP: {ip_address} ===")
