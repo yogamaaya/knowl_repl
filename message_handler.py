@@ -9,9 +9,10 @@ def receive_message():
         data = request.get_json()
         message = data.get('message', '')
         messages = []
+        ip_address = request.remote_addr
         if message:
             messages.append(message)
-            reply = on_submit(message)
+            reply = on_submit(message, ip_address)
             messages.append(reply['text'])
             print("response: ", messages)
             return jsonify({

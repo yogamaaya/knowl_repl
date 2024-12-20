@@ -16,10 +16,11 @@ from langchain.prompts import PromptTemplate
 load_dotenv()
 openai_api_key = os.getenv('OPENAI_API_KEY')
 
-chat_history = []
+# Store sessions by IP address
+qa_chains = {}
+chat_histories = {}
 text = ''
 doc_id = ''
-qa_chain = None
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 
