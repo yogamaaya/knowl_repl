@@ -27,6 +27,17 @@ creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def create_doc():
+    try:
+        credentials = service_account.Credentials.from_service_account_info(
+            creds, scopes=SCOPES)
+        service = build('docs', 'v1', credentials=credentials)
+        doc = service.documents().create(body={}).execute()
+        return doc.get('documentId')
+    except Exception as e:
+        logger.error(f"Error creating document: {str(e)}")
+        return None
+
 def get_doc_title(doc_id):
     try:
         credentials = service_account.Credentials.from_service_account_info(
