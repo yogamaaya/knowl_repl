@@ -101,9 +101,9 @@ def reset_qa_chain():
     chat_history = []
 
 
-def change_text_source(new_doc_id):
+def change_text_source(new_doc_id, ip_address=None):
     """Handle text source change and create new embeddings"""
-    global text, doc_id, qa_chain, chat_history
+    global text, doc_id
     try:
         doc_id = new_doc_id  # Update the global doc_id
         new_text = get_text_from_doc(doc_id)

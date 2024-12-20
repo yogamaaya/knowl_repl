@@ -68,8 +68,9 @@ def update_embeddings():
     data = request.get_json()
     doc_id = data.get('doc_id')
     if doc_id:
+        ip_address = request.remote_addr
         print(f"Updating embeddings for document: {doc_id}")
-        if change_text_source(doc_id):
+        if change_text_source(doc_id, ip_address):
             title = get_doc_title(doc_id)
             print("Embeddings updated successfully")
             return jsonify({"success": True, "title": title})
