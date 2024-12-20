@@ -99,8 +99,17 @@ window.addEventListener('load', async function() {
         localStorage.setItem('currentSourceTitle', updateData.title);
         localStorage.setItem('currentDocId', defaultDocId);
         
-        // Show temporary source toast
-        showToast(`New source: ${updateData.title}`, 'success');
+        // Show persistent source toast with link
+        const sourceToast = document.createElement('div');
+        sourceToast.className = 'toast persistent source-toast';
+        const link = document.createElement('a');
+        link.href = docUrl;
+        link.target = '_blank';
+        link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
+        link.textContent = `Current source: ${updateData.title}`;
+        sourceToast.appendChild(link);
+        document.getElementById('toastContainer').appendChild(sourceToast);
+        setTimeout(() => sourceToast.classList.add('show'), 10);
     }
 });
 
@@ -255,9 +264,12 @@ async function handleChangeText() {
         loadingToast.remove();
         showToast('Text Source Updated Successfully', 'success');
         
-        // Show persistent source toast with link
+        // Remove existing source toast
+        document.querySelector('.source-toast')?.remove();
+        
+        // Show new persistent source toast with link
         const sourceToast = document.createElement('div');
-        sourceToast.className = 'toast persistent';
+        sourceToast.className = 'toast persistent source-toast';
         const link = document.createElement('a');
         link.href = docUrl;
         link.target = '_blank';
