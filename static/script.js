@@ -130,22 +130,21 @@ async function handleChangeText() {
             if (elapsedSeconds >= MAX_SECONDS) {
                 if (currentDocId === latestDocId) {
                     const shouldContinue = await new Promise(resolve => {
-                        const container = document.createElement('div');
-                        container.id = 'customAlertContainer';
-                        container.innerHTML = `
-                            <div class="overlay"></div>
-                            <div class="custom-alert">
-                                <div>No content found after 60 seconds.</div>
-                                <div class="buttons">
-                                    <button onclick="handleAlertResponse(true)">Continue Waiting</button>
-                                    <button onclick="handleAlertResponse(false)">Cancel</button>
+                        const overlayContainer = document.getElementById('overlayContainer');
+                        overlayContainer.innerHTML = `
+                            <div id="customAlertContainer">
+                                <div class="overlay"></div>
+                                <div class="custom-alert">
+                                    <div>No content found after 60 seconds.</div>
+                                    <div class="buttons">
+                                        <button onclick="handleAlertResponse(true)">Continue Waiting</button>
+                                        <button onclick="handleAlertResponse(false)">Cancel</button>
+                                    </div>
                                 </div>
                             </div>
                         `;
-                        
-                        document.body.appendChild(container);
                         window.handleAlertResponse = (response) => {
-                            container.remove();
+                            overlayContainer.innerHTML = '';
                             resolve(response);
                         };
                     });
