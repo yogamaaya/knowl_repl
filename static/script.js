@@ -156,47 +156,17 @@ function showPersistentToast(message, isPersistent = false) {
     return toast;
 }
 
-let currentChangeTextController = null;
-let currentLoadingToast = null;
-let checkContentInterval = null;
-
 async function handleChangeText() {
-    // Clean up any existing operation
-    if (checkContentInterval) {
-        clearInterval(checkContentInterval);
-    }
-
-    if (currentChangeTextController) {
-        currentChangeTextController.abort();
-        currentChangeTextController = null;
-    }
-
-        if (currentLoadingToast) {
-            currentLoadingToast.remove();
-            currentLoadingToast = null;
-        }
-
-        const existingAlert = document.getElementById('customAlertContainer');
-        if (existingAlert) {
-            existingAlert.remove();
-        }
-
-        // Remove any existing source toast
-        const existingToast = document.querySelector('.source-toast');
-        if (existingToast) {
-            existingToast.remove();
-        }
-        
-        currentChangeTextController = new AbortController();
-        currentLoadingToast = null;
-        const MAX_SECONDS = 60;
+    let loadingToast = null;
+    const MAX_SECONDS = 60;
+    
+    try {
         // Show creating document toast
-        currentLoadingToast = showPersistentToast(' Please have text ready to paste in a new document...', true);
+        loadingToast = showPersistentToast(' Please have text ready to paste in a new document...', true);
         
         // Create document
         const response = await fetch('/create_doc', {
             method: 'POST',
-            signal: currentChangeTextController.signal
         });
         
         if (!response.ok) {
@@ -213,57 +183,48 @@ async function handleChangeText() {
         window.open(docUrl, '_blank');
         // showToast('Document created. Please paste your text and save.', 'success');
         
-        const startTime = Date.now();
-        let contentFound = false;
-
-        const checkContent = () => new Promise((resolve, reject) => {
-            let elapsedSeconds = 0;
+        // Content checking function
+        const checkContent = async () => {
+            const startTime = Date.now();
+            let hasContent = false;
             
-            checkContentInterval = setInterval(async () => {
+            while (!hasContent && (Date.now() - startTime) < (MAX_SECONDS * 1000)) {
                 try {
-                    elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                    loadingToast.textContent = `Checking for content... ${Math.floor((Date.now() - startTime) / 1000)}s`;
                     
-                    if (elapsedSeconds >= MAX_SECONDS) {
-                        clearInterval(checkContentInterval);
-                        resolve(false);
-                        return;
-                    }
-
-                    if (currentLoadingToast) {
-                        currentLoadingToast.textContent = `Checking for content... ${elapsedSeconds}s`;
-                    }
-
                     const checkResponse = await fetch('/check_doc_content', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ doc_id: data.doc_id }),
-                        signal: currentChangeTextController.signal
+                        body: JSON.stringify({ doc_id: data.doc_id })
                     });
-
+                    
                     if (!checkResponse.ok) {
                         throw new Error('Failed to check document content');
                     }
-
+                    
                     const checkData = await checkResponse.json();
                     if (checkData.has_content) {
-                        clearInterval(checkContentInterval);
-                        resolve(true);
+                        hasContent = true;
+                        break;
                     }
+                    
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 } catch (error) {
-                    if (error.name === 'AbortError') {
-                        clearInterval(checkContentInterval);
-                        reject(error);
-                    }
                     console.error('Content check error:', error);
-                    throw error;
+                    // Continue checking despite errors
                 }
-            }, 1000);
-        });
-
-        contentFound = await checkContent();
-        if (!contentFound) {
-            // Create overlay and custom alert
-            const container = document.createElement('div');
+            }
+            
+            return hasContent;
+        };
+        
+        // Keep checking until content is found or user cancels
+        let contentFound = false;
+        do {
+            contentFound = await checkContent();
+            if (!contentFound) {
+                // Create overlay and custom alert
+                const container = document.createElement('div');
                 container.id = 'customAlertContainer';
                 const overlay = document.createElement('div');
                 overlay.className = 'overlay';
@@ -302,31 +263,14 @@ async function handleChangeText() {
                     throw new Error('Document update cancelled by user');
                 }
             }
-        // Wait for user response
-                const shouldContinue = await new Promise(resolve => {
-                    window.handleAlertResponse = (response) => {
-                        container.remove();
-                        resolve(response);
-                    };
-                });
-                
-                if (!shouldContinue) {
-                    throw new Error('Document update cancelled by user');
-                }
-                
-                // If user wants to continue, restart the check
-                return handleChangeText();
-            }
-            
-            // Update knowledge base
-            if (currentLoadingToast) {
-                currentLoadingToast.textContent = 'Updating knowledge base...';
-            }
+        } while (!contentFound);
+        
+        // Update knowledge base
+        loadingToast.textContent = 'Updating knowledge base...';
         const updateResponse = await fetch('/update_embeddings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ doc_id: data.doc_id }),
-            signal: currentChangeTextController.signal
+            body: JSON.stringify({ doc_id: data.doc_id })
         });
         
         if (!updateResponse.ok) {
@@ -372,18 +316,10 @@ async function handleChangeText() {
         
     } catch (error) {
         console.error('Error:', error);
-        if (currentLoadingToast) {
-            currentLoadingToast.remove();
+        if (loadingToast) {
+            loadingToast.remove();
         }
-        if (error.name !== 'AbortError') {
-            showToast(error.message, 'error');
-        }
-        // Cleanup on error
-        currentChangeTextController = null;
-    } finally {
-        if (checkContentInterval) {
-            clearInterval(checkContentInterval);
-        }
+        showToast(error.message, 'error');
     }
 }
 let currentAudio = null;
