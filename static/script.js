@@ -195,38 +195,46 @@ async function handleChangeText() {
         
         // Content checking function
         const checkContent = async () => {
-            currentDocCheck = new AbortController();
-            const startTime = Date.now();
-            let hasContent = false;
-            
-            while (!hasContent && (Date.now() - startTime) < (MAX_SECONDS * 1000) && !currentDocCheck.signal.aborted) {
-                try {
-                    loadingToast.textContent = `Checking for content... ${Math.floor((Date.now() - startTime) / 1000)}s`;
-                    
-                    const checkResponse = await fetch('/check_doc_content', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ doc_id: data.doc_id })
-                    });
-                    
-                    if (!checkResponse.ok) {
-                        throw new Error('Failed to check document content');
+            try {
+                currentDocCheck = new AbortController();
+                const startTime = Date.now();
+                let hasContent = false;
+                
+                while (!hasContent && (Date.now() - startTime) < (MAX_SECONDS * 1000) && !currentDocCheck.signal.aborted) {
+                    try {
+                        currentLoadingToast.textContent = `Checking for content... ${Math.floor((Date.now() - startTime) / 1000)}s`;
+                        
+                        const checkResponse = await fetch('/check_doc_content', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ doc_id: data.doc_id }),
+                            signal: currentDocCheck.signal
+                        });
+                        
+                        if (!checkResponse.ok) {
+                            throw new Error('Failed to check document content');
+                        }
+                        
+                        const checkData = await checkResponse.json();
+                        if (checkData.has_content) {
+                            hasContent = true;
+                            break;
+                        }
+                        
+                        await new Promise(resolve => setTimeout(resolve, 2000)); // Increased interval
+                    } catch (error) {
+                        if (error.name === 'AbortError') {
+                            return false;
+                        }
+                        console.error('Content check error:', error);
                     }
-                    
-                    const checkData = await checkResponse.json();
-                    if (checkData.has_content) {
-                        hasContent = true;
-                        break;
-                    }
-                    
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                } catch (error) {
-                    console.error('Content check error:', error);
-                    // Continue checking despite errors
                 }
+                
+                return hasContent;
+            } catch (error) {
+                console.error('Content check failed:', error);
+                return false;
             }
-            
-            return hasContent;
         };
         
         // Keep checking until content is found or user cancels
