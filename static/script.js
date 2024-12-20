@@ -238,11 +238,8 @@ async function handleChangeText() {
                     });
                     
                     if (saveResponse.ok) {
-                        // Refresh history page if it's open
-                        const historyWindow = window.open('', 'history');
-                        if (historyWindow) {
-                            historyWindow.postMessage('refreshHistory', '*');
-                        }
+                        // Broadcast refresh message to any open history windows
+                        window.postMessage('refreshHistory', '*');
                     }
                 } catch (error) {
                     console.error('Failed to save doc history:', error);
