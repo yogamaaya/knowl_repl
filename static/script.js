@@ -156,13 +156,23 @@ function showPersistentToast(message, isPersistent = false) {
     return toast;
 }
 
+let currentDocCheck = null;
+let currentLoadingToast = null;
+
 async function handleChangeText() {
-    let loadingToast = null;
+    // Clean up any existing check
+    if (currentDocCheck) {
+        currentDocCheck.abort();
+    }
+    
+    if (currentLoadingToast) {
+        currentLoadingToast.remove();
+    }
+
     const MAX_SECONDS = 60;
+    currentLoadingToast = showPersistentToast('Please have text ready to paste in a new document...', true);
     
     try {
-        // Show creating document toast
-        loadingToast = showPersistentToast(' Please have text ready to paste in a new document...', true);
         
         // Create document
         const response = await fetch('/create_doc', {
@@ -185,10 +195,11 @@ async function handleChangeText() {
         
         // Content checking function
         const checkContent = async () => {
+            currentDocCheck = new AbortController();
             const startTime = Date.now();
             let hasContent = false;
             
-            while (!hasContent && (Date.now() - startTime) < (MAX_SECONDS * 1000)) {
+            while (!hasContent && (Date.now() - startTime) < (MAX_SECONDS * 1000) && !currentDocCheck.signal.aborted) {
                 try {
                     loadingToast.textContent = `Checking for content... ${Math.floor((Date.now() - startTime) / 1000)}s`;
                     
