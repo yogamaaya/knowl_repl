@@ -294,8 +294,11 @@ function toggleAudio() {
 
 // Handle page load
 window.addEventListener('load', async function() {
-    currentPageMessages = [];
-    updateChat([]);
+    currentPageMessages = [
+        "Who is Knowl and How to Use?",
+        "✨ Knowl is intented to be your fun partner to understand a text from a different perspective of your own ✨<br> 🌕 <br>The way to helpful responses is in asking helpful questions. Here are some tips to ask effectively:<br>🌖<br> Try prefacing questions with \"In this context\", \"According to this text\" etc.!<br>🌗<br> Whenever you paste new text, please ask <b>new and specific questions to get new answers.</b> Knowl retains all information of text corpora given to date. <br>🌘<br>You can try rephrasing the same question or command if a response doesn't please you!<br> A starter quetion is \"What is the main focus of this text\"?🌑<br> Try to use keywords of the text, and reference the current context as much as possible.<br><p> PS: Please be patient with Knowl as she thinks~</p>"
+    ];
+    updateChat(currentPageMessages);
     
     const defaultDocId = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A';
     
