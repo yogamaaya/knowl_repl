@@ -20,6 +20,8 @@ openai_api_key = os.getenv('OPENAI_API_KEY')
 # Store sessions by IP address
 qa_chains = {}
 chat_histories = {}
+ip_documents = {}  # Store document IDs by IP
+DEFAULT_DOC_ID = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A'
 text = ''
 doc_id = ''
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
@@ -103,7 +105,7 @@ def reset_qa_chain():
 
 def change_text_source(new_doc_id, ip_address=None):
     """Handle text source change and create new embeddings"""
-    global text, doc_id
+    global text, doc_id, ip_documents
     
     try:
         if not new_doc_id:
@@ -120,9 +122,11 @@ def change_text_source(new_doc_id, ip_address=None):
             print(f"Error getting text from new doc: {str(e)}")
             return False
             
-        # Update globals
+        # Update globals and IP document mapping
         doc_id = new_doc_id
         text = new_text
+        if ip_address:
+            ip_documents[ip_address] = new_doc_id
         print(f"New document ID: {doc_id}")
         print(f"First 100 characters of new text: {text[:100]}")
         
@@ -218,7 +222,7 @@ def create_embeddings(text, ip_address=None):
 
 def initialize_embeddings(ip_address=None):
     print("\n=== Initializing Embeddings ===")
-    global text, doc_id, qa_chains, chat_histories
+    global text, doc_id, qa_chains, chat_histories, ip_documents
     
     try:
         # Initialize dictionaries if not exist
@@ -226,18 +230,31 @@ def initialize_embeddings(ip_address=None):
             qa_chains = {}
         if not chat_histories:
             chat_histories = {}
+        if not ip_documents:
+            ip_documents = {}
             
-        # Always try to load latest doc from history
-        try:
-            with open('doc_history.txt', 'r') as f:
-                doc_history = json.load(f)
-                if doc_history:
-                    latest_doc = doc_history[-1]
-                    doc_id = latest_doc['id']
-                    print(f"Using latest doc from history: {doc_id}")
-                else:
-                    print("No document history found")
-                    return False
+        # Use IP's existing document if available
+        if ip_address and ip_address in ip_documents:
+            doc_id = ip_documents[ip_address]
+            print(f"Using IP's existing doc: {doc_id}")
+        else:
+            # Try to load from history or use default
+            try:
+                with open('doc_history.txt', 'r') as f:
+                    doc_history = json.load(f)
+                    if doc_history:
+                        latest_doc = doc_history[-1]
+                        doc_id = latest_doc['id']
+                        print(f"Using latest doc from history: {doc_id}")
+                    else:
+                        doc_id = DEFAULT_DOC_ID
+                        print(f"Using default doc: {doc_id}")
+            except (FileNotFoundError, json.JSONDecodeError) as e:
+                doc_id = DEFAULT_DOC_ID
+                print(f"Using default doc: {doc_id}")
+            
+            if ip_address:
+                ip_documents[ip_address] = doc_id
         except (FileNotFoundError, json.JSONDecodeError) as e:
             print(f"Error loading doc history: {str(e)}")
             return False

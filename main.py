@@ -17,7 +17,7 @@ def history():
 def chat():
     print("\n=== Starting Chat Application ===")
     print("Initializing embeddings with default document...")
-    initialize_embeddings(None)
+    initialize_embeddings(request.remote_addr)
     return render_template('chat.html')
 
 
