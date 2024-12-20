@@ -320,8 +320,7 @@ def on_submit(query, ip_address):
     client = texttospeech.TextToSpeechClient.from_service_account_info(
         credentials_dict)
 
-    latest_answer = updated_history[-1][1] if updated_history else answer
-    synthesis_input = texttospeech.SynthesisInput(text=latest_answer)
+    synthesis_input = texttospeech.SynthesisInput(text=answer)
     voice = texttospeech.VoiceSelectionParams(
         language_code="en-US",
         name="en-US-Studio-O",
