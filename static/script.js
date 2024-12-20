@@ -156,7 +156,16 @@ function showPersistentToast(message, isPersistent = false) {
     return toast;
 }
 
+let currentChangeTextController = null;
+
 async function handleChangeText() {
+    // Abort previous operation if exists
+    if (currentChangeTextController) {
+        currentChangeTextController.abort();
+        currentChangeTextController = null;
+    }
+    
+    currentChangeTextController = new AbortController();
     let loadingToast = null;
     const MAX_SECONDS = 60;
     
@@ -167,6 +176,7 @@ async function handleChangeText() {
         // Create document
         const response = await fetch('/create_doc', {
             method: 'POST',
+            signal: currentChangeTextController.signal
         });
         
         if (!response.ok) {
@@ -195,7 +205,8 @@ async function handleChangeText() {
                     const checkResponse = await fetch('/check_doc_content', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ doc_id: data.doc_id })
+                        body: JSON.stringify({ doc_id: data.doc_id }),
+                        signal: currentChangeTextController.signal
                     });
                     
                     if (!checkResponse.ok) {
@@ -270,7 +281,8 @@ async function handleChangeText() {
         const updateResponse = await fetch('/update_embeddings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ doc_id: data.doc_id })
+            body: JSON.stringify({ doc_id: data.doc_id }),
+            signal: currentChangeTextController.signal
         });
         
         if (!updateResponse.ok) {
