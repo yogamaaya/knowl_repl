@@ -1,4 +1,23 @@
 
+async function copyMessage(button) {
+    const messageText = button.parentElement.innerText.replace('Copy', '').trim();
+    try {
+        await navigator.clipboard.writeText(messageText);
+        const tooltip = button.querySelector('.copy-tooltip');
+        const originalText = tooltip.textContent;
+        button.classList.add('copied');
+        tooltip.textContent = 'Copied!';
+        setTimeout(() => {
+            button.classList.remove('copied');
+            tooltip.textContent = originalText;
+        }, 2000);
+    } catch (err) {
+        console.error('Failed to copy text:', err);
+    }
+}
+
+
+
 let currentDocCheck = null;
 let currentLoadingToast = null;
 let latestDocId = null;
@@ -81,7 +100,15 @@ function updateChat(messages) {
         answerDiv.className = 'chat-message';
         answerDiv.innerHTML = `
             <img src="/static/knowl_logo.png" alt="Knowl Logo" class="logo">
-            <div class="message-bubble">${currentPageMessages[lastAnswerIndex]}</div>
+            <div class="message-bubble">
+                ${currentPageMessages[lastAnswerIndex]}
+                <button class="copy-btn" onclick="copyMessage(this)" aria-label="Copy message">
+                    <div class="copy-tooltip">Copy</div>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
+                </button>
+            </div>
         `;
         chatBox.appendChild(answerDiv);
     }
