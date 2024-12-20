@@ -17,8 +17,11 @@
     
     </div>
 <div class="sticky-header">
-
-    
+    <div class="video-background">
+        <video autoplay loop muted playsinline>
+            <source src="{{ url_for('static', filename='starry.mp4') }}" type="video/mp4">
+        </video>
+    </div>
     <h1>Talk to Knowl 🦉 </h1>
     
     <form class="input-form"  id="messageForm" onsubmit="submitMessage(event)">
