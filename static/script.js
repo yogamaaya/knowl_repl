@@ -158,11 +158,17 @@ function showPersistentToast(message, isPersistent = false) {
 
 let currentDocCheck = null;
 let currentLoadingToast = null;
+let latestDocId = null;
+let previousDocIds = [];
 
 async function handleChangeText() {
     // Clean up any existing check
     if (currentDocCheck) {
         currentDocCheck.abort();
+    }
+    
+    if (latestDocId) {
+        previousDocIds.push(latestDocId);
     }
     
     if (currentLoadingToast) {
@@ -187,6 +193,8 @@ async function handleChangeText() {
         if (!data.doc_id) {
             throw new Error('Failed to create document: No document ID received');
         }
+        
+        latestDocId = data.doc_id;
         
         // Open document and update toast
         const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
@@ -301,15 +309,20 @@ async function handleChangeText() {
             throw new Error('Failed to update knowledge base: ' + (updateData.error || 'Unknown error'));
         }
         
-        // Update local storage and history
+        // Update local storage and history for only the latest successful document
         localStorage.setItem('currentSourceTitle', updateData.title);
-        localStorage.setItem('currentDocId', data.doc_id);
+        localStorage.setItem('currentDocId', latestDocId);
         
         const docHistory = JSON.parse(localStorage.getItem('docHistory') || '[]');
-        if (!docHistory.find(doc => doc.id === data.doc_id)) {
-            docHistory.push({ id: data.doc_id, title: updateData.title });
-            localStorage.setItem('docHistory', JSON.stringify(docHistory));
+        // Remove any previously created but unused documents
+        const filteredHistory = docHistory.filter(doc => !previousDocIds.includes(doc.id));
+        // Add only the latest successful document
+        if (!filteredHistory.find(doc => doc.id === latestDocId)) {
+            filteredHistory.push({ id: latestDocId, title: updateData.title });
+            localStorage.setItem('docHistory', JSON.stringify(filteredHistory));
         }
+        // Clear previous document tracking
+        previousDocIds = [];
         
         // Update UI with success
         loadingToast.remove();
