@@ -1,9 +1,21 @@
-function change() // no ';' here
-{
+
+let currentDocCheck = null;
+let currentLoadingToast = null;
+let latestDocId = null;
+let currentAudio = null;
+let isPlaying = false;
+let currentPageMessages = [];
+
+// Previous functions remain unchanged
+function change() {
     var elem = document.getElementById("tips");
-    if (elem.value=="Show Tips!") {elem.value = "Close";
-        elem.innerHTML = "Close";}
-    else {elem.value = "Show Tips!"; elem.innerHTML = "Show"; };
+    if (elem.value=="Show Tips!") {
+        elem.value = "Close";
+        elem.innerHTML = "Close";
+    } else {
+        elem.value = "Show Tips!";
+        elem.innerHTML = "Show";
+    }
 }
 
 async function submitMessage(event) {
@@ -14,12 +26,7 @@ async function submitMessage(event) {
 
     if (message) {
         try {
-            // Show loading spinner
             loadingElement.style.display = 'block';
-
-
-
-
             const response = await fetch('/submit', {
                 method: 'POST',
                 headers: {
@@ -32,9 +39,8 @@ async function submitMessage(event) {
             if (response.ok) {
                 console.log('Success: ', data.messages);
                 updateChat(data.messages);
-                messageInput.value = ''; // clear the input field
+                messageInput.value = '';
                 
-                // Show play button when audio is available
                 if (data.audio_url) {
                     window.lastAudioUrl = data.audio_url;
                     const playButton = document.getElementById('playAudioBtn');
@@ -46,28 +52,21 @@ async function submitMessage(event) {
         } catch (error) {
             console.error('Error:', error);
         } finally {
-            // Hide loading spinner
             loadingElement.style.display = 'none';
         }
     }
 }
 
-let currentPageMessages = []; // Store messages for current session only
-
 function updateChat(messages) {
     const chatBox = document.getElementById('chatBox');
-    chatBox.innerHTML = '';  // Clear existing messages
-
-    // Update current page messages
+    chatBox.innerHTML = '';
     currentPageMessages = messages;
 
-    // Display messages for current session only
     for (let i = 0; i < currentPageMessages.length; i++) {
         let msg = currentPageMessages[i];
-        if (i % 2 == 0){
+        if (i % 2 == 0) {
             msg = `<img src="/static/user_logo.png" alt="Knowl Logo" class="logo"> ${msg}</li>`;
-        }
-        else{
+        } else {
             msg = `<img src="/static/knowl_logo.png" alt="Knowl Logo" class="logo"> ${msg}</li>`;
         }
         const messageElement = document.createElement('p');
@@ -76,92 +75,7 @@ function updateChat(messages) {
     }
 }
 
-// Handle page load
-window.addEventListener('load', async function() {
-    currentPageMessages = [];
-    updateChat([]);
-    
-    // Reset to default doc
-    const defaultDocId = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A';
-    
-    // Update embeddings with default doc
-    const updateResponse = await fetch('/update_embeddings', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ doc_id: defaultDocId })
-    });
-    
-    const updateData = await updateResponse.json();
-    if (updateResponse.ok && updateData.success) {
-        const docUrl = `https://docs.google.com/document/d/${defaultDocId}/edit`;
-        localStorage.setItem('currentSourceTitle', updateData.title);
-        localStorage.setItem('currentDocId', defaultDocId);
-        
-        // Show persistent source toast with link
-        const sourceToast = document.createElement('div');
-        sourceToast.className = 'toast persistent source-toast';
-        const link = document.createElement('a');
-        link.href = docUrl;
-        link.target = '_blank';
-        link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
-        link.textContent = `Current source: ${updateData.title}`;
-        sourceToast.appendChild(link);
-        document.getElementById('toastContainer').appendChild(sourceToast);
-        setTimeout(() => sourceToast.classList.add('show'), 10);
-    }
-});
-
-
-function handleDonate() {
-    // Open donation page in new tab
-window.open('https://www.buymeacoffee.com/knowl', '_blank');
-}
-
-function showToast(message, type = '') {
-    const container = document.getElementById('toastContainer');
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
-
-    container.appendChild(toast);
-
-    // Trigger reflow to enable animation
-    toast.offsetHeight;
-
-    // Show toast
-    setTimeout(() => toast.classList.add('show'), 10);
-
-    // Remove toast after 3 seconds
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => container.removeChild(toast), 300);
-    }, 3000);
-}
-
-function showPersistentToast(message, isPersistent = false) {
-    const container = document.getElementById('toastContainer');
-    const toast = document.createElement('div');
-    toast.className = `toast ${isPersistent ? 'persistent' : ''}`;
-    toast.textContent = message;
-    container.appendChild(toast);
-    setTimeout(() => toast.classList.add('show'), 10);
-    if (!isPersistent) {
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => container.removeChild(toast), 300);
-        }, 3000);
-    }
-    return toast;
-}
-
-let currentDocCheck = null;
-let currentLoadingToast = null;
-let latestDocId = null;
-
 async function handleChangeText() {
-    // Clean up existing check and overlay
     if (currentDocCheck) {
         currentDocCheck.abort();
     }
@@ -174,11 +88,8 @@ async function handleChangeText() {
     }
 
     try {
-
-        // Show initial toast
         currentLoadingToast = showPersistentToast('Please have text ready to paste into new document...', true);
 
-        // Create new document
         const response = await fetch('/create_doc', {
             method: 'POST'
         });
@@ -193,25 +104,21 @@ async function handleChangeText() {
         }
 
         latestDocId = data.doc_id;
-
-        // Open document in new tab
         const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
         window.open(docUrl, '_blank');
 
-        // Content checking loop
         const MAX_SECONDS = 60;
         const CHECK_INTERVAL = 3000;
         let contentFound = false;
         const startTime = Date.now();
         
         currentDocCheck = new AbortController();
-        const currentDocId = data.doc_id;  // Store current doc ID for comparison
+        const currentDocId = data.doc_id;
 
         while (!contentFound && !currentDocCheck.signal.aborted) {
             const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
             
             if (elapsedSeconds >= MAX_SECONDS) {
-                // Show continue/cancel prompt only for latest document
                 if (currentDocId === latestDocId) {
                     const shouldContinue = await new Promise(resolve => {
                         const container = document.createElement('div');
@@ -241,7 +148,7 @@ async function handleChangeText() {
                         return;
                     }
                 } else {
-                    break;  // Stop checking if not latest document
+                    break;
                 }
             }
 
@@ -292,14 +199,12 @@ async function handleChangeText() {
                 throw new Error('Failed to update knowledge base');
             }
 
-            // Update storage and UI only for successful update
             localStorage.setItem('currentSourceTitle', updateData.title);
             localStorage.setItem('currentDocId', data.doc_id);
             
             currentLoadingToast.remove();
             showToast('Text Source Updated Successfully', 'success');
 
-            // Update source toast
             const container = document.getElementById('toastContainer');
             const existingToast = container.querySelector('.source-toast');
             if (existingToast) {
@@ -324,201 +229,36 @@ async function handleChangeText() {
         showToast(error.message, 'error');
     }
 }
-        
-        // Create document
-        const response = await fetch('/create_doc', {
-            method: 'POST',
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to create document: Server error');
-        }
-        
-        const data = await response.json();
-        if (!data.doc_id) {
-            throw new Error('Failed to create document: No document ID received');
-        }
-        
-        latestDocId = data.doc_id;
-        
-        // Open document and update toast
-        const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
-        window.open(docUrl, '_blank');
-        // showToast('Document created. Please paste your text and save.', 'success');
-        
-        // Content checking function
-        const checkContent = async () => {
-            currentDocCheck = new AbortController();
-            const startTime = Date.now();
-            let hasContent = false;
-            
-            try {
-                while (!hasContent && (Date.now() - startTime) < (MAX_SECONDS * 1000) && !currentDocCheck.signal.aborted) {
-                    currentLoadingToast.textContent = `Checking for content... ${Math.floor((Date.now() - startTime) / 1000)}s`;
-                    
-                    const checkResponse = await fetch('/check_doc_content', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ doc_id: data.doc_id }),
-                        signal: currentDocCheck.signal
-                    });
-                        
-                        if (!checkResponse.ok) {
-                            throw new Error('Failed to check document content');
-                        }
-                        
-                        const checkData = await checkResponse.json();
-                        if (checkData.has_content) {
-                            hasContent = true;
-                            break;
-                        }
-                        
-                        await new Promise(resolve => setTimeout(resolve, 3000)); // Check every 3 seconds
-                    } catch (error) {
-                        if (error.name === 'AbortError') {
-                            return false;
-                        }
-                        console.error('Content check error:', error);
-                    }
-                }
-                
-                return hasContent;
-            } catch (error) {
-                console.error('Content check failed:', error);
-                return false;
-            }
-        };
-        
-        // Keep checking until content is found or user cancels
-        let contentFound = false;
-        const currentDocId = data.doc_id;  // Store current doc ID for comparison
-        
-        do {
-            // Only continue checking if this is still the latest document
-            if (currentDocId !== latestDocId) {
-                break;
-            }
-            
-            contentFound = await checkContent();
-            if (!contentFound) {
-                // Create overlay and custom alert only for latest document
-                if (currentDocId === latestDocId) {
-                    const container = document.createElement('div');
-                    container.id = 'customAlertContainer';
-                    const overlay = document.createElement('div');
-                    overlay.className = 'overlay';
-                    const customAlert = document.createElement('div');
-                    customAlert.className = 'custom-alert';
-                    customAlert.innerHTML = `
-                        <div>No content found after 60 seconds.</div>
-                        <div class="buttons">
-                            <button onclick="handleAlertResponse(true)">Continue Waiting</button>
-                            <button onclick="handleAlertResponse(false)">Cancel</button>
-                        </div>
-                    `;
-                    container.appendChild(overlay);
-                    container.appendChild(customAlert);
-                    const changeTextDiv = document.getElementById('changeText');
-                    changeTextDiv.parentNode.insertBefore(container, changeTextDiv.nextSibling);
-                    setTimeout(() => {
-                        overlay.classList.add('show');
-                        customAlert.classList.add('show');
-                    }, 10);
 
-                    // Wait for user response
-                    const response = await new Promise(resolve => {
-                        window.handleAlertResponse = (shouldContinue) => {
-                            overlay.classList.remove('show');
-                            customAlert.classList.remove('show');
-                            setTimeout(() => {
-                                overlay.remove();
-                                customAlert.remove();
-                            }, 300);
-                            resolve(shouldContinue);
-                        };
-                    });
-                    
-                    if (!response) {
-                        // Stop checking and show cancellation toast
-                        if (currentDocCheck) {
-                            currentDocCheck.abort();
-                        }
-                        if (currentLoadingToast) {
-                            currentLoadingToast.remove();
-                        }
-                        showToast('Text source change cancelled - keeping previous source', 'error');
-                        return;
-                    }
-                } else {
-                    break;  // Stop checking if this is not the latest document
-                }
-            }
-        } while (!contentFound && currentDocId === latestDocId);
-        
-        // Update knowledge base
-        loadingToast.textContent = 'Updating knowledge base...';
-        const updateResponse = await fetch('/update_embeddings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ doc_id: data.doc_id })
-        });
-        
-        if (!updateResponse.ok) {
-            throw new Error('Failed to update knowledge base');
-        }
-        
-        const updateData = await updateResponse.json();
-        if (!updateData.success) {
-            throw new Error('Failed to update knowledge base: ' + (updateData.error || 'Unknown error'));
-        }
-        
-        // Update local storage and history for only the latest successful document
-        localStorage.setItem('currentSourceTitle', updateData.title);
-        localStorage.setItem('currentDocId', latestDocId);
-        
-        const docHistory = JSON.parse(localStorage.getItem('docHistory') || '[]');
-        // Remove any previously created but unused documents
-        const filteredHistory = docHistory.filter(doc => !previousDocIds.includes(doc.id));
-        // Add only the latest successful document
-        if (!filteredHistory.find(doc => doc.id === latestDocId)) {
-            filteredHistory.push({ id: latestDocId, title: updateData.title });
-            localStorage.setItem('docHistory', JSON.stringify(filteredHistory));
-        }
-        // Clear previous document tracking
-        previousDocIds = [];
-        
-        // Update UI with success
-        loadingToast.remove();
-        showToast('Text Source Updated Successfully', 'success');
-        
-        // Update source toast with new document info
-        const existingToast = document.querySelector('.source-toast');
-        if (existingToast) {
-            existingToast.remove();
-        }
-        
-        // Show new persistent source toast with link
-        const sourceToast = document.createElement('div');
-        sourceToast.className = 'toast persistent source-toast';
-        const link = document.createElement('a');
-        link.href = docUrl;
-        link.target = '_blank';
-        link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
-        link.textContent = `Current source: ${updateData.title}`;
-        sourceToast.appendChild(link);
-        document.getElementById('toastContainer').appendChild(sourceToast);
-        setTimeout(() => sourceToast.classList.add('show'), 10);
-        
-    } catch (error) {
-        console.error('Error:', error);
-        if (loadingToast) {
-            loadingToast.remove();
-        }
-        showToast(error.message, 'error');
-    }
+function showToast(message, type = '') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    toast.offsetHeight;
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => container.removeChild(toast), 300);
+    }, 3000);
 }
-let currentAudio = null;
-let isPlaying = false;
+
+function showPersistentToast(message, isPersistent = false) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${isPersistent ? 'persistent' : ''}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    if (!isPersistent) {
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => container.removeChild(toast), 300);
+        }, 3000);
+    }
+    return toast;
+}
 
 function toggleAudio() {
     const playButton = document.getElementById('playAudioBtn');
@@ -543,3 +283,41 @@ function toggleAudio() {
         }
     }
 }
+
+// Handle page load
+window.addEventListener('load', async function() {
+    currentPageMessages = [];
+    updateChat([]);
+    
+    const defaultDocId = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A';
+    
+    try {
+        const updateResponse = await fetch('/update_embeddings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ doc_id: defaultDocId })
+        });
+        
+        const updateData = await updateResponse.json();
+        if (updateResponse.ok && updateData.success) {
+            const docUrl = `https://docs.google.com/document/d/${defaultDocId}/edit`;
+            localStorage.setItem('currentSourceTitle', updateData.title);
+            localStorage.setItem('currentDocId', defaultDocId);
+            
+            const sourceToast = document.createElement('div');
+            sourceToast.className = 'toast persistent source-toast';
+            const link = document.createElement('a');
+            link.href = docUrl;
+            link.target = '_blank';
+            link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
+            link.textContent = `Current source: ${updateData.title}`;
+            sourceToast.appendChild(link);
+            document.getElementById('toastContainer').appendChild(sourceToast);
+            setTimeout(() => sourceToast.classList.add('show'), 10);
+        }
+    } catch (error) {
+        console.error('Error loading default document:', error);
+    }
+});
