@@ -29,11 +29,15 @@ def submit_message():
 
 @app.route('/create_doc', methods=['POST'])
 def new_doc():
-    print("Creating new Google Doc...")
-    doc_id = create_doc()
-    if doc_id:
-        return jsonify({"doc_id": doc_id})
-    return jsonify({"error": "Failed to create document"}), 500
+    try:
+        print("Creating new Google Doc...")
+        doc_id = create_doc()
+        if doc_id:
+            return jsonify({"doc_id": doc_id})
+        return jsonify({"error": "Failed to create document"}), 500
+    except Exception as e:
+        print(f"Error in create_doc: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/check_doc_content', methods=['POST'])
