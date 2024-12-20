@@ -16,8 +16,14 @@
         async function loadDocHistory() {
             try {
                 const response = await fetch('/load_doc_history');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const data = await response.json();
-                const docHistory = data.success ? data.docHistory : [];
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to load history');
+                }
+                const docHistory = data.docHistory || [];
                 localStorage.setItem('docHistory', JSON.stringify(docHistory));
                 const docList = document.getElementById('docList');
                 docList.innerHTML = '';

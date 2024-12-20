@@ -80,13 +80,20 @@ def update_embeddings():
 
 @app.route('/save_doc_history', methods=['POST'])
 def save_doc_history():
+    if not request.is_json:
+        return jsonify({'success': False, 'error': 'Content-Type must be application/json'}), 400
+        
     try:
-        doc_history = request.json.get('docHistory', [])
+        doc_history = request.get_json().get('docHistory', [])
+        if not isinstance(doc_history, list):
+            return jsonify({'success': False, 'error': 'docHistory must be an array'}), 400
+            
         with open('doc_history.txt', 'w') as f:
             json.dump(doc_history, f)
-        return jsonify({'success': True})
+        return jsonify({'success': True}), 200
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+        print(f"Error saving doc history: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/load_doc_history', methods=['GET'])
 def load_doc_history():
@@ -94,10 +101,11 @@ def load_doc_history():
         if os.path.exists('doc_history.txt'):
             with open('doc_history.txt', 'r') as f:
                 doc_history = json.load(f)
-            return jsonify({'success': True, 'docHistory': doc_history})
-        return jsonify({'success': True, 'docHistory': []})
+            return jsonify({'success': True, 'docHistory': doc_history}), 200
+        return jsonify({'success': True, 'docHistory': []}), 200
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+        print(f"Error loading doc history: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)
