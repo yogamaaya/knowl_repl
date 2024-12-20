@@ -287,20 +287,27 @@ def on_submit(query, ip_address):
         success = initialize_embeddings(ip_address)
         if not success:
             raise Exception("Failed to initialize QA chain")
+            
     print(f"Current doc_id: {doc_id}")
     print(f"Current text preview: {text[:100]}")
     print(f"Received query: {query}")
+    
     chat_history = chat_histories.get(ip_address, [])
     result = qa_chains[ip_address]({"question": query, "chat_history": chat_history[-2:] if chat_history else []})
     answer = result['answer']
-    chat_histories[ip_address] = chat_history + [(query, answer)]
-
+    
+    # Update chat history before TTS generation
+    updated_history = chat_history + [(query, answer)]
+    chat_histories[ip_address] = updated_history
+    
+    # Only generate TTS for latest message
     from google.cloud import texttospeech
     credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
     client = texttospeech.TextToSpeechClient.from_service_account_info(
         credentials_dict)
 
-    synthesis_input = texttospeech.SynthesisInput(text=answer)
+    latest_answer = updated_history[-1][1] if updated_history else answer
+    synthesis_input = texttospeech.SynthesisInput(text=latest_answer)
     voice = texttospeech.VoiceSelectionParams(
         language_code="en-US",
         name="en-US-Studio-O",
@@ -312,8 +319,8 @@ def on_submit(query, ip_address):
         pitch=0.0)
 
     response = client.synthesize_speech(input=synthesis_input,
-                                        voice=voice,
-                                        audio_config=audio_config)
+                                      voice=voice,
+                                      audio_config=audio_config)
 
     audio_path = "static/response.mp3"
     with open(audio_path, "wb") as out:
