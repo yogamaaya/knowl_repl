@@ -7,16 +7,7 @@ let isPlaying = false;
 let currentPageMessages = [];
 
 // Previous functions remain unchanged
-function change() {
-    var elem = document.getElementById("tips");
-    if (elem.value=="Show Tips!") {
-        elem.value = "Close";
-        elem.innerHTML = "Close";
-    } else {
-        elem.value = "Show Tips!";
-        elem.innerHTML = "Show";
-    }
-}
+
 
 async function submitMessage(event) {
     event.preventDefault();
