@@ -1,4 +1,5 @@
 from flask import request, jsonify, session
+import chat
 from chat import on_submit
 
 def receive_message():

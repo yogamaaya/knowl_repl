@@ -16,10 +16,16 @@ messages = {}  # Store messages per session
 
 @app.route('/history')
 def history():
-    ip_address = request.remote_addr
-    if ip_address not in chat.message_histories:
-        chat.message_histories[ip_address] = []
-    return render_template('history.html', history=chat.message_histories[ip_address])
+    try:
+        ip_address = request.remote_addr
+        if not hasattr(chat, 'message_histories'):
+            chat.message_histories = {}
+        if ip_address not in chat.message_histories:
+            chat.message_histories[ip_address] = []
+        return render_template('history.html', history=chat.message_histories[ip_address])
+    except Exception as e:
+        print(f"Error in history route: {str(e)}")
+        return render_template('history.html', history=[])
 
 @app.route('/')
 def chat():
