@@ -22,7 +22,11 @@ qa_chains = {}
 chat_histories = {}
 text = ''
 doc_id = ''
-SCOPES = ['https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/documents']
+SCOPES = [
+    'https://www.googleapis.com/auth/drive.file',
+    'https://www.googleapis.com/auth/documents',
+    'https://www.googleapis.com/auth/drive'
+]
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -46,6 +50,7 @@ def create_doc(title=None):
         doc_id = doc['documentId']
 
         # Set public access
+        # Set public write access
         permission = {
             'type': 'anyone',
             'role': 'writer',
@@ -54,7 +59,21 @@ def create_doc(title=None):
         drive_service.permissions().create(
             fileId=doc_id,
             body=permission,
-            fields='id'
+            fields='id',
+            supportsAllDrives=True
+        ).execute()
+
+        # Set domain-wide read access as backup
+        domain_permission = {
+            'type': 'domain',
+            'role': 'reader',
+            'domain': 'gmail.com'
+        }
+        drive_service.permissions().create(
+            fileId=doc_id,
+            body=domain_permission,
+            fields='id',
+            supportsAllDrives=True
         ).execute()
 
         # Get initial content
