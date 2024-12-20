@@ -394,10 +394,16 @@ window.addEventListener('load', async function() {
         <p>PS: Please be patient with Knowl as she thinks~ 🦉</p>`
     ];
     updateChat(currentPageMessages);
-});onse.ok && updateData.success) {
-            const docUrl = `https://docs.google.com/document/d/${defaultDocId}/edit`;
-            localStorage.setItem('currentSourceTitle', updateData.title);
-            localStorage.setItem('currentDocId', defaultDocId);
+    
+    try {
+        const defaultDocId = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A';
+        const docUrl = `https://docs.google.com/document/d/${defaultDocId}/edit`;
+        localStorage.setItem('currentSourceTitle', 'Welcome to Knowl');
+        localStorage.setItem('currentDocId', defaultDocId);
+    } catch (error) {
+        console.error('Error loading default document:', error);
+    }
+});
             
             const sourceToast = document.createElement('div');
             sourceToast.className = 'toast persistent source-toast';
