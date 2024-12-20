@@ -15,7 +15,9 @@ messages = {}  # Store messages per session
 
 @app.route('/history')
 def history():
-    return render_template('history.html')
+    ip_address = request.remote_addr
+    ip_history = chat.message_histories.get(ip_address, [])
+    return render_template('history.html', history=ip_history)
 
 @app.route('/')
 def chat():

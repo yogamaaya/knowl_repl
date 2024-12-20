@@ -17,10 +17,11 @@ load_dotenv()
 openai_api_key = os.getenv('OPENAI_API_KEY')
 
 from flask import session
-chat_histories = {}  # Store histories per session
+chat_histories = {}  # Store histories per IP
+message_histories = {}  # Store message histories per IP
 text = ''
 doc_id = ''
-qa_chains = {}  # Store chains per session
+qa_chains = {}  # Store chains per IP
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 
@@ -195,13 +196,14 @@ def initialize_embeddings():
     create_embeddings(text)
 
 
-def on_submit(query):
+def on_submit(query, ip_address):
     print("\n=== Processing Query ===")
-    session_id = session.get('user_id', 'default')
-    if session_id not in chat_histories:
-        chat_histories[session_id] = []
-    if session_id not in qa_chains:
-        qa_chains[session_id] = None
+    if ip_address not in chat_histories:
+        chat_histories[ip_address] = []
+    if ip_address not in message_histories:
+        message_histories[ip_address] = []
+    if ip_address not in qa_chains:
+        qa_chains[ip_address] = None
     
     global text, doc_id
     print(f"Current doc_id: {doc_id}")
