@@ -110,5 +110,39 @@ def load_doc_history():
         print(f"Error loading doc history: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/cleanup_docs', methods=['POST'])
+def cleanup_docs():
+    try:
+        # Read doc history
+        if not os.path.exists('doc_history.txt'):
+            return jsonify({'success': True, 'message': 'No documents to clean'}), 200
+            
+        with open('doc_history.txt', 'r') as f:
+            doc_history = json.load(f)
+            
+        # Setup credentials and service
+        credentials = service_account.Credentials.from_service_account_info(
+            creds, scopes=['https://www.googleapis.com/auth/drive.file'])
+        drive_service = build('drive', 'v3', credentials=credentials)
+        
+        # Delete each document
+        for doc in doc_history:
+            try:
+                drive_service.files().delete(fileId=doc['id']).execute()
+            except Exception as e:
+                print(f"Error deleting doc {doc['id']}: {str(e)}")
+                
+        # Clear history file
+        with open('doc_history.txt', 'w') as f:
+            json.dump([], f)
+            
+        return jsonify({
+            'success': True,
+            'message': f'Successfully cleaned up {len(doc_history)} documents'
+        })
+    except Exception as e:
+        print(f"Error in cleanup: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)
