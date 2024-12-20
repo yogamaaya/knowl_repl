@@ -31,37 +31,60 @@
                 // Only populate if empty
                 if (docList.children.length === 0) {
                     for (const doc of docHistory) {
-                        const docItem = document.createElement('article');
-                        docItem.className = 'doc-item';
-                        
-                        const title = document.createElement('h2');
-                        title.className = 'doc-title';
-                        title.textContent = doc.title;
-                        
-                        const preview = document.createElement('div');
-                        preview.className = 'doc-preview';
-                        
-                        docItem.appendChild(title);
-                        docItem.appendChild(preview);
-                        
                         try {
-                            const response = await fetch('/get_doc_preview', {
+                            // Check if document has content
+                            const contentResponse = await fetch('/check_doc_content', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
                                 },
                                 body: JSON.stringify({ doc_id: doc.id })
                             });
-                            const data = await response.json();
-                            preview.innerHTML = `
-                                <p>${data.preview}</p>
-                                <a href="https://docs.google.com/document/d/${doc.id}/edit" target="_blank" class="read-more">Read More →</a>
-                            `;
+                            
+                            if (!contentResponse.ok) {
+                                console.log(`Skipping doc ${doc.id} - not accessible`);
+                                continue;
+                            }
+                            
+                            const contentData = await contentResponse.json();
+                            if (!contentData.has_content) {
+                                console.log(`Skipping doc ${doc.id} - no content`);
+                                continue;
+                            }
+
+                            const docItem = document.createElement('article');
+                            docItem.className = 'doc-item';
+                            
+                            const title = document.createElement('h2');
+                            title.className = 'doc-title';
+                            title.textContent = doc.title;
+                            
+                            const preview = document.createElement('div');
+                            preview.className = 'doc-preview';
+                            
+                            docItem.appendChild(title);
+                            docItem.appendChild(preview);
+                            
+                            const previewResponse = await fetch('/get_doc_preview', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ doc_id: doc.id })
+                            });
+
+                            if (previewResponse.ok) {
+                                const previewData = await previewResponse.json();
+                                preview.innerHTML = `
+                                    <p>${previewData.preview}</p>
+                                    <a href="https://docs.google.com/document/d/${doc.id}/edit" target="_blank" class="read-more">Read More →</a>
+                                `;
+                                docList.appendChild(docItem);
+                            }
                         } catch (error) {
-                            console.error('Error fetching preview:', error);
+                            console.error('Error processing doc:', doc.id, error);
+                            continue;
                         }
-                        
-                        docList.appendChild(docItem);
                     }
                 }
             } catch (error) {
@@ -71,12 +94,11 @@
 
         window.addEventListener('load', loadDocHistory);
         
-        // Only refresh when explicitly requested
         window.addEventListener('message', (event) => {
             if (event.data === 'refreshHistory') {
                 const docList = document.getElementById('docList');
-                docList.innerHTML = ''; // Clear existing content
-                loadDocHistory(); // Reload everything
+                docList.innerHTML = '';
+                loadDocHistory();
             }
         });
     </script>
