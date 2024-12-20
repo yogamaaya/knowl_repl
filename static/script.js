@@ -61,9 +61,16 @@ async function submitMessage(event) {
                 messageInput.value = '';
                 
                 if (data.audio_url) {
+                    // Reset audio state
+                    if (currentAudio) {
+                        currentAudio.pause();
+                        currentAudio = null;
+                    }
+                    isPlaying = false;
                     window.lastAudioUrl = data.audio_url;
                     const playButton = document.getElementById('playAudioBtn');
                     playButton.style.display = 'inline-block';
+                    playButton.textContent = 'Play Response 🔊';
                 }
             } else {
                 console.error('Error:', data.error);
