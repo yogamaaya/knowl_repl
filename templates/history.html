@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,6 +23,7 @@
                 if (!data.success) {
                     throw new Error(data.error || 'Failed to load history');
                 }
+
                 const docHistory = data.docHistory || [];
                 localStorage.setItem('docHistory', JSON.stringify(docHistory));
                 const docList = document.getElementById('docList');
@@ -31,26 +33,26 @@
                     const docItem = document.createElement('article');
                     docItem.className = 'doc-item';
                     
-                    const header = document.createElement('header');
-                    header.className = 'doc-header';
-                    
                     const titleButton = document.createElement('button');
                     titleButton.className = 'doc-title-button';
                     titleButton.textContent = doc.title;
                     
                     const preview = document.createElement('div');
-                    preview.className = 'doc-preview collapsed';
+                    preview.className = 'doc-preview';
+                    preview.style.display = 'none';
                     
-                    header.appendChild(titleButton);
                     docItem.appendChild(titleButton);
                     docItem.appendChild(preview);
                     
-                    let hasContent = false;
+                    const docState = {
+                        isExpanded: false,
+                        hasContent: false
+                    };
                     
                     titleButton.addEventListener('click', async function() {
-                        if (!hasContent) {
-                            titleButton.disabled = true;
+                        if (!docState.hasContent) {
                             try {
+                                titleButton.disabled = true;
                                 const response = await fetch('/get_doc_preview', {
                                     method: 'POST',
                                     headers: {
@@ -63,17 +65,17 @@
                                     <p>${data.preview}</p>
                                     <a href="https://docs.google.com/document/d/${doc.id}/edit" target="_blank" class="read-more">Read More →</a>
                                 `;
-                                hasContent = true;
+                                docState.hasContent = true;
                             } catch (error) {
                                 console.error('Error fetching preview:', error);
-                                return;
                             } finally {
                                 titleButton.disabled = false;
                             }
                         }
                         
-                        preview.classList.toggle('show');
-                        titleButton.classList.toggle('active');
+                        docState.isExpanded = !docState.isExpanded;
+                        preview.style.display = docState.isExpanded ? 'block' : 'none';
+                        titleButton.classList.toggle('active', docState.isExpanded);
                     });
                     
                     docList.appendChild(docItem);
@@ -83,13 +85,8 @@
             }
         }
 
-        // Load history once when page loads
-        window.onload = loadDocHistory;
-
-        // Auto-refresh history every 5 seconds
+        window.addEventListener('load', loadDocHistory);
         setInterval(loadDocHistory, 5000);
-        
-        // Also listen for manual refresh messages
         window.addEventListener('message', (event) => {
             if (event.data === 'refreshHistory') {
                 loadDocHistory();

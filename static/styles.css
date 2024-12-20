@@ -626,14 +626,11 @@ button[type="submit"]:active {
 }
 
 .doc-preview {
-    display: none;
     padding: 15px;
     border-top: 1px solid #e0e0e0;
     line-height: 1.5;
-}
-
-.doc-preview.show {
-    display: block;
+    transition: height 0.3s ease-in-out;
+    overflow: hidden;
 }
 
 .read-more {
