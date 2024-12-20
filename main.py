@@ -3,8 +3,14 @@ from message_handler import receive_message
 from chat import initialize_embeddings, create_doc, get_text_from_doc, create_embeddings, change_text_source, get_doc_title
 from flask import jsonify, request
 
+from flask import Flask, session
+from datetime import timedelta
+import hashlib
+
 app = Flask(__name__)
-messages = []
+app.secret_key = hashlib.sha256().hexdigest()  # Generate random secret key
+app.permanent_session_lifetime = timedelta(days=30)
+messages = {}  # Store messages per session
 
 
 @app.route('/history')

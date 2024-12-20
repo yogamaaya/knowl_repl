@@ -1,10 +1,10 @@
-from flask import request, jsonify
+from flask import request, jsonify, session
 from chat import on_submit
 
-messages = []
-
-
 def receive_message():
+    session_id = session.get('user_id', request.remote_addr)
+    session['user_id'] = session_id
+    session.permanent = True
     if request.content_type == 'application/json':
         data = request.get_json()
         message = data.get('message', '')
