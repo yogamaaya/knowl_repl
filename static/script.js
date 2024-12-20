@@ -71,16 +71,22 @@ function updateChat(messages) {
     chatBox.innerHTML = '';
     currentPageMessages = messages;
 
-    for (let i = 0; i < currentPageMessages.length; i++) {
-        let msg = currentPageMessages[i];
-        if (i % 2 == 0) {
-            msg = `<img src="/static/user_logo.png" alt="Knowl Logo" class="logo"> ${msg}</li>`;
-        } else {
-            msg = `<img src="/static/knowl_logo.png" alt="Knowl Logo" class="logo"> ${msg}</li>`;
-        }
-        const messageElement = document.createElement('p');
-        messageElement.innerHTML = msg;
-        chatBox.appendChild(messageElement);
+    // Only display the last question and answer if they exist
+    if (currentPageMessages.length >= 2) {
+        const lastQuestionIndex = currentPageMessages.length - 2;
+        const lastAnswerIndex = currentPageMessages.length - 1;
+
+        // Display last question
+        const questionMsg = `<img src="/static/user_logo.png" alt="Knowl Logo" class="logo"> ${currentPageMessages[lastQuestionIndex]}</li>`;
+        const questionElement = document.createElement('p');
+        questionElement.innerHTML = questionMsg;
+        chatBox.appendChild(questionElement);
+
+        // Display last answer
+        const answerMsg = `<img src="/static/knowl_logo.png" alt="Knowl Logo" class="logo"> ${currentPageMessages[lastAnswerIndex]}</li>`;
+        const answerElement = document.createElement('p');
+        answerElement.innerHTML = answerMsg;
+        chatBox.appendChild(answerElement);
     }
 }
 
