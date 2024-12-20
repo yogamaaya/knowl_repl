@@ -33,50 +33,32 @@
                     const docItem = document.createElement('article');
                     docItem.className = 'doc-item';
                     
-                    const titleButton = document.createElement('button');
-                    titleButton.className = 'doc-title-button';
-                    titleButton.textContent = doc.title;
+                    const title = document.createElement('h2');
+                    title.className = 'doc-title';
+                    title.textContent = doc.title;
                     
                     const preview = document.createElement('div');
                     preview.className = 'doc-preview';
-                    preview.style.display = 'none';
                     
-                    docItem.appendChild(titleButton);
+                    docItem.appendChild(title);
                     docItem.appendChild(preview);
                     
-                    const docState = {
-                        isExpanded: false,
-                        hasContent: false
-                    };
-                    
-                    titleButton.addEventListener('click', async function() {
-                        if (!docState.hasContent) {
-                            try {
-                                titleButton.disabled = true;
-                                const response = await fetch('/get_doc_preview', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify({ doc_id: doc.id })
-                                });
-                                const data = await response.json();
-                                preview.innerHTML = `
-                                    <p>${data.preview}</p>
-                                    <a href="https://docs.google.com/document/d/${doc.id}/edit" target="_blank" class="read-more">Read More →</a>
-                                `;
-                                docState.hasContent = true;
-                            } catch (error) {
-                                console.error('Error fetching preview:', error);
-                            } finally {
-                                titleButton.disabled = false;
-                            }
-                        }
-                        
-                        docState.isExpanded = !docState.isExpanded;
-                        preview.style.display = docState.isExpanded ? 'block' : 'none';
-                        titleButton.classList.toggle('active', docState.isExpanded);
-                    });
+                    try {
+                        const response = await fetch('/get_doc_preview', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ doc_id: doc.id })
+                        });
+                        const data = await response.json();
+                        preview.innerHTML = `
+                            <p>${data.preview}</p>
+                            <a href="https://docs.google.com/document/d/${doc.id}/edit" target="_blank" class="read-more">Read More →</a>
+                        `;
+                    } catch (error) {
+                        console.error('Error fetching preview:', error);
+                    }
                     
                     docList.appendChild(docItem);
                 }

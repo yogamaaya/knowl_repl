@@ -592,45 +592,25 @@ button[type="submit"]:active {
 .doc-list {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 20px;
 }
 
 .doc-item {
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     background: white;
+    padding: 20px;
 }
 
-.doc-title-button {
-    width: 100%;
-    padding: 15px;
-    text-align: left;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
+.doc-title {
+    margin: 0 0 15px 0;
+    font-size: 18px;
     color: #740476;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.doc-title-button:after {
-    content: '+';
-    font-size: 20px;
-    font-weight: bold;
-}
-
-.doc-title-button.active:after {
-    content: '-';
 }
 
 .doc-preview {
-    padding: 15px;
-    border-top: 1px solid #e0e0e0;
-    line-height: 1.5;
-    transition: height 0.3s ease-in-out;
-    overflow: hidden;
+    color: #333;
+    line-height: 1.6;
 }
 
 .read-more {
@@ -638,6 +618,11 @@ button[type="submit"]:active {
     margin-top: 10px;
     color: #740476;
     text-decoration: none;
+    font-weight: 500;
+}
+
+.read-more:hover {
+    text-decoration: underline;
 }
 
 .back-button {
@@ -648,4 +633,9 @@ button[type="submit"]:active {
     color: white;
     text-decoration: none;
     border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.back-button:hover {
+    background-color: #8a0589;
 }
