@@ -310,11 +310,8 @@ async function handleChangeText() {
 
 function updateSourceToast(docUrl, title) {
     const container = document.getElementById('toastContainer');
-    // Remove any existing source toast
-    const existingToast = container.querySelector('.source-toast');
-    if (existingToast) {
-        existingToast.remove();
-    }
+    // Remove all existing source toasts
+    container.querySelectorAll('.source-toast').forEach(toast => toast.remove());
 
     const sourceToast = document.createElement('div');
     sourceToast.className = 'toast persistent source-toast show';
