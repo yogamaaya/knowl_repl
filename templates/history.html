@@ -14,8 +14,12 @@
     </div>
     <script>
         window.onload = async function() {
-            const docHistory = JSON.parse(localStorage.getItem('docHistory') || '[]');
-            const docList = document.getElementById('docList');
+            try {
+                const response = await fetch('/load_doc_history');
+                const data = await response.json();
+                const docHistory = data.success ? data.docHistory : [];
+                localStorage.setItem('docHistory', JSON.stringify(docHistory));
+                const docList = document.getElementById('docList');
             
             for (const doc of docHistory) {
                 const docItem = document.createElement('article');
