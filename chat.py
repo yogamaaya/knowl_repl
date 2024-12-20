@@ -16,6 +16,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import json
 from google.cloud import texttospeech
+from datetime import datetime
 
 load_dotenv()
 openai_api_key = os.getenv('OPENAI_API_KEY')
@@ -32,9 +33,25 @@ logger = logging.getLogger(__name__)
 def create_doc():
     try:
         credentials = service_account.Credentials.from_service_account_info(creds, scopes=SCOPES)
-        service = build('docs', 'v1', credentials=credentials)
-        doc = service.documents().create(body={}).execute()
-        return doc.get('documentId')
+        docs_service = build('docs', 'v1', credentials=credentials)
+        drive_service = build('drive', 'v3', credentials=credentials)
+        
+        # Create the document
+        doc = docs_service.documents().create(body={
+            'title': f'Knowledge Source {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
+        }).execute()
+        doc_id = doc.get('documentId')
+        
+        # Update sharing permissions
+        drive_service.permissions().create(
+            fileId=doc_id,
+            body={
+                'role': 'writer',
+                'type': 'anyone'
+            }
+        ).execute()
+        
+        return doc_id
     except Exception as e:
         logger.error(f"Error creating document: {str(e)}")
         return None
