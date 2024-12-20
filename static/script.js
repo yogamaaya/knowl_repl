@@ -1,4 +1,3 @@
-
 async function copyMessage(button) {
     const messageText = button.parentElement.innerText.replace('Copy', '').trim();
     try {
@@ -258,28 +257,15 @@ async function handleChangeText() {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        docHistory: [newDoc]  // Send only new doc to be appended
-                    })
+                    body: JSON.stringify(newDoc)
                 });
                 
-                // Save to file
-                try {
-                    const saveResponse = await fetch('/save_doc_history', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ docHistory })
-                    });
-                    
-                    if (saveResponse.ok) {
-                        // Broadcast refresh message to any open history windows
-                        window.postMessage('refreshHistory', '*');
-                    }
-                } catch (error) {
-                    console.error('Failed to save doc history:', error);
+                if (saveResponse.ok) {
+                    // Broadcast refresh message to any open history windows
+                    window.postMessage('refreshHistory', '*');
                 }
+            } catch (error) {
+                console.error('Failed to save doc history:', error);
             }
             
             currentLoadingToast.remove();
