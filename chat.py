@@ -99,26 +99,38 @@ def on_submit(query, ip_address):
     answer = result['answer']
     session_manager.chat_histories[ip_address].append((query, answer))
 
-    # Text-to-speech processing
-    credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
-    client = texttospeech.TextToSpeechClient.from_service_account_info(credentials_dict)
-    
-    synthesis_input = texttospeech.SynthesisInput(text=answer)
-    voice = texttospeech.VoiceSelectionParams(
-        language_code="en-US",
-        name="en-US-Studio-O",
-        ssml_gender=texttospeech.SsmlVoiceGender.FEMALE
-    )
-    
-    audio_config = texttospeech.AudioConfig(
-        audio_encoding=texttospeech.AudioEncoding.MP3,
-        speaking_rate=1.0,
-        pitch=0.0
-    )
+    try:
+        # Text-to-speech processing
+        credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
+        client = texttospeech.TextToSpeechClient.from_service_account_info(credentials_dict)
+        
+        synthesis_input = texttospeech.SynthesisInput(text=answer)
+        voice = texttospeech.VoiceSelectionParams(
+            language_code="en-US",
+            name="en-US-Studio-O",
+            ssml_gender=texttospeech.SsmlVoiceGender.FEMALE
+        )
+        
+        audio_config = texttospeech.AudioConfig(
+            audio_encoding=texttospeech.AudioEncoding.MP3,
+            speaking_rate=1.0,
+            pitch=0.0
+        )
 
-    response = client.synthesize_speech(
-        input=synthesis_input,
-        voice=voice,
+        response = client.synthesize_speech(
+            input=synthesis_input,
+            voice=voice,
+            audio_config=audio_config
+        )
+
+        audio_path = f"static/response_{ip_address}.mp3"
+        with open(audio_path, "wb") as out:
+            out.write(response.audio_content)
+
+        return {"text": answer, "audio_url": f"/static/response_{ip_address}.mp3"}
+    except Exception as e:
+        logger.error(f"Text-to-speech error: {str(e)}")
+        return {"text": answer, "audio_url": None}
 
 def initialize_embeddings(ip_address=None):
     logger.info("\n=== Initializing Default Embeddings ===")
