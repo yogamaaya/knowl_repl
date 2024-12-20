@@ -161,9 +161,6 @@ async function handleChangeText() {
     const MAX_SECONDS = 60;
     
     try {
-        // Clear existing toasts
-        document.querySelectorAll('.toast.persistent').forEach(toast => toast.remove());
-        
         // Show creating document toast
         loadingToast = showPersistentToast(' Please have text ready to paste in a new document...', true);
         
@@ -264,8 +261,11 @@ async function handleChangeText() {
         loadingToast.remove();
         showToast('Text Source Updated Successfully', 'success');
         
-        // Remove existing source toast
-        document.querySelector('.source-toast')?.remove();
+        // Update source toast with new document info
+        const existingToast = document.querySelector('.source-toast');
+        if (existingToast) {
+            existingToast.remove();
+        }
         
         // Show new persistent source toast with link
         const sourceToast = document.createElement('div');
