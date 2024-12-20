@@ -381,7 +381,7 @@ function toggleAudio() {
 }
 
 // Handle page load
-window.addEventListener('load', async function() {
+window.addEventListener('load', function() {
     currentPageMessages = [
         "Who is Knowl and How to Use?",
         `✨ Knowl is intented to be your fun partner to understand a text from a different perspective of your own ✨<br><br>
