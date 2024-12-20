@@ -229,7 +229,7 @@ async function handleChangeText() {
                             break;
                         }
                         
-                        await new Promise(resolve => setTimeout(resolve, 1000)); // Check every second
+                        await new Promise(resolve => setTimeout(resolve, 3000)); // Check every 3 seconds
                     } catch (error) {
                         if (error.name === 'AbortError') {
                             return false;
