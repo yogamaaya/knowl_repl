@@ -1,31 +1,378 @@
 
-const d=document,w=window,ls=localStorage,cur={docCheck:null,loadToast:null,docId:null,audio:null,playing:!1,msgs:[]};async function submitMessage(e){e.preventDefault();const t=d.getElementById("messageInput"),n=t.value,s=d.getElementById("loading");if(!n||!n.trim())return;try{s.style.display="block";const e=await fetch("/submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:n})}),o=await e.json();e.ok&&(updateChat(o.messages),t.value="",o.audio_url&&(w.lastAudioUrl=o.audio_url,d.getElementById("playAudioBtn").style.display="inline-block"))}catch(e){console.error("Error:",e)}finally{s.style.display="none"}}function updateChat(e){const t=d.getElementById("chatBox");if(t.innerHTML="",cur.msgs=e,cur.msgs.length>=2){const n=cur.msgs.length-2,s=cur.msgs.length-1,o=d.createElement("div");o.className="chat-message",o.innerHTML=`<img src="/static/user_logo.png" alt="User Logo" class="logo"><div class="message-bubble">${cur.msgs[n]}</div>`,t.appendChild(o);const a=d.createElement("div");a.className="chat-message",a.innerHTML=`<img src="/static/knowl_logo.png" alt="Knowl Logo" class="logo"><div class="message-bubble">${cur.msgs[s]}</div>`,t.appendChild(a)}}async function handleChangeText() {
-    if (cur.docCheck) cur.docCheck.abort();
-    if (cur.loadToast) cur.loadToast.remove();
+let currentDocCheck = null;
+let currentLoadingToast = null;
+let latestDocId = null;
+let currentAudio = null;
+let isPlaying = false;
+let currentPageMessages = [];
+
+// Previous functions remain unchanged
+
+
+async function submitMessage(event) {
+    event.preventDefault();
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput.value;
+    const loadingElement = document.getElementById('loading');
     
-    const alertContainer = d.getElementById("customAlertContainer");
-    if (alertContainer) alertContainer.remove();
+    console.log('Submitting message:', message);
     
-    try {
-        cur.loadToast = showToast("Please have text ready to paste into new document...", true);
-        
-        const response = await fetch("/create_doc", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
+    if (!message || message.trim() === '') {
+        console.error('Empty message, aborting submission');
+        return;
+    }
+
+    if (message) {
+        try {
+            loadingElement.style.display = 'block';
+            const response = await fetch('/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: message })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                console.log('Response received successfully');
+                console.log('Messages:', data.messages);
+                console.log('Audio URL:', data.audio_url);
+                updateChat(data.messages);
+                messageInput.value = '';
+                
+                if (data.audio_url) {
+                    window.lastAudioUrl = data.audio_url;
+                    const playButton = document.getElementById('playAudioBtn');
+                    playButton.style.display = 'inline-block';
+                }
+            } else {
+                console.error('Error:', data.error);
             }
-        });
-        
-        if (!response.ok) {
-            throw new Error("Failed to create document");
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            loadingElement.style.display = 'none';
         }
-        
+    }
+}
+
+function updateChat(messages) {
+    const chatBox = document.getElementById('chatBox');
+    chatBox.innerHTML = '';
+    currentPageMessages = messages;
+
+    // Only display the last question and answer if they exist
+    if (currentPageMessages.length >= 2) {
+        const lastQuestionIndex = currentPageMessages.length - 2;
+        const lastAnswerIndex = currentPageMessages.length - 1;
+
+        // Display last question
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'chat-message';
+        questionDiv.innerHTML = `
+            <img src="/static/user_logo.png" alt="User Logo" class="logo">
+            <div class="message-bubble">${currentPageMessages[lastQuestionIndex]}</div>
+        `;
+        chatBox.appendChild(questionDiv);
+
+        // Display last answer
+        const answerDiv = document.createElement('div');
+        answerDiv.className = 'chat-message';
+        answerDiv.innerHTML = `
+            <img src="/static/knowl_logo.png" alt="Knowl Logo" class="logo">
+            <div class="message-bubble">${currentPageMessages[lastAnswerIndex]}</div>
+        `;
+        chatBox.appendChild(answerDiv);
+    }
+}
+
+async function handleChangeText() {
+    if (currentDocCheck) {
+        currentDocCheck.abort();
+    }
+    if (currentLoadingToast) {
+        currentLoadingToast.remove();
+    }
+    const existingOverlay = document.getElementById('customAlertContainer');
+    if (existingOverlay) {
+        existingOverlay.remove();
+    }
+
+    try {
+        currentLoadingToast = showPersistentToast('Please have text ready to paste into new document...', true);
+
+        const response = await fetch('/create_doc', {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to create document');
+        }
+
         const data = await response.json();
         if (!data.doc_id) {
-            throw new Error("No document ID received");
+            throw new Error('No document ID received');
         }
+
+        latestDocId = data.doc_id;
+        const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
+        window.open(docUrl, '_blank');
+
+        const MAX_SECONDS = 60;
+        const CHECK_INTERVAL = 3000;
+        let contentFound = false;
+        const startTime = Date.now();
         
-        // Store the doc ID and open in new tab
-        cur.docId = data.doc_id;
-        const docUrl = `https://docs.google.com/document/${data.doc_id}/edit`;
-        w.open(docUrl, "_blank");let s=!1;const o=Date.now();cur.docCheck=new AbortController;const a=t.doc_id;for(;!s&&!cur.docCheck.signal.aborted;){const e=Math.floor((Date.now()-o)/1e3);if(e>=60){if(a===cur.docId){if(!await new Promise(e=>{d.getElementById("overlayContainer").innerHTML=`<div id="customAlertContainer"><div class="overlay"></div><div class="custom-alert"><div>No content found after 60 seconds.</div><div class="buttons"><button onclick="handleAlertResponse(true)">Continue Waiting</button><button onclick="handleAlertResponse(false)">Cancel</button></div></div></div>`,w.handleAlertResponse=t=>{d.getElementById("overlayContainer").innerHTML="",e(t)}})){cur.docCheck.abort(),cur.loadToast.remove(),showToast("User cancelled updating text source","error");return}}else break}try{cur.loadToast.textContent=`Checking for content... ${e}s`;const n=await fetch("/check_doc_content",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({doc_id:t.doc_id}),signal:cur.docCheck.signal});if(!n.ok)throw Error("Failed to check document content");(await n.json()).has_content&&(s=!0)}catch(e){if("AbortError"===e.name)return;throw e}await new Promise(e=>setTimeout(e,3e3))}if(s&&a===cur.docId){cur.loadToast.textContent="Updating knowledge base...";const e=await fetch("/update_embeddings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({doc_id:t.doc_id})});if(!e.ok)throw Error("Failed to update knowledge base");const s=await e.json();if(!s.success)throw Error("Failed to update knowledge base");ls.setItem("currentSourceTitle",s.title),ls.setItem("currentDocId",t.doc_id);const o=JSON.parse(ls.getItem("docHistory")||"[]"),r={id:t.doc_id,title:s.title,timestamp:new Date().toISOString()};if(!o.some(e=>e.id===r.id)){o.push(r),ls.setItem("docHistory",JSON.stringify(o));try{(await fetch("/save_doc_history",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({docHistory:o})})).ok&&w.postMessage("refreshHistory","*")}catch(e){console.error("Failed to save doc history:",e)}}cur.loadToast.remove(),showToast("Text Source Updated Successfully","success");const i=d.getElementById("toastContainer"),c=i.querySelector(".source-toast");c&&c.remove();const l=d.createElement("div");l.className="toast persistent source-toast",l.innerHTML=`<a href="${n}" target="_blank" style="color: white; text-decoration: underline;">Current source: ${s.title}</a>`,i.appendChild(l),setTimeout(()=>l.classList.add("show"),10)}}catch(e){console.error("Error:",e),cur.loadToast&&cur.loadToast.remove(),showToast(e.message,"error")}}function showToast(e,t=""){const n=d.getElementById("toastContainer"),s=d.createElement("div");return s.className=`toast ${t}`,s.textContent=e,n.appendChild(s),s.offsetHeight,setTimeout(()=>s.classList.add("show"),10),t||setTimeout(()=>{s.classList.remove("show"),setTimeout(()=>n.removeChild(s),300)},3e3),s}function toggleAudio(){const e=d.getElementById("playAudioBtn");!cur.audio&&w.lastAudioUrl&&(cur.audio=new Audio(w.lastAudioUrl),cur.audio.addEventListener("ended",()=>{e.textContent="Play Response 🔊",cur.playing=!1})),cur.audio&&(cur.playing?(cur.audio.pause(),e.textContent="Play Response 🔊",cur.playing=!1):(cur.audio.play(),e.textContent="Pause Response ⏸️",cur.playing=!0))}w.addEventListener("load",async function(){cur.msgs=["Who is Knowl and How to Use?",`✨ Knowl is intented to be your fun partner to understand a text from a different perspective of your own ✨<br><br>🌕 The way to helpful responses is in asking helpful questions. Here are some tips to ask effectively:<br><br>🌖 Try prefacing questions with "In this context", "According to this text" etc!<br><br>🌗 Whenever you paste new text, please ask <b>new and specific questions to get new answers.</b><br>Knowl retains all information of text corpora given to date.<br><br>🌘 You can try rephrasing the same question or command if a response doesn't please you!<br>A starter question is "What is the main focus of this text?"<br><br>🌑 Try to use keywords of the text, and reference the current context as much as possible.<br><br><p>PS: Please be patient with Knowl as she thinks~ 🦉</p>`],updateChat(cur.msgs);try{const e=await fetch("/update_embeddings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({doc_id:"1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"})});if(e.ok){const t=await e.json();if(t.success){const e=`https://docs.google.com/document/d/1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A/edit`;ls.setItem("currentSourceTitle",t.title),ls.setItem("currentDocId","1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A");const n=d.createElement("div");n.className="toast persistent source-toast";const s=d.createElement("a");s.href=e,s.target="_blank",s.style.cssText="color: white; text-decoration: underline; cursor: pointer;",s.textContent=`Current source: ${t.title}`,n.appendChild(s),d.getElementById("toastContainer").appendChild(n),setTimeout(()=>n.classList.add("show"),10)}}}catch(e){console.error("Error loading default document:",e)}});
+        currentDocCheck = new AbortController();
+        const currentDocId = data.doc_id;
+
+        while (!contentFound && !currentDocCheck.signal.aborted) {
+            const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+            
+            if (elapsedSeconds >= MAX_SECONDS) {
+                if (currentDocId === latestDocId) {
+                    const shouldContinue = await new Promise(resolve => {
+                        const overlayContainer = document.getElementById('overlayContainer');
+                        overlayContainer.innerHTML = `
+                            <div id="customAlertContainer">
+                                <div class="overlay"></div>
+                                <div class="custom-alert">
+                                    <div>No content found after 60 seconds.</div>
+                                    <div class="buttons">
+                                        <button onclick="handleAlertResponse(true)">Continue Waiting</button>
+                                        <button onclick="handleAlertResponse(false)">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        window.handleAlertResponse = (response) => {
+                            overlayContainer.innerHTML = '';
+                            resolve(response);
+                        };
+                    });
+
+                    if (!shouldContinue) {
+                        currentDocCheck.abort();
+                        currentLoadingToast.remove();
+                        showToast('User cancelled updating text source', 'error');
+                        return;
+                    }
+                } else {
+                    break;
+                }
+            }
+
+            try {
+                currentLoadingToast.textContent = `Checking for content... ${elapsedSeconds}s`;
+                
+                const checkResponse = await fetch('/check_doc_content', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ doc_id: data.doc_id }),
+                    signal: currentDocCheck.signal
+                });
+
+                if (!checkResponse.ok) {
+                    throw new Error('Failed to check document content');
+                }
+
+                const checkData = await checkResponse.json();
+                if (checkData.has_content) {
+                    contentFound = true;
+                    break;
+                }
+
+                await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL));
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    return;
+                }
+                throw error;
+            }
+        }
+
+        if (contentFound && currentDocId === latestDocId) {
+            currentLoadingToast.textContent = 'Updating knowledge base...';
+            
+            const updateResponse = await fetch('/update_embeddings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ doc_id: data.doc_id })
+            });
+
+            if (!updateResponse.ok) {
+                throw new Error('Failed to update knowledge base');
+            }
+
+            const updateData = await updateResponse.json();
+            if (!updateData.success) {
+                throw new Error('Failed to update knowledge base');
+            }
+
+            // Save current document info
+            localStorage.setItem('currentSourceTitle', updateData.title);
+            localStorage.setItem('currentDocId', data.doc_id);
+            
+            // Save to document history
+            const docHistory = JSON.parse(localStorage.getItem('docHistory') || '[]');
+            const newDoc = {
+                id: data.doc_id,
+                title: updateData.title,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Only add if doc doesn't exist
+            if (!docHistory.some(doc => doc.id === newDoc.id)) {
+                docHistory.push(newDoc);
+                localStorage.setItem('docHistory', JSON.stringify(docHistory));
+                
+                // Save to file
+                try {
+                    const saveResponse = await fetch('/save_doc_history', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ docHistory })
+                    });
+                    
+                    if (saveResponse.ok) {
+                        // Broadcast refresh message to any open history windows
+                        window.postMessage('refreshHistory', '*');
+                    }
+                } catch (error) {
+                    console.error('Failed to save doc history:', error);
+                }
+            }
+            
+            currentLoadingToast.remove();
+            showToast('Text Source Updated Successfully', 'success');
+
+            const container = document.getElementById('toastContainer');
+            const existingToast = container.querySelector('.source-toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            const sourceToast = document.createElement('div');
+            sourceToast.className = 'toast persistent source-toast';
+            sourceToast.innerHTML = `
+                <a href="${docUrl}" target="_blank" style="color: white; text-decoration: underline;">
+                    Current source: ${updateData.title}
+                </a>
+            `;
+            container.appendChild(sourceToast);
+            setTimeout(() => sourceToast.classList.add('show'), 10);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        if (currentLoadingToast) {
+            currentLoadingToast.remove();
+        }
+        showToast(error.message, 'error');
+    }
+}
+
+function showToast(message, type = '') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    toast.offsetHeight;
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => container.removeChild(toast), 300);
+    }, 3000);
+}
+
+function showPersistentToast(message, isPersistent = false) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${isPersistent ? 'persistent' : ''}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    if (!isPersistent) {
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => container.removeChild(toast), 300);
+        }, 3000);
+    }
+    return toast;
+}
+
+function toggleAudio() {
+    const playButton = document.getElementById('playAudioBtn');
+    
+    if (!currentAudio && window.lastAudioUrl) {
+        currentAudio = new Audio(window.lastAudioUrl);
+        currentAudio.addEventListener('ended', () => {
+            playButton.textContent = 'Play Response 🔊';
+            isPlaying = false;
+        });
+    }
+    
+    if (currentAudio) {
+        if (isPlaying) {
+            currentAudio.pause();
+            playButton.textContent = 'Play Response 🔊';
+            isPlaying = false;
+        } else {
+            currentAudio.play();
+            playButton.textContent = 'Pause Response ⏸️';
+            isPlaying = true;
+        }
+    }
+}
+
+// Handle page load
+window.addEventListener('load', async function() {
+    currentPageMessages = [
+        "Who is Knowl and How to Use?",
+        `✨ Knowl is intented to be your fun partner to understand a text from a different perspective of your own ✨<br><br>
+        🌕 The way to helpful responses is in asking helpful questions. Here are some tips to ask effectively:<br><br>
+        🌖 Try prefacing questions with "In this context", "According to this text" etc!<br><br>
+        🌗 Whenever you paste new text, please ask <b>new and specific questions to get new answers.</b><br>
+        Knowl retains all information of text corpora given to date.<br><br>
+        🌘 You can try rephrasing the same question or command if a response doesn't please you!<br>
+        A starter question is "What is the main focus of this text?"<br><br>
+        🌑 Try to use keywords of the text, and reference the current context as much as possible.<br><br>
+        <p>PS: Please be patient with Knowl as she thinks~ 🦉</p>`
+    ];
+    updateChat(currentPageMessages);
+    
+    const defaultDocId = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A';
+    
+    try {
+        const updateResponse = await fetch('/update_embeddings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ doc_id: defaultDocId })
+        });
+        
+        const updateData = await updateResponse.json();
+        if (updateResponse.ok && updateData.success) {
+            const docUrl = `https://docs.google.com/document/d/${defaultDocId}/edit`;
+            localStorage.setItem('currentSourceTitle', updateData.title);
+            localStorage.setItem('currentDocId', defaultDocId);
+            
+            const sourceToast = document.createElement('div');
+            sourceToast.className = 'toast persistent source-toast';
+            const link = document.createElement('a');
+            link.href = docUrl;
+            link.target = '_blank';
+            link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
+            link.textContent = `Current source: ${updateData.title}`;
+            sourceToast.appendChild(link);
+            document.getElementById('toastContainer').appendChild(sourceToast);
+            setTimeout(() => sourceToast.classList.add('show'), 10);
+        }
+    } catch (error) {
+        console.error('Error loading default document:', error);
+    }
+});
