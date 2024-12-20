@@ -75,11 +75,15 @@
 
                             if (previewResponse.ok) {
                                 const previewData = await previewResponse.json();
-                                preview.innerHTML = `
-                                    <p>${previewData.preview}</p>
-                                    <a href="https://docs.google.com/document/d/${doc.id}/edit" target="_blank" class="read-more">Read More →</a>
-                                `;
-                                docList.appendChild(docItem);
+                                if (!previewData.preview.includes("Sorry, the file you have requested has been deleted")) {
+                                    preview.innerHTML = `
+                                        <p>${previewData.preview}</p>
+                                        <a href="https://docs.google.com/document/d/${doc.id}/edit" target="_blank" class="read-more">Read More →</a>
+                                    `;
+                                    docList.appendChild(docItem);
+                                } else {
+                                    console.log(`Skipping deleted doc ${doc.id}`);
+                                }
                             }
                         } catch (error) {
                             console.error('Error processing doc:', doc.id, error);
