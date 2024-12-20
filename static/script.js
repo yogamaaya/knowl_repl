@@ -229,13 +229,21 @@ async function handleChangeText() {
                 
                 // Save to file
                 try {
-                    await fetch('/save_doc_history', {
+                    const saveResponse = await fetch('/save_doc_history', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({ docHistory })
                     });
+                    
+                    if (saveResponse.ok) {
+                        // Refresh history page if it's open
+                        const historyWindow = window.open('', 'history');
+                        if (historyWindow) {
+                            historyWindow.postMessage('refreshHistory', '*');
+                        }
+                    }
                 } catch (error) {
                     console.error('Failed to save doc history:', error);
                 }

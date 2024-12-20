@@ -13,55 +13,69 @@
         <a href="/" class="back-button">Back to Chat</a>
     </div>
     <script>
-        window.onload = async function() {
+        async function loadDocHistory() {
             try {
                 const response = await fetch('/load_doc_history');
                 const data = await response.json();
                 const docHistory = data.success ? data.docHistory : [];
                 localStorage.setItem('docHistory', JSON.stringify(docHistory));
                 const docList = document.getElementById('docList');
-            
-            for (const doc of docHistory) {
-                const docItem = document.createElement('article');
-                docItem.className = 'doc-item';
+                docList.innerHTML = '';
                 
-                const header = document.createElement('header');
-                header.className = 'doc-header';
-                
-                const titleButton = document.createElement('button');
-                titleButton.className = 'doc-title-button';
-                titleButton.textContent = doc.title;
-                
-                const preview = document.createElement('div');
-                preview.className = 'doc-preview collapsed';
-                
-                header.appendChild(titleButton);
-                docItem.appendChild(header);
-                docItem.appendChild(preview);
-                
-                titleButton.addEventListener('click', async () => {
-                    if (preview.classList.contains('collapsed')) {
-                        const response = await fetch('/get_doc_preview', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ doc_id: doc.id })
-                        });
-                        const data = await response.json();
-                        
-                        preview.innerHTML = `
-                            <p>${data.preview}</p>
-                            <a href="https://docs.google.com/document/d/${doc.id}/edit" target="_blank" class="read-more">Read More →</a>
-                        `;
-                    }
-                    preview.classList.toggle('collapsed');
-                    titleButton.classList.toggle('active');
-                });
-                
-                docList.appendChild(docItem);
+                for (const doc of docHistory) {
+                    const docItem = document.createElement('article');
+                    docItem.className = 'doc-item';
+                    
+                    const header = document.createElement('header');
+                    header.className = 'doc-header';
+                    
+                    const titleButton = document.createElement('button');
+                    titleButton.className = 'doc-title-button';
+                    titleButton.textContent = doc.title;
+                    
+                    const preview = document.createElement('div');
+                    preview.className = 'doc-preview collapsed';
+                    
+                    header.appendChild(titleButton);
+                    docItem.appendChild(header);
+                    docItem.appendChild(preview);
+                    
+                    titleButton.addEventListener('click', async () => {
+                        if (preview.classList.contains('collapsed')) {
+                            const response = await fetch('/get_doc_preview', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ doc_id: doc.id })
+                            });
+                            const data = await response.json();
+                            
+                            preview.innerHTML = `
+                                <p>${data.preview}</p>
+                                <a href="https://docs.google.com/document/d/${doc.id}/edit" target="_blank" class="read-more">Read More →</a>
+                            `;
+                        }
+                        preview.classList.toggle('collapsed');
+                        titleButton.classList.toggle('active');
+                    });
+                    
+                    docList.appendChild(docItem);
+                }
+            } catch (error) {
+                console.error('Error loading doc history:', error);
             }
-        };
+        }
+
+        // Load history once when page loads
+        window.onload = loadDocHistory;
+
+        // Listen for messages from the parent window
+        window.addEventListener('message', (event) => {
+            if (event.data === 'refreshHistory') {
+                loadDocHistory();
+            }
+        });
     </script>
 </body>
 </html>
