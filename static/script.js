@@ -380,25 +380,26 @@ window.addEventListener('load', async function() {
                 },
                 body: JSON.stringify({ doc_id: savedDocId })
             });
-        
-        const updateData = await updateResponse.json();
-        if (updateResponse.ok && updateData.success) {
-            const docUrl = `https://docs.google.com/document/d/${defaultDocId}/edit`;
-            localStorage.setItem('currentSourceTitle', updateData.title);
-            localStorage.setItem('currentDocId', defaultDocId);
             
-            const sourceToast = document.createElement('div');
-            sourceToast.className = 'toast persistent source-toast';
-            const link = document.createElement('a');
-            link.href = docUrl;
-            link.target = '_blank';
-            link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
-            link.textContent = `Current source: ${updateData.title}`;
-            sourceToast.appendChild(link);
-            document.getElementById('toastContainer').appendChild(sourceToast);
-            setTimeout(() => sourceToast.classList.add('show'), 10);
+            const updateData = await updateResponse.json();
+            if (updateResponse.ok && updateData.success) {
+                const docUrl = `https://docs.google.com/document/d/${savedDocId}/edit`;
+                localStorage.setItem('currentSourceTitle', updateData.title);
+                localStorage.setItem('currentDocId', savedDocId);
+                
+                const sourceToast = document.createElement('div');
+                sourceToast.className = 'toast persistent source-toast';
+                const link = document.createElement('a');
+                link.href = docUrl;
+                link.target = '_blank';
+                link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
+                link.textContent = `Current source: ${updateData.title}`;
+                sourceToast.appendChild(link);
+                document.getElementById('toastContainer').appendChild(sourceToast);
+                setTimeout(() => sourceToast.classList.add('show'), 10);
+            }
+        } catch (error) {
+            console.error('Error loading default document:', error);
         }
-    } catch (error) {
-        console.error('Error loading default document:', error);
     }
 });
