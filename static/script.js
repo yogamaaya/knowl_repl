@@ -370,7 +370,8 @@ window.addEventListener('load', async function() {
     ];
     updateChat(currentPageMessages);
     
-    const defaultDocId = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A';
+    const savedDocId = localStorage.getItem('currentDocId');
+    const defaultDocId = savedDocId || '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A';
     
     try {
         const updateResponse = await fetch('/update_embeddings', {
