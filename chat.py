@@ -255,9 +255,6 @@ def initialize_embeddings(ip_address=None):
             
             if ip_address:
                 ip_documents[ip_address] = doc_id
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            print(f"Error loading doc history: {str(e)}")
-            return False
             
         # Get document text
         try:
