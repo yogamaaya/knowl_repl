@@ -266,24 +266,38 @@ margin-bottom: 5px;
 }
 /* Adjust the chat message container to align items properly */
 
-.chatBox p {
+.chat-message {
     display: flex;
     align-items: flex-start;
-    margin: 20px 0;
-    padding: 20px;
-    border-radius: 12px;
-    background-color: rgba(116, 4, 118, 0.05);
-    box-shadow: 0 2px 8px rgba(116, 4, 118, 0.1);
-    line-height: 1.6;
-    font-size: 1.1em;
-    letter-spacing: 0.2px;
-    transition: all 0.3s ease;
+    gap: 10px;
+    margin: 15px 0;
+    padding: 0 15px;
     max-width: 90%;
     margin-left: auto;
     margin-right: auto;
 }
 
-.chatBox p:hover {
+.chat-message .logo {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    margin-top: 5px;
+}
+
+.chat-message .message-bubble {
+    position: relative;
+    background-color: rgba(116, 4, 118, 0.05);
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 0 2px 8px rgba(116, 4, 118, 0.1);
+    line-height: 1.6;
+    font-size: 1.1em;
+    letter-spacing: 0.2px;
+    transition: all 0.3s ease;
+    flex-grow: 1;
+}
+
+.chat-message .message-bubble:hover {
     background-color: rgba(116, 4, 118, 0.08);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(116, 4, 118, 0.15);

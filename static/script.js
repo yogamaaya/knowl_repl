@@ -77,16 +77,22 @@ function updateChat(messages) {
         const lastAnswerIndex = currentPageMessages.length - 1;
 
         // Display last question
-        const questionMsg = `<img src="/static/user_logo.png" alt="Knowl Logo" class="logo"> ${currentPageMessages[lastQuestionIndex]}</li>`;
-        const questionElement = document.createElement('p');
-        questionElement.innerHTML = questionMsg;
-        chatBox.appendChild(questionElement);
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'chat-message';
+        questionDiv.innerHTML = `
+            <img src="/static/user_logo.png" alt="User Logo" class="logo">
+            <div class="message-bubble">${currentPageMessages[lastQuestionIndex]}</div>
+        `;
+        chatBox.appendChild(questionDiv);
 
         // Display last answer
-        const answerMsg = `<img src="/static/knowl_logo.png" alt="Knowl Logo" class="logo"> ${currentPageMessages[lastAnswerIndex]}</li>`;
-        const answerElement = document.createElement('p');
-        answerElement.innerHTML = answerMsg;
-        chatBox.appendChild(answerElement);
+        const answerDiv = document.createElement('div');
+        answerDiv.className = 'chat-message';
+        answerDiv.innerHTML = `
+            <img src="/static/knowl_logo.png" alt="Knowl Logo" class="logo">
+            <div class="message-bubble">${currentPageMessages[lastAnswerIndex]}</div>
+        `;
+        chatBox.appendChild(answerDiv);
     }
 }
 
