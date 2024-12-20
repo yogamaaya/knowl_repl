@@ -159,17 +159,25 @@ function showPersistentToast(message, isPersistent = false) {
 let currentChangeTextController = null;
 
 async function handleChangeText() {
-    // Abort previous operation if exists
-    if (currentChangeTextController) {
-        currentChangeTextController.abort();
-        currentChangeTextController = null;
-    }
-    
-    currentChangeTextController = new AbortController();
-    let loadingToast = null;
-    const MAX_SECONDS = 60;
-    
     try {
+        // Clean up any existing toasts and alerts
+        const existingToasts = document.querySelectorAll('.toast:not(.source-toast)');
+        existingToasts.forEach(toast => toast.remove());
+        
+        const existingAlert = document.getElementById('customAlertContainer');
+        if (existingAlert) {
+            existingAlert.remove();
+        }
+        
+        // Abort previous operation if exists
+        if (currentChangeTextController) {
+            currentChangeTextController.abort();
+            currentChangeTextController = null;
+        }
+        
+        currentChangeTextController = new AbortController();
+        let loadingToast = null;
+        const MAX_SECONDS = 60;
         // Show creating document toast
         loadingToast = showPersistentToast(' Please have text ready to paste in a new document...', true);
         
@@ -331,7 +339,11 @@ async function handleChangeText() {
         if (loadingToast) {
             loadingToast.remove();
         }
-        showToast(error.message, 'error');
+        if (error.name !== 'AbortError') {
+            showToast(error.message, 'error');
+        }
+        // Cleanup on error
+        currentChangeTextController = null;
     }
 }
 let currentAudio = null;
