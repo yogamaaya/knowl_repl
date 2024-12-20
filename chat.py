@@ -188,14 +188,15 @@ def create_embeddings(text):
         combine_docs_chain_kwargs={'prompt': PROMPT})
 
 
-def initialize_embeddings():
+def initialize_embeddings(ip_address=None):
     print("\n=== Initializing Default Embeddings ===")
-    global text, doc_id, qa_chain
+    global text, doc_id
     doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
     print(f"Using default doc_id: {doc_id}")
     text = get_text_from_doc(doc_id)
     print(f"Retrieved text (first 100 chars): {text[:100]}")
-    qa_chain = None
+    if ip_address:
+        qa_chains[ip_address] = None
     create_embeddings(text)
 
 
