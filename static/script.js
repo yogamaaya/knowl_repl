@@ -1,21 +1,5 @@
 
-// Initialize document source toast on page load
-window.addEventListener('DOMContentLoaded', () => {
-    if (window.initialDoc && window.initialDoc.success) {
-        const container = document.getElementById('toastContainer');
-        const docUrl = `https://docs.google.com/document/d/${window.initialDoc.doc_id}/edit`;
-        
-        const sourceToast = document.createElement('div');
-        sourceToast.className = 'toast persistent source-toast';
-        sourceToast.innerHTML = `
-            <a href="${docUrl}" target="_blank" style="color: white; text-decoration: underline;">
-                Current source: ${window.initialDoc.title}
-            </a>
-        `;
-        container.appendChild(sourceToast);
-        setTimeout(() => sourceToast.classList.add('show'), 10);
-    }
-});
+
 
 
 
