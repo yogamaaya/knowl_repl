@@ -119,6 +119,31 @@ def on_submit(query, ip_address):
     response = client.synthesize_speech(
         input=synthesis_input,
         voice=voice,
+
+def initialize_embeddings(ip_address=None):
+    logger.info("\n=== Initializing Default Embeddings ===")
+    doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
+    logger.info(f"Using default doc_id: {doc_id}")
+    
+    text = get_text_from_doc(doc_id)
+    logger.info(f"Retrieved text length: {len(text)}")
+    
+    db = create_embeddings(text, doc_id)
+    
+    qa_chain = ConversationalRetrievalChain.from_llm(
+        OpenAI(temperature=0.7, 
+              model_name="gpt-3.5-turbo", 
+              openai_api_key=openai_api_key),
+        db.as_retriever(),
+        return_source_documents=True,
+        verbose=True
+    )
+    
+    if ip_address:
+        session_manager.update_qa_chain(ip_address, qa_chain)
+    
+    return qa_chain
+
         audio_config=audio_config
     )
 
