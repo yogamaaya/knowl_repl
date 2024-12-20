@@ -22,7 +22,7 @@ qa_chains = {}
 chat_histories = {}
 text = ''
 doc_id = ''
-SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
+SCOPES = ['https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/documents']
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -46,9 +46,16 @@ def create_doc(title=None):
         doc_id = doc['documentId']
 
         # Set public access
-        permission = {'type': 'anyone', 'role': 'writer'}
-        drive_service.permissions().create(fileId=doc_id,
-                                           body=permission).execute()
+        permission = {
+            'type': 'anyone',
+            'role': 'writer',
+            'allowFileDiscovery': True
+        }
+        drive_service.permissions().create(
+            fileId=doc_id,
+            body=permission,
+            fields='id'
+        ).execute()
 
         # Get initial content
         initial_content = get_text_from_doc(doc_id)
