@@ -23,6 +23,8 @@ text = ''
 doc_id = ''
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def create_doc(title=None):
@@ -196,9 +198,17 @@ def initialize_embeddings():
     create_embeddings(text)
 
 
-def on_submit(query):
-    print("\n=== Processing Query ===")
-    global chat_history, qa_chain, text, doc_id
+def on_submit(query, ip_address):
+    logger.info(f"\n=== Processing Query for IP: {ip_address} ===")
+    global text, doc_id
+    
+    if ip_address not in qa_chains:
+        logger.info(f"Initializing new QA chain for IP: {ip_address}")
+        qa_chains[ip_address] = None
+        chat_histories[ip_address] = []
+        
+    if qa_chains[ip_address] is None:
+        initialize_embeddings(ip_address)
     print(f"Current doc_id: {doc_id}")
     print(f"Current text preview: {text[:100]}")
     print(f"Received query: {query}")

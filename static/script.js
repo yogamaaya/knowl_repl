@@ -23,6 +23,13 @@ async function submitMessage(event) {
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value;
     const loadingElement = document.getElementById('loading');
+    
+    console.log('Submitting message:', message);
+    
+    if (!message || message.trim() === '') {
+        console.error('Empty message, aborting submission');
+        return;
+    }
 
     if (message) {
         try {
@@ -37,7 +44,9 @@ async function submitMessage(event) {
 
             const data = await response.json();
             if (response.ok) {
-                console.log('Success: ', data.messages);
+                console.log('Response received successfully');
+                console.log('Messages:', data.messages);
+                console.log('Audio URL:', data.audio_url);
                 updateChat(data.messages);
                 messageInput.value = '';
                 
