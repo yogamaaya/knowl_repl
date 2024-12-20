@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preload" as="video" href="{{ url_for('static', filename='starry.mp4') }}">
+    <link rel="preload" as="image" href="{{ url_for('static', filename='starry.gif') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     
@@ -17,11 +17,8 @@
     
     </div>
 <div class="sticky-header">
-    <div class="video-background">
-        <video autoplay loop muted playsinline>
-            <source src="{{ url_for('static', filename='starry.mp4') }}" type="video/mp4">
-        </video>
-    </div>
+
+    
     <h1>Talk to Knowl 🦉 </h1>
     
     <form class="input-form"  id="messageForm" onsubmit="submitMessage(event)">
@@ -30,13 +27,6 @@
     </form>
   
 </div>
-
-    <div class="video-background">
-        <video autoplay loop muted playsinline>
-            <source src="{{ url_for('static', filename='starry.mp4') }}" type="video/mp4">
-        </video>
-    </div>
-
     <div id="changeText" class="change-text">
         <button class="change-text-btn" onclick="handleChangeText()">Change Text Source</button>
         <a href="/history" class="change-text-btn" target="_blank" rel="noopener noreferrer">View History</a>
