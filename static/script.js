@@ -161,18 +161,19 @@ let currentLoadingToast = null;
 let latestDocId = null;
 
 async function handleChangeText() {
+    // Clean up existing check and overlay
+    if (currentDocCheck) {
+        currentDocCheck.abort();
+    }
+    if (currentLoadingToast) {
+        currentLoadingToast.remove();
+    }
+    const existingOverlay = document.getElementById('customAlertContainer');
+    if (existingOverlay) {
+        existingOverlay.remove();
+    }
+
     try {
-        // Clean up existing check and overlay
-        if (currentDocCheck) {
-            currentDocCheck.abort();
-        }
-        if (currentLoadingToast) {
-            currentLoadingToast.remove();
-        }
-        const existingOverlay = document.getElementById('customAlertContainer');
-        if (existingOverlay) {
-            existingOverlay.remove();
-        }
 
         // Show initial toast
         currentLoadingToast = showPersistentToast('Please have text ready to paste into new document...', true);
@@ -323,8 +324,6 @@ async function handleChangeText() {
         showToast(error.message, 'error');
     }
 }
-    
-    try {
         
         // Create document
         const response = await fetch('/create_doc', {
