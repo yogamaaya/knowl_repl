@@ -189,27 +189,26 @@ async function handleChangeText() {
         
         // Function to check document content
         const checkAndUpdate = async () => {
-            if (attempts >= MAX_ATTEMPTS) {
-                throw new Error('Timeout waiting for document content');
-            }
+            const MAX_SECONDS = 60;
+            const startTime = Date.now();
             
-            attempts++;
             if (!loadingToast) {
                 loadingToast = showPersistentToast('Checking for content...', true);
             }
-            
-            // Check for content
-            const checkResponse = await fetch('/check_doc_content', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ doc_id: data.doc_id })
-            }).catch(() => {
-                throw new Error('Failed to check document content');
-            });
-            
-            const checkData = await checkResponse.json();
-            
-            if (checkData.has_content) {
+
+            while ((Date.now() - startTime) < (MAX_SECONDS * 1000)) {
+                // Check for content
+                const checkResponse = await fetch('/check_doc_content', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ doc_id: data.doc_id })
+                }).catch(() => {
+                    throw new Error('Failed to check document content');
+                });
+                
+                const checkData = await checkResponse.json();
+                
+                if (checkData.has_content) {
                 loadingToast.textContent = 'Updating knowledge base...';
                 
                 // Update embeddings
@@ -255,16 +254,25 @@ async function handleChangeText() {
                 }
             }
             
-            // Continue checking
-            if (window.confirm('Still waiting for content. Continue waiting?')) {
-                setTimeout(checkAndUpdate, 10000);
+            return true;
+                }
+                
+                // Wait 1 second before next check
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                loadingToast.textContent = `Checking for content... ${Math.floor((Date.now() - startTime) / 1000)}s`;
+            }
+            
+            // If we get here, we've timed out
+            const shouldContinue = confirm('No content found after 60 seconds. Continue waiting?');
+            if (shouldContinue) {
+                return checkAndUpdate();
             } else {
                 throw new Error('Document update cancelled');
             }
         };
         
-        // Start checking after 10 seconds
-        setTimeout(checkAndUpdate, 10000);
+        // Start checking immediately
+        checkAndUpdate();
         
     } catch (error) {
         console.error('Error:', error);
