@@ -158,12 +158,11 @@ function showPersistentToast(message, isPersistent = false) {
 
 let currentChangeTextController = null;
 
+let currentLoadingToast = null;
+
 async function handleChangeText() {
     try {
-        // Clean up any existing toasts and alerts
-        const existingToasts = document.querySelectorAll('.toast:not(.source-toast)');
-        existingToasts.forEach(toast => toast.remove());
-        
+        // Clean up any existing alerts
         const existingAlert = document.getElementById('customAlertContainer');
         if (existingAlert) {
             existingAlert.remove();
@@ -173,13 +172,17 @@ async function handleChangeText() {
         if (currentChangeTextController) {
             currentChangeTextController.abort();
             currentChangeTextController = null;
+            if (currentLoadingToast) {
+                currentLoadingToast.remove();
+                currentLoadingToast = null;
+            }
         }
         
         currentChangeTextController = new AbortController();
-        let loadingToast = null;
+        currentLoadingToast = null;
         const MAX_SECONDS = 60;
         // Show creating document toast
-        loadingToast = showPersistentToast(' Please have text ready to paste in a new document...', true);
+        currentLoadingToast = showPersistentToast(' Please have text ready to paste in a new document...', true);
         
         // Create document
         const response = await fetch('/create_doc', {
