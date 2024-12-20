@@ -393,21 +393,7 @@ window.addEventListener('load', async function() {
         🌑 Try to use keywords of the text, and reference the current context as much as possible.<br><br>
         <p>PS: Please be patient with Knowl as she thinks~ 🦉</p>`
     ];
-    updateChat(currentPageMessages);
-    
-    const defaultDocId = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A';
-    
-    try {
-        const updateResponse = await fetch('/update_embeddings', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ doc_id: defaultDocId })
-        });
-        
-        const updateData = await updateResponse.json();
-        if (updateResponse.ok && updateData.success) {
+    updateChat(currentPageMessages);onse.ok && updateData.success) {
             const docUrl = `https://docs.google.com/document/d/${defaultDocId}/edit`;
             localStorage.setItem('currentSourceTitle', updateData.title);
             localStorage.setItem('currentDocId', defaultDocId);

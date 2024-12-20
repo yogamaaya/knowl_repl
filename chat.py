@@ -195,9 +195,9 @@ def initialize_embeddings(ip_address=None):
     print("\n=== Initializing Embeddings ===")
     global text, doc_id, qa_chains, chat_histories
     
-    qa_chains = {}
-    chat_histories = {}
-    
+    if ip_address and ip_address in qa_chains and qa_chains[ip_address] is not None:
+        return {"success": True, "doc_id": doc_id, "title": get_doc_title(doc_id)}
+        
     default_doc = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
     doc_id = default_doc
     
@@ -214,10 +214,10 @@ def initialize_embeddings(ip_address=None):
         
     print(f"Using doc_id: {doc_id}")
     text = get_text_from_doc(doc_id)
-    print(f"Retrieved text (first 100 chars): {text[:100]}")
+    
     if ip_address:
         qa_chains[ip_address] = None
-    create_embeddings(text)
+        create_embeddings(text)
 
     # Get document title and broadcast update
     title = get_doc_title(doc_id)
