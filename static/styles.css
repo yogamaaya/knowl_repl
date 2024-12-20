@@ -96,6 +96,58 @@ h1 {
 }
 
 
+/* Minimalist with subtle hover effect */
+.description {
+    margin: 0px auto;
+    max-width: 800px;
+    background: linear-gradient(145deg, rgba(116, 4, 118, 0.1), rgba(116, 4, 118, 0.2));
+    backdrop-filter: blur(5px);
+    border-radius: 15px;
+    padding: 10px;
+    transition: all 0.5s ease-in-out; /* Increased duration for smoother transition */
+}
+
+#tips.btn-primary {
+    background: black;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 25px;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    border-radius: 25px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Added smooth easing */
+    box-shadow: none;
+}
+
+#tips.btn-primary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Remove fade animation and use smooth height transition instead */
+#descriptionContent {
+    transition: height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    opacity: 1;
+}
+
+#descriptionContent.collapse:not(.show) {
+    display: block;
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
+}
+
+#descriptionContent.collapsing {
+    height: 0;
+    opacity: 0;
+    transition: height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+#descriptionContent.collapse.show {
+    height: auto;
+    opacity: 1;
+}
+
 /* Add new styles for the submit button */
 button[type="submit"] {
     background-color: #740476;
@@ -215,7 +267,7 @@ margin-bottom: 5px;
 /* Adjust the chat message container to align items properly */
 
 .chatBox p {
-    display: flow;
+    display: flex;
     align-items: flex-start;
     margin: 20px 0;
     padding: 20px;
@@ -348,48 +400,6 @@ margin-bottom: 5px;
     text-decoration: none;
 }
 .footer a:hover {
-
-.chat-message {
-    display: flex;
-    align-items: flex-start;
-    margin: 15px 0;
-    line-height: 1.6;
-    padding: 10px;
-    border-radius: 8px;
-    background-color: rgba(255, 255, 255, 0.05);
-    position: relative;
-}
-
-.chat-message p {
-    margin: 0;
-    font-size: 1.1em;
-    color: #333;
-    flex: 1;
-    padding-right: 40px;
-}
-
-.copy-btn {
-    position: absolute;
-    right: 10px;
-    top: 10px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    opacity: 0.6;
-    transition: opacity 0.3s ease;
-}
-
-.copy-btn:hover {
-    opacity: 1;
-}
-
-.copy-icon {
-    width: 20px;
-    height: 20px;
-    fill: #740476;
-}
-
     text-decoration: underline;
 }
 
