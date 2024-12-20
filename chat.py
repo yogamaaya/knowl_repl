@@ -200,16 +200,21 @@ def initialize_embeddings(ip_address=None):
     if not chat_histories:
         chat_histories = {}
     
-    # Only use default doc_id for new IP sessions
-    if ip_address and ip_address not in qa_chains:
+    # Initialize for any IP address that doesn't have a chain
+    if ip_address and (ip_address not in qa_chains or qa_chains[ip_address] is None):
         doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
         print(f"New IP session, using default doc_id: {doc_id}")
-        qa_chains[ip_address] = None
         text = get_text_from_doc(doc_id)
         print(f"Retrieved text (first 100 chars): {text[:100]}")
-        create_embeddings(text, ip_address)
-    elif ip_address:
-        print(f"Using existing session for IP: {ip_address}")
+        if text:
+            create_embeddings(text, ip_address)
+            if ip_address not in qa_chains or qa_chains[ip_address] is None:
+                print("Error: QA chain not properly initialized")
+                return False
+        else:
+            print("Error: No text retrieved from document")
+            return False
+    return True
 
 
 def on_submit(query, ip_address):
@@ -222,7 +227,9 @@ def on_submit(query, ip_address):
         chat_histories[ip_address] = []
         
     if qa_chains[ip_address] is None:
-        initialize_embeddings(ip_address)
+        success = initialize_embeddings(ip_address)
+        if not success:
+            raise Exception("Failed to initialize QA chain")
     print(f"Current doc_id: {doc_id}")
     print(f"Current text preview: {text[:100]}")
     print(f"Received query: {query}")
