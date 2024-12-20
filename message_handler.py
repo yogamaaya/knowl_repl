@@ -12,7 +12,7 @@ def receive_message():
         ip_address = request.remote_addr
         if message:
             messages.append(message)
-            reply = on_submit(message, ip_address)
+            reply = on_submit(message)
             messages.append(reply['text'])
             print("response: ", messages)
             return jsonify({
