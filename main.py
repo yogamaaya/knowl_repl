@@ -17,8 +17,8 @@ def history():
 def chat():
     print("\n=== Starting Chat Application ===")
     print("Initializing embeddings with default document...")
-    doc_info = initialize_embeddings(request.remote_addr)
-    return render_template('chat.html', initial_doc=doc_info)
+    initialize_embeddings(None)
+    return render_template('chat.html')
 
 
 @app.route('/submit', methods=['POST', 'GET'])
@@ -67,36 +67,16 @@ def get_doc_preview():
 def update_embeddings():
     data = request.get_json()
     doc_id = data.get('doc_id')
-    if not doc_id:
-        return jsonify({"success": False, "error": "No document ID provided"}), 400
-        
-    print(f"Updating embeddings for document: {doc_id}")
-    if change_text_source(doc_id):
-        title = get_doc_title(doc_id)
-        
-        # Update doc history with the latest successful document
-        try:
-            doc_history = []
-            if os.path.exists('doc_history.txt'):
-                with open('doc_history.txt', 'r') as f:
-                    doc_history = json.load(f)
-                    
-            # Only keep the new document if it has content
-            new_doc = {"id": doc_id, "title": title}
-            if not any(doc['id'] == doc_id for doc in doc_history):
-                doc_history.append(new_doc)
-                
-            with open('doc_history.txt', 'w') as f:
-                json.dump(doc_history, f)
-                
+    if doc_id:
+        print(f"Updating embeddings for document: {doc_id}")
+        if change_text_source(doc_id):
+            title = get_doc_title(doc_id)
             print("Embeddings updated successfully")
             return jsonify({"success": True, "title": title})
-        except Exception as e:
-            print(f"Error updating doc history: {str(e)}")
-            return jsonify({"success": False, "error": "Failed to update history"}), 500
-    else:
-        print("Failed to get text from document")
-        return jsonify({"success": False, "error": "No text found"}), 400
+        else:
+            print("Failed to get text from document")
+            return jsonify({"success": False, "error": "No text found"}), 400
+    return jsonify({"success": False, "error": "No document ID provided"}), 400
 
 
 
@@ -116,24 +96,6 @@ def save_doc_history():
     except Exception as e:
         print(f"Error saving doc history: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/get_current_doc', methods=['GET'])
-def get_current_doc():
-    try:
-        ip_address = request.remote_addr
-        if ip_address in doc_ids:
-            doc_id = doc_ids[ip_address]
-            return jsonify({
-                "success": True,
-                "doc_id": doc_id,
-                "title": get_doc_title(doc_id)
-            })
-        else:
-            result = initialize_embeddings(ip_address)
-            return jsonify(result)
-    except Exception as e:
-        print(f"Error loading default document: {str(e)}")
-        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/load_doc_history', methods=['GET'])
 def load_doc_history():
