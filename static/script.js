@@ -162,32 +162,30 @@ let checkContentInterval = null;
 
 async function handleChangeText() {
     try {
-        // Cleanup previous state
-        const existingAlert = document.getElementById('customAlertContainer');
-        if (existingAlert) {
-            existingAlert.remove();
-        }
-        
+        // Clean up any existing operation
         if (checkContentInterval) {
             clearInterval(checkContentInterval);
         }
 
-        // Abort previous operation if exists
-        if (currentChangeTextController) {
-            currentChangeTextController.abort();
-            if (currentLoadingToast) {
-                currentLoadingToast.remove();
-            }
-        }
-        
-        // Abort previous operation if exists
         if (currentChangeTextController) {
             currentChangeTextController.abort();
             currentChangeTextController = null;
-            if (currentLoadingToast) {
-                currentLoadingToast.remove();
-                currentLoadingToast = null;
-            }
+        }
+
+        if (currentLoadingToast) {
+            currentLoadingToast.remove();
+            currentLoadingToast = null;
+        }
+
+        const existingAlert = document.getElementById('customAlertContainer');
+        if (existingAlert) {
+            existingAlert.remove();
+        }
+
+        // Remove any existing source toast
+        const existingToast = document.querySelector('.source-toast');
+        if (existingToast) {
+            existingToast.remove();
         }
         
         currentChangeTextController = new AbortController();
@@ -262,7 +260,8 @@ async function handleChangeText() {
             }, 1000);
         });
 
-        contentFound = await checkContent();
+        try {
+            contentFound = await checkContent();
             if (!contentFound) {
                 // Create overlay and custom alert
                 const container = document.createElement('div');
@@ -304,10 +303,26 @@ async function handleChangeText() {
                     throw new Error('Document update cancelled by user');
                 }
             }
-        } while (!contentFound);
-        
-        // Update knowledge base
-        loadingToast.textContent = 'Updating knowledge base...';
+        // Wait for user response
+                const shouldContinue = await new Promise(resolve => {
+                    window.handleAlertResponse = (response) => {
+                        container.remove();
+                        resolve(response);
+                    };
+                });
+                
+                if (!shouldContinue) {
+                    throw new Error('Document update cancelled by user');
+                }
+                
+                // If user wants to continue, restart the check
+                return handleChangeText();
+            }
+            
+            // Update knowledge base
+            if (currentLoadingToast) {
+                currentLoadingToast.textContent = 'Updating knowledge base...';
+            }
         const updateResponse = await fetch('/update_embeddings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
