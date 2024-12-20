@@ -161,16 +161,15 @@ let currentLoadingToast = null;
 let checkContentInterval = null;
 
 async function handleChangeText() {
-    try {
-        // Clean up any existing operation
-        if (checkContentInterval) {
-            clearInterval(checkContentInterval);
-        }
+    // Clean up any existing operation
+    if (checkContentInterval) {
+        clearInterval(checkContentInterval);
+    }
 
-        if (currentChangeTextController) {
-            currentChangeTextController.abort();
-            currentChangeTextController = null;
-        }
+    if (currentChangeTextController) {
+        currentChangeTextController.abort();
+        currentChangeTextController = null;
+    }
 
         if (currentLoadingToast) {
             currentLoadingToast.remove();
@@ -261,11 +260,10 @@ async function handleChangeText() {
             }, 1000);
         });
 
-        try {
-            contentFound = await checkContent();
-            if (!contentFound) {
-                // Create overlay and custom alert
-                const container = document.createElement('div');
+        contentFound = await checkContent();
+        if (!contentFound) {
+            // Create overlay and custom alert
+            const container = document.createElement('div');
                 container.id = 'customAlertContainer';
                 const overlay = document.createElement('div');
                 overlay.className = 'overlay';
@@ -382,6 +380,10 @@ async function handleChangeText() {
         }
         // Cleanup on error
         currentChangeTextController = null;
+    } finally {
+        if (checkContentInterval) {
+            clearInterval(checkContentInterval);
+        }
     }
 }
 let currentAudio = null;
