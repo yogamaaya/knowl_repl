@@ -1,4 +1,7 @@
 
+from flask import request
+
+
 import logging
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents.base import Document
@@ -133,6 +136,12 @@ def update_doc_for_ip(ip_address, new_doc_id):
     if text and create_embeddings(text, ip_address):
         doc_ids[ip_address] = new_doc_id
         chat_histories[ip_address] = []
+        return True
+    return False
+
+def change_text_source(doc_id):
+    text = get_text_from_doc(doc_id)
+    if text and create_embeddings(text, request.remote_addr):
         return True
     return False
 
