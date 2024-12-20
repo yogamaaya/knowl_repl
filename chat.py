@@ -171,6 +171,7 @@ def create_embeddings(text):
     5) Mention if a question asked is not related to the current text, and ask for clarification
     6) Only use specific, accurate and context-relevant knowledge from the text source provided alone
     7) End with a fun follow-up question about the text or a gratitude statement
+    8) Discard mentioning any information that is not directly present in the text
 
     Remember: All responses should be long, minimum 150 words, story telling paraphrases of the current source text alone, with accurate details that make the text feel interesting. Ensure that the text is directly quoted multiple times!
     """
