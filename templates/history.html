@@ -45,12 +45,11 @@
                     docItem.appendChild(header);
                     docItem.appendChild(preview);
                     
-                    let isExpanding = false;
+                    let isExpanded = false;
+                    let hasContent = false;
+                    
                     titleButton.addEventListener('click', async () => {
-                        if (isExpanding) return;
-                        isExpanding = true;
-                        
-                        if (preview.classList.contains('collapsed')) {
+                        if (!hasContent && !isExpanded) {
                             try {
                                 const response = await fetch('/get_doc_preview', {
                                     method: 'POST',
@@ -60,25 +59,20 @@
                                     body: JSON.stringify({ doc_id: doc.id })
                                 });
                                 const data = await response.json();
-                                
                                 preview.innerHTML = `
                                     <p>${data.preview}</p>
                                     <a href="https://docs.google.com/document/d/${doc.id}/edit" target="_blank" class="read-more">Read More →</a>
                                 `;
-                                // Force browser reflow
-                                preview.offsetHeight;
+                                hasContent = true;
                             } catch (error) {
                                 console.error('Error fetching preview:', error);
+                                return;
                             }
                         }
                         
+                        isExpanded = !isExpanded;
                         preview.classList.toggle('collapsed');
                         titleButton.classList.toggle('active');
-                        
-                        // Wait for animation to complete
-                        setTimeout(() => {
-                            isExpanding = false;
-                        }, 400); // Match transition duration
                     });
                     
                     docList.appendChild(docItem);
