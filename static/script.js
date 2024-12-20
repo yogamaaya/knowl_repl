@@ -371,6 +371,24 @@ window.addEventListener('load', async function() {
     updateChat(currentPageMessages);
     
     const savedDocId = localStorage.getItem('currentDocId');
+    const savedTitle = localStorage.getItem('currentSourceTitle');
+    
+    // Show toast immediately if we have saved document info
+    if (savedDocId && savedTitle) {
+        const docUrl = `https://docs.google.com/document/d/${savedDocId}/edit`;
+        const sourceToast = document.createElement('div');
+        sourceToast.className = 'toast persistent source-toast';
+        const link = document.createElement('a');
+        link.href = docUrl;
+        link.target = '_blank';
+        link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
+        link.textContent = `Current source: ${savedTitle}`;
+        sourceToast.appendChild(link);
+        document.getElementById('toastContainer').appendChild(sourceToast);
+        setTimeout(() => sourceToast.classList.add('show'), 10);
+    }
+
+    // Then update embeddings in background
     if (savedDocId) {
         try {
             const updateResponse = await fetch('/update_embeddings', {
@@ -383,20 +401,8 @@ window.addEventListener('load', async function() {
             
             const updateData = await updateResponse.json();
             if (updateResponse.ok && updateData.success) {
-                const docUrl = `https://docs.google.com/document/d/${savedDocId}/edit`;
                 localStorage.setItem('currentSourceTitle', updateData.title);
                 localStorage.setItem('currentDocId', savedDocId);
-                
-                const sourceToast = document.createElement('div');
-                sourceToast.className = 'toast persistent source-toast';
-                const link = document.createElement('a');
-                link.href = docUrl;
-                link.target = '_blank';
-                link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
-                link.textContent = `Current source: ${updateData.title}`;
-                sourceToast.appendChild(link);
-                document.getElementById('toastContainer').appendChild(sourceToast);
-                setTimeout(() => sourceToast.classList.add('show'), 10);
             }
         } catch (error) {
             console.error('Error loading default document:', error);
