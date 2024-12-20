@@ -76,7 +76,10 @@
         // Load history once when page loads
         window.onload = loadDocHistory;
 
-        // Listen for messages from the parent window
+        // Auto-refresh history every 5 seconds
+        setInterval(loadDocHistory, 5000);
+        
+        // Also listen for manual refresh messages
         window.addEventListener('message', (event) => {
             if (event.data === 'refreshHistory') {
                 loadDocHistory();
