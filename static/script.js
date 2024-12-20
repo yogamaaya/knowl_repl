@@ -256,6 +256,7 @@ async function handleChangeText() {
                         reject(error);
                     }
                     console.error('Content check error:', error);
+                    throw error;
                 }
             }, 1000);
         });
@@ -373,8 +374,8 @@ async function handleChangeText() {
         
     } catch (error) {
         console.error('Error:', error);
-        if (loadingToast) {
-            loadingToast.remove();
+        if (currentLoadingToast) {
+            currentLoadingToast.remove();
         }
         if (error.name !== 'AbortError') {
             showToast(error.message, 'error');
