@@ -264,18 +264,6 @@ async function handleChangeText() {
         loadingToast.remove();
         showToast('Text Source Updated Successfully', 'success');
         
-        // Show current source toast
-        const sourceToast = document.createElement('div');
-        sourceToast.className = 'toast persistent';
-        const link = document.createElement('a');
-        link.href = docUrl;
-        link.target = '_blank';
-        link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
-        link.textContent = `Current source: ${updateData.title}`;
-        sourceToast.appendChild(link);
-        document.getElementById('toastContainer').appendChild(sourceToast);
-        setTimeout(() => sourceToast.classList.add('show'), 10);
-        
     } catch (error) {
         console.error('Error:', error);
         if (loadingToast) {
