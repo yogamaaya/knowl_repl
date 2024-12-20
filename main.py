@@ -42,12 +42,23 @@ def new_doc():
 
 @app.route('/check_doc_content', methods=['POST'])
 def check_doc_content():
-    data = request.get_json()
-    doc_id = data.get('doc_id')
-    if doc_id:
+    try:
+        if not request.is_json:
+            return jsonify({"error": "Invalid request format"}), 400
+            
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Empty request"}), 400
+            
+        doc_id = data.get('doc_id')
+        if not doc_id:
+            return jsonify({"error": "Missing document ID"}), 400
+            
         text = get_text_from_doc(doc_id)
         return jsonify({"has_content": bool(text and len(text.strip()) > 0)})
-    return jsonify({"has_content": False})
+    except Exception as e:
+        logger.error(f"Error checking document content: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
 
 
 @app.route('/get_doc_preview', methods=['POST'])

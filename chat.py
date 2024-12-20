@@ -120,12 +120,16 @@ def change_text_source(new_doc_id):
 
 
 def create_embeddings(text):
-    print("\n=== Creating Embeddings ===")
-    print(f"Text preview (first 100 chars): {text[:100]}")
-    global qa_chain, chat_history
+    try:
+        print("\n=== Creating Embeddings ===")
+        if not text or not isinstance(text, str):
+            raise ValueError("Invalid text input for embedding creation")
+            
+        print(f"Text preview (first 100 chars): {text[:100]}")
+        global qa_chain, chat_history
 
-    # Reset context and QA chain
-    reset_qa_chain()
+        # Reset context and QA chain
+        reset_qa_chain()
 
     # Ensure clean initialization
     if text.strip():
