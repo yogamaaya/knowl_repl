@@ -163,13 +163,14 @@ async function submitMessage(event) {
 // Initialize on page load
 window.addEventListener('load', async function() {
     try {
-        const storedDocId = localStorage.getItem('currentDocId');
-        const storedTitle = localStorage.getItem('currentSourceTitle');
+        const currentDocId = localStorage.getItem('currentDocId') || 
+                           (window.initialDoc && window.initialDoc.doc_id);
+        const currentTitle = localStorage.getItem('currentSourceTitle') || 
+                           (window.initialDoc && window.initialDoc.title);
         
-        // Only use stored document if it exists
-        if (storedDocId && storedTitle) {
-            const docUrl = `https://docs.google.com/document/d/${storedDocId}/edit`;
-            updateSourceToast(docUrl, storedTitle);
+        if (currentDocId) {
+            const docUrl = `https://docs.google.com/document/d/${currentDocId}/edit`;
+            updateSourceToast(docUrl, currentTitle || 'Current Document');
         }
     } catch (error) {
         console.error('Error loading document:', error);

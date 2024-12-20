@@ -198,11 +198,21 @@ def initialize_embeddings(ip_address=None):
     if ip_address and ip_address in qa_chains and qa_chains[ip_address] is not None:
         return {"success": True, "doc_id": doc_id, "title": get_doc_title(doc_id)}
     
+    # For new IP addresses, try to get latest document from history
     try:
-        # For new IP sessions only, use default doc
-        if ip_address and ip_address not in qa_chains:
-            doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
-        # Otherwise maintain existing doc_id
+        with open('doc_history.txt', 'r') as f:
+            doc_history = json.load(f)
+            if doc_history and doc_history[-1].get('id'):
+                latest_doc = doc_history[-1]['id']
+                latest_text = get_text_from_doc(latest_doc)
+                if latest_text and len(latest_text.strip()) > 0:
+                    doc_id = latest_doc
+            else:
+                # If no history exists, use default document
+                doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
+    except:
+        # If file doesn't exist, use default document
+        doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
         
     print(f"Using doc_id: {doc_id}")
     text = get_text_from_doc(doc_id)
