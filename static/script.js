@@ -158,23 +158,23 @@ function showPersistentToast(message, isPersistent = false) {
 
 async function handleChangeText() {
     let loadingToast = null;
-    let attempts = 0;
-    const MAX_ATTEMPTS = 6; // 60 seconds total waiting time
+    const MAX_SECONDS = 60;
     
     try {
         // Clear existing toasts
-        const existingToasts = document.querySelectorAll('.toast.persistent');
-        existingToasts.forEach(toast => toast.remove());
+        document.querySelectorAll('.toast.persistent').forEach(toast => toast.remove());
         
-        // Show initial toast
-        const creatingToast = showPersistentToast('Creating new document...', true);
+        // Show creating document toast
+        loadingToast = showPersistentToast('Creating new document. Please wait...', true);
         
         // Create document
         const response = await fetch('/create_doc', {
             method: 'POST',
-        }).catch(error => {
-            throw new Error('Failed to create document: Network error');
         });
+        
+        if (!response.ok) {
+            throw new Error('Failed to create document: Server error');
+        }
         
         const data = await response.json();
         if (!data.doc_id) {
@@ -184,100 +184,103 @@ async function handleChangeText() {
         // Open document and update toast
         const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
         window.open(docUrl, '_blank');
-        creatingToast.remove();
         showToast('Document created. Please paste your text and save.', 'success');
         
-        // Function to check document content
-        const checkAndUpdate = async () => {
-            const MAX_SECONDS = 60;
+        // Content checking function
+        const checkContent = async () => {
             const startTime = Date.now();
+            let hasContent = false;
             
-            if (!loadingToast) {
-                loadingToast = showPersistentToast('Checking for content...', true);
-            }
-
-            while ((Date.now() - startTime) < (MAX_SECONDS * 1000)) {
-                // Check for content
-                const checkResponse = await fetch('/check_doc_content', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ doc_id: data.doc_id })
-                }).catch(() => {
-                    throw new Error('Failed to check document content');
-                });
-                
-                const checkData = await checkResponse.json();
-                
-                if (checkData.has_content) {
-                loadingToast.textContent = 'Updating knowledge base...';
-                
-                // Update embeddings
-                const updateResponse = await fetch('/update_embeddings', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ doc_id: data.doc_id })
-                }).catch(() => {
-                    throw new Error('Failed to update knowledge base');
-                });
-                
-                const updateData = await updateResponse.json();
-                
-                if (updateResponse.ok && updateData.success) {
-                    // Update local storage
-                    localStorage.setItem('currentSourceTitle', updateData.title);
-                    localStorage.setItem('currentDocId', data.doc_id);
+            while (!hasContent && (Date.now() - startTime) < (MAX_SECONDS * 1000)) {
+                try {
+                    loadingToast.textContent = `Checking for content... ${Math.floor((Date.now() - startTime) / 1000)}s`;
                     
-                    // Update history
-                    const docHistory = JSON.parse(localStorage.getItem('docHistory') || '[]');
-                    if (!docHistory.find(doc => doc.id === data.doc_id)) {
-                        docHistory.push({ id: data.doc_id, title: updateData.title });
-                        localStorage.setItem('docHistory', JSON.stringify(docHistory));
+                    const checkResponse = await fetch('/check_doc_content', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ doc_id: data.doc_id })
+                    });
+                    
+                    if (!checkResponse.ok) {
+                        throw new Error('Failed to check document content');
                     }
                     
-                    // Update UI
-                    loadingToast.remove();
-                    showToast('Knowledge base updated successfully', 'success');
+                    const checkData = await checkResponse.json();
+                    if (checkData.has_content) {
+                        hasContent = true;
+                        break;
+                    }
                     
-                    // Show source toast
-                    const sourceToast = document.createElement('div');
-                    sourceToast.className = 'toast persistent';
-                    const link = document.createElement('a');
-                    link.href = docUrl;
-                    link.target = '_blank';
-                    link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
-                    link.textContent = `Current source: ${updateData.title}`;
-                    sourceToast.appendChild(link);
-                    document.getElementById('toastContainer').appendChild(sourceToast);
-                    setTimeout(() => sourceToast.classList.add('show'), 10);
-                    
-                    return true;
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                } catch (error) {
+                    console.error('Content check error:', error);
+                    // Continue checking despite errors
                 }
-            } catch (error) {
-                throw new Error('Failed to update knowledge base: ' + error.message);
-            }
-            return false;
-        }
-                
-                // Wait 1 second before next check
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                loadingToast.textContent = `Checking for content... ${Math.floor((Date.now() - startTime) / 1000)}s`;
             }
             
-            // If we get here, we've timed out
-            const shouldContinue = confirm('No content found after 60 seconds. Continue waiting?');
-            if (shouldContinue) {
-                return checkAndUpdate();
-            } else {
-                throw new Error('Document update cancelled');
-            }
+            return hasContent;
         };
         
-        // Start checking immediately
-        checkAndUpdate();
+        // Keep checking until content is found or user cancels
+        let contentFound = false;
+        do {
+            contentFound = await checkContent();
+            if (!contentFound) {
+                const shouldContinue = confirm('No content found after 60 seconds. Continue waiting?');
+                if (!shouldContinue) {
+                    throw new Error('Document update cancelled by user');
+                }
+            }
+        } while (!contentFound);
+        
+        // Update knowledge base
+        loadingToast.textContent = 'Updating knowledge base...';
+        const updateResponse = await fetch('/update_embeddings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ doc_id: data.doc_id })
+        });
+        
+        if (!updateResponse.ok) {
+            throw new Error('Failed to update knowledge base');
+        }
+        
+        const updateData = await updateResponse.json();
+        if (!updateData.success) {
+            throw new Error('Failed to update knowledge base: ' + (updateData.error || 'Unknown error'));
+        }
+        
+        // Update local storage and history
+        localStorage.setItem('currentSourceTitle', updateData.title);
+        localStorage.setItem('currentDocId', data.doc_id);
+        
+        const docHistory = JSON.parse(localStorage.getItem('docHistory') || '[]');
+        if (!docHistory.find(doc => doc.id === data.doc_id)) {
+            docHistory.push({ id: data.doc_id, title: updateData.title });
+            localStorage.setItem('docHistory', JSON.stringify(docHistory));
+        }
+        
+        // Update UI with success
+        loadingToast.remove();
+        showToast('Text Source Updated Successfully', 'success');
+        
+        // Show current source toast
+        const sourceToast = document.createElement('div');
+        sourceToast.className = 'toast persistent';
+        const link = document.createElement('a');
+        link.href = docUrl;
+        link.target = '_blank';
+        link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
+        link.textContent = `Current source: ${updateData.title}`;
+        sourceToast.appendChild(link);
+        document.getElementById('toastContainer').appendChild(sourceToast);
+        setTimeout(() => sourceToast.classList.add('show'), 10);
         
     } catch (error) {
         console.error('Error:', error);
-        if (loadingToast) loadingToast.remove();
+        if (loadingToast) {
+            loadingToast.remove();
+        }
         showToast(error.message, 'error');
     }
 }
