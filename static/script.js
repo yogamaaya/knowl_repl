@@ -364,8 +364,7 @@ window.addEventListener('load', async function() {
         🌖 Try prefacing questions with "In this context", "According to this text" etc!<br><br>
         🌗 Whenever you paste new text, please ask <b>new and specific questions to get new answers.</b><br>
         Knowl retains all information of text corpora given to date.<br><br>
-        🌘 You can try rephrasing the same question or command if a response doesn't please you!<br>
-        A starter question is "What is the main focus of this text?"<br><br>
+        🌘 You can try rephrasing the same question or command if a response doesn't please you!<br><br>
         🌑 Try to use keywords of the text, and reference the current context as much as possible.<br><br>
         <p>PS: Please be patient with Knowl as she thinks~ 🦉</p>`
     ];
