@@ -87,12 +87,24 @@ def save_doc_history():
         return jsonify({'success': False, 'error': 'Content-Type must be application/json'}), 400
         
     try:
-        doc_history = request.get_json().get('docHistory', [])
-        if not isinstance(doc_history, list):
-            return jsonify({'success': False, 'error': 'docHistory must be an array'}), 400
+        new_doc = request.get_json().get('docHistory', [])[0]
+        if not new_doc or not isinstance(new_doc, dict):
+            return jsonify({'success': False, 'error': 'Invalid document data'}), 400
             
+        # Read existing history
+        existing_docs = []
+        if os.path.exists('doc_history.txt'):
+            with open('doc_history.txt', 'r') as f:
+                existing_docs = json.load(f)
+                
+        # Only add if doc doesn't exist
+        if not any(doc['id'] == new_doc['id'] for doc in existing_docs):
+            existing_docs.append(new_doc)
+            
+        # Save updated history
         with open('doc_history.txt', 'w') as f:
-            json.dump(doc_history, f)
+            json.dump(existing_docs, f)
+            
         return jsonify({'success': True}), 200
     except Exception as e:
         print(f"Error saving doc history: {str(e)}")

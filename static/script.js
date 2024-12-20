@@ -244,22 +244,24 @@ async function handleChangeText() {
                 throw new Error('Failed to update knowledge base');
             }
 
-            // Save current document info
-            localStorage.setItem('currentSourceTitle', updateData.title);
-            localStorage.setItem('currentDocId', data.doc_id);
-            
-            // Save to document history
-            const docHistory = JSON.parse(localStorage.getItem('docHistory') || '[]');
+            // Create new doc entry
             const newDoc = {
                 id: data.doc_id,
                 title: updateData.title,
                 timestamp: new Date().toISOString()
             };
             
-            // Only add if doc doesn't exist
-            if (!docHistory.some(doc => doc.id === newDoc.id)) {
-                docHistory.push(newDoc);
-                localStorage.setItem('docHistory', JSON.stringify(docHistory));
+            // Save directly to doc_history.txt
+            try {
+                const saveResponse = await fetch('/save_doc_history', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        docHistory: [newDoc]  // Send only new doc to be appended
+                    })
+                });
                 
                 // Save to file
                 try {
