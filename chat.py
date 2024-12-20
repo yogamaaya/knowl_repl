@@ -142,6 +142,8 @@ def update_doc_for_ip(ip_address, new_doc_id):
 def change_text_source(doc_id):
     text = get_text_from_doc(doc_id)
     if text and create_embeddings(text, request.remote_addr):
+        doc_ids[request.remote_addr] = doc_id
+        chat_histories[request.remote_addr] = []
         return True
     return False
 

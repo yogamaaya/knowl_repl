@@ -117,6 +117,24 @@ def save_doc_history():
         print(f"Error saving doc history: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/get_current_doc', methods=['GET'])
+def get_current_doc():
+    try:
+        ip_address = request.remote_addr
+        if ip_address in doc_ids:
+            doc_id = doc_ids[ip_address]
+            return jsonify({
+                "success": True,
+                "doc_id": doc_id,
+                "title": get_doc_title(doc_id)
+            })
+        else:
+            result = initialize_embeddings(ip_address)
+            return jsonify(result)
+    except Exception as e:
+        print(f"Error loading default document: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
 @app.route('/load_doc_history', methods=['GET'])
 def load_doc_history():
     try:
