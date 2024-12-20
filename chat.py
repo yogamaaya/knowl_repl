@@ -192,13 +192,24 @@ def create_embeddings(text):
 
 
 def initialize_embeddings(ip_address=None):
-    print("\n=== Initializing Default Embeddings ===")
+    print("\n=== Initializing Embeddings ===")
     global text, doc_id, qa_chains, chat_histories
     # Clear all session data
     qa_chains = {}
     chat_histories = {}
-    doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"
-    print(f"Using default doc_id: {doc_id}")
+    
+    # Try to get doc from history first
+    try:
+        with open('doc_history.txt', 'r') as f:
+            doc_history = json.load(f)
+            if doc_history:
+                doc_id = doc_history[-1]['id']  # Get most recent doc
+            else:
+                doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"  # Fallback
+    except:
+        doc_id = "1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A"  # Fallback
+        
+    print(f"Using doc_id: {doc_id}")
     text = get_text_from_doc(doc_id)
     print(f"Retrieved text (first 100 chars): {text[:100]}")
     if ip_address:
