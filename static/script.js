@@ -99,22 +99,31 @@ async function checkDocumentContent(docId, maxAttempts = 20) {
 }
 
 async function saveToHistory(docId, title) {
-    const docHistory = JSON.parse(localStorage.getItem('docHistory') || '[]');
-    const newDoc = {
-        id: docId,
-        title: title,
-        timestamp: new Date().toISOString()
-    };
-    
-    if (!docHistory.some(doc => doc.id === newDoc.id)) {
-        docHistory.push(newDoc);
-        localStorage.setItem('docHistory', JSON.stringify(docHistory));
+    try {
+        const docHistory = JSON.parse(localStorage.getItem('docHistory') || '[]');
+        const newDoc = {
+            id: docId,
+            title: title,
+            timestamp: new Date().toISOString()
+        };
         
-        await fetch('/save_doc_history', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ docHistory })
-        });
+        if (!docHistory.some(doc => doc.id === newDoc.id)) {
+            docHistory.push(newDoc);
+            localStorage.setItem('docHistory', JSON.stringify(docHistory));
+            
+            const response = await fetch('/save_doc_history', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ docHistory })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to save document history');
+            }
+        }
+    } catch (error) {
+        console.error('Error saving to history:', error);
+        showToast('Failed to save document history', 'error');
     }
 }
 
