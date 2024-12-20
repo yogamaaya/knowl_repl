@@ -1,10 +1,8 @@
 
 // Global state
-let currentDocCheck = null;
 let currentLoadingToast = null;
 let currentAudio = null;
 let isPlaying = false;
-let currentPageMessages = [];
 
 // Document management functions
 async function updateKnowledgeBase(docId) {
@@ -41,11 +39,11 @@ function updateSourceToast(docUrl, title) {
 }
 
 async function handleChangeText() {
-    if (currentDocCheck) currentDocCheck.abort();
     if (currentLoadingToast) currentLoadingToast.remove();
     
+    currentLoadingToast = showToast('Please have text ready to paste into new document...', true);
+    
     try {
-        currentLoadingToast = showToast('Please have text ready to paste into new document...', true);
         
         const response = await fetch('/create_doc', { method: 'POST' });
         const data = await response.json();
