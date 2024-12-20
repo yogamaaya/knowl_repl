@@ -1,3 +1,4 @@
+import logging
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents.base import Document
 from transformers import DistilBertTokenizerFast
