@@ -324,14 +324,6 @@ function updateSourceToast(docUrl, title) {
         </a>
     `;
     container.appendChild(sourceToast);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        if (currentLoadingToast) {
-            currentLoadingToast.remove();
-        }
-        showToast(error.message, 'error');
-    }
 }
 
 function showToast(message, type = '') {
