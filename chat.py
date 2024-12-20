@@ -101,7 +101,7 @@ def reset_qa_chain():
     chat_history = []
 
 
-def change_text_source(new_doc_id, ip_address):
+def change_text_source(new_doc_id):
     """Handle text source change and create new embeddings"""
     global text, doc_id, qa_chain, chat_history
     try:
@@ -111,7 +111,7 @@ def change_text_source(new_doc_id, ip_address):
             text = new_text
             print(f"New document ID: {doc_id}")
             print(f"First 100 characters of new text: {text[:100]}")
-            create_embeddings(text, ip_address)
+            create_embeddings(text)
             return True
         return False
     except Exception as e:
@@ -119,7 +119,7 @@ def change_text_source(new_doc_id, ip_address):
         return False
 
 
-def create_embeddings(text, ip_address):
+def create_embeddings(text):
     print("\n=== Creating Embeddings ===")
     print(f"Text preview (first 100 chars): {text[:100]}")
     global qa_chain, chat_history
@@ -189,8 +189,6 @@ def create_embeddings(text, ip_address):
         return_source_documents=False,
         memory=None,
         combine_docs_chain_kwargs={'prompt': PROMPT})
-    if ip_address:
-        qa_chains[ip_address] = qa_chain
 
 
 def initialize_embeddings(ip_address=None):
@@ -219,7 +217,7 @@ def initialize_embeddings(ip_address=None):
     
     if ip_address:
         qa_chains[ip_address] = None
-        create_embeddings(text, ip_address)
+        create_embeddings(text)
 
     # Get document title and broadcast update
     title = get_doc_title(doc_id)
@@ -244,7 +242,6 @@ def on_submit(query, ip_address):
         initialize_embeddings()
 
     chat_history = chat_histories.get(ip_address, [])
-    qa_chain = qa_chains[ip_address]
     result = qa_chain({"question": query, "chat_history": chat_history[-2:] if chat_history else []})
     answer = result['answer']
     chat_histories[ip_address] = chat_history + [(query, answer)]
