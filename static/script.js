@@ -99,17 +99,8 @@ window.addEventListener('load', async function() {
         localStorage.setItem('currentSourceTitle', updateData.title);
         localStorage.setItem('currentDocId', defaultDocId);
         
-        // Show source toast
-        const sourceToast = document.createElement('div');
-        sourceToast.className = 'toast persistent';
-        const link = document.createElement('a');
-        link.href = docUrl;
-        link.target = '_blank';
-        link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
-        link.textContent = `Current source: ${updateData.title}`;
-        sourceToast.appendChild(link);
-        document.getElementById('toastContainer').appendChild(sourceToast);
-        setTimeout(() => sourceToast.classList.add('show'), 10);
+        // Show temporary source toast
+        showToast(`New source: ${updateData.title}`, 'success');
     }
 });
 
