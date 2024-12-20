@@ -193,7 +193,7 @@ def create_embeddings(text, ip_address=None):
     Question: {question}
 
     Your responses must:
-    1) Begin by charismatically thanking the ask
+    1) Begin by charismatically thanking the asker
     2) Include at least 3-4 main excerpts of the current source with direct quotes from the text (enclosed in '') 
     3) Follow direct text quotes with interesting paraphrased explanations
     4) Have at least 150 words directly from the current text source
@@ -292,15 +292,16 @@ def on_submit(query, ip_address):
     logger.info(f"\n=== Processing Query for IP: {ip_address} ===")
     global text, doc_id
     
-    if ip_address not in qa_chains:
+    if ip_address not in qa_chains or qa_chains[ip_address] is None:
         logger.info(f"Initializing new QA chain for IP: {ip_address}")
-        qa_chains[ip_address] = None
-        chat_histories[ip_address] = []
-        
-    if qa_chains[ip_address] is None:
         success = initialize_embeddings(ip_address)
         if not success:
             raise Exception("Failed to initialize QA chain")
+        # Double check initialization succeeded
+        if qa_chains[ip_address] is None:
+            raise Exception("QA chain initialization failed")
+            
+    chat_histories.setdefault(ip_address, [])
             
     print(f"Current doc_id: {doc_id}")
     print(f"Current text preview: {text[:100]}")
