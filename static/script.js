@@ -11,16 +11,11 @@ async function updateKnowledgeBase(docId) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ doc_id: docId })
     });
-
-    if (!updateResponse.ok) {
-        throw new Error('Failed to update knowledge base');
-    }
-
+    
     const updateData = await updateResponse.json();
-    if (!updateData.success) {
+    if (!updateResponse.ok || !updateData.success) {
         throw new Error(updateData.error || 'Failed to update knowledge base');
     }
-
     return updateData;
 }
 
@@ -40,11 +35,9 @@ function updateSourceToast(docUrl, title) {
 
 async function handleChangeText() {
     if (currentLoadingToast) currentLoadingToast.remove();
-    
     currentLoadingToast = showToast('Please have text ready to paste into new document...', true);
     
     try {
-        
         const response = await fetch('/create_doc', { method: 'POST' });
         const data = await response.json();
         
@@ -55,15 +48,12 @@ async function handleChangeText() {
         const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
         window.open(docUrl, '_blank');
 
-        let contentFound = await checkDocumentContent(data.doc_id);
+        const contentFound = await checkDocumentContent(data.doc_id);
         if (!contentFound) {
-            showToast('No content found in document', 'error');
-            return;
+            throw new Error('No content found in document');
         }
 
         const updateData = await updateKnowledgeBase(data.doc_id);
-        
-        // Update local storage and UI
         localStorage.setItem('currentSourceTitle', updateData.title);
         localStorage.setItem('currentDocId', data.doc_id);
         updateSourceToast(docUrl, updateData.title);
@@ -71,7 +61,6 @@ async function handleChangeText() {
         await saveToHistory(data.doc_id, updateData.title);
         showToast('Text Source Updated Successfully', 'success');
     } catch (error) {
-        console.error('Error:', error);
         showToast(error.message, 'error');
     } finally {
         if (currentLoadingToast) currentLoadingToast.remove();
@@ -82,15 +71,14 @@ async function checkDocumentContent(docId, maxAttempts = 20) {
     const CHECK_INTERVAL = 3000;
     
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        const checkResponse = await fetch('/check_doc_content', {
+        const response = await fetch('/check_doc_content', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ doc_id: docId })
         });
-
-        const checkData = await checkResponse.json();
-        if (checkData.has_content) return true;
         
+        const data = await response.json();
+        if (data.has_content) return true;
         await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL));
     }
     return false;
@@ -120,12 +108,10 @@ async function saveToHistory(docId, title) {
             }
         }
     } catch (error) {
-        console.error('Error saving to history:', error);
         showToast('Failed to save document history', 'error');
     }
 }
 
-// Chat message functions
 async function submitMessage(event) {
     event.preventDefault();
     const messageInput = document.getElementById('messageInput');
@@ -152,15 +138,14 @@ async function submitMessage(event) {
             }
         }
     } catch (error) {
-        console.error('Error:', error);
+        showToast('Error submitting message', 'error');
     } finally {
         loadingElement.style.display = 'none';
     }
 }
 
-// Initialize on page load
 window.addEventListener('load', function() {
-    if (window.initialDoc && window.initialDoc.success && window.initialDoc.doc_id) {
+    if (window.initialDoc?.success && window.initialDoc?.doc_id) {
         const docUrl = `https://docs.google.com/document/d/${window.initialDoc.doc_id}/edit`;
         updateSourceToast(docUrl, window.initialDoc.title);
         localStorage.setItem('currentDocId', window.initialDoc.doc_id);
@@ -168,7 +153,6 @@ window.addEventListener('load', function() {
     }
 });
 
-// Utility functions
 function showToast(message, isPersistent = false, type = '') {
     const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
