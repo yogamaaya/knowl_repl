@@ -348,17 +348,17 @@ function toggleAudio() {
 window.addEventListener('load', async function() {
     currentPageMessages = [
         "Who is Knowl and How to Use?",
-        `✨ Knowl is intented to be your fun partner to understand a text from a different perspective of your own ✨<br><br>
+        `✨ Knowl is intented to be your fun partner to understand a text from a different perspective of your own ✨
 
-🌕 Please check the current document source to get an idea of what prompts to give Knowl. The default is short paraphrased summary of <a href="https://docs.google.com/document/d/e/2PACX-1vTkbb2S4xGVc-BpD1KBYVQchaqxGKyCMALd18yflkx7W1bB6Oo0J2XxQ_NQD_7TP3jXMArCZAbqNa8r/pub" target="_blank" rel="noopener noreferrer">Bhagavad Gita</a>.<br><br>
+🌕 Please check the current document source to get an idea of what prompts to give Knowl. The default is short paraphrased summary of <a href="https://docs.google.com/document/d/e/2PACX-1vTkbb2S4xGVc-BpD1KBYVQchaqxGKyCMALd18yflkx7W1bB6Oo0J2XxQ_NQD_7TP3jXMArCZAbqNa8r/pub" target="_blank" rel="noopener noreferrer">Bhagavad Gita</a>.
 
-🌖 If you wish to change the text source, please have the new text ready to be pasted and click "Change Text Source" button which opens a blank document for you.<br><br>
+🌖 If you wish to change the text source, please have the new text ready to be pasted and click "Change Text Source" button which opens a blank document for you.
 
-🌗 Whenever you paste new text, please ask <b>new and specific questions to get new answers.</b> Knowl retains all information of text corpora given to date. Try to use direct keywords of the text.<br><br>
+🌗 Whenever you paste new text, please ask <b>new and specific questions to get new answers.</b> Knowl retains all information of text corpora given to date. Try to use direct keywords of the text.
 
-🌘 You can try rephrasing the same question or command if a response doesn't please you!<br><br>
+🌘 You can try rephrasing the same question or command if a response doesn't please you!
 
-🌑 Knowl is currently in Beta and might have a heavy diet of bugs 🐛 . Please report any bugs <a href="mailto:asknowl.ai@gmail.com?subject=Bug%20Report&body=Found%20a%20bug%20for%20Knowl%3F%20Please%20describe%20the%20bug%20and%20steps%20to%20reproduce%20it.%20Thank%20you!">here (asknowl.ai@gmail.com)</a>.<br><br>
+🌑 Knowl is currently in Beta and might have a heavy diet of bugs 🐛 . Please report any bugs <a href="mailto:asknowl.ai@gmail.com?subject=Bug%20Report&body=Found%20a%20bug%20for%20Knowl%3F%20Please%20describe%20the%20bug%20and%20steps%20to%20reproduce%20it.%20Thank%20you!">here (asknowl.ai@gmail.com)</a>.
 
 <p>PS: Please be patient with Knowl as she thinks~ 🦉</p>`
     ];
