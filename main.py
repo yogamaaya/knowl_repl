@@ -3,7 +3,7 @@ from flask import Flask, render_template
 from message_handler import receive_message
 import json
 import os
-from chat import initialize_embeddings, create_doc, get_text_from_doc, create_embeddings, change_text_source, get_doc_title
+from chat import initialize_embeddings, create_doc, get_text_from_doc, create_embeddings, change_text_source, get_doc_title, ip_documents
 from flask import jsonify, request
 
 app = Flask(__name__)
