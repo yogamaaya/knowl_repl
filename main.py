@@ -93,10 +93,11 @@ def update_embeddings():
 @app.route('/get_current_doc', methods=['GET'])
 def get_current_doc():
     ip_address = request.remote_addr
-    # Use DEFAULT_DOC_ID if IP not found in ip_documents
-    doc_id = ip_documents.get(ip_address, DEFAULT_DOC_ID)
-    title = get_doc_title(doc_id)
-    return jsonify({"doc_id": doc_id, "title": title})
+    if ip_address in ip_documents:
+        doc_id = ip_documents[ip_address]
+        title = get_doc_title(doc_id)
+        return jsonify({"doc_id": doc_id, "title": title})
+    return jsonify({"doc_id": None, "title": None})
 
 @app.route('/load_doc_history', methods=['GET'])
 def load_doc_history():
