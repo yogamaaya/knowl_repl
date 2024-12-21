@@ -64,9 +64,7 @@ async function submitMessage(event) {
             <div class="message-bubble">
                 <div class="thinking-animation">
                     <span>Thinking</span>
-                    <span class="nature-emoji">🌱</span>
-                    <span class="nature-emoji">🌿</span>
-                    <span class="nature-emoji">🍀</span>
+                    <span class="nature-emoji">💬</span>
                 </div>
             </div>
         `;
