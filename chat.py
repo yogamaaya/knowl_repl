@@ -272,9 +272,19 @@ def initialize_embeddings(ip_address=None):
                                                       dict) else {}
         ip_documents = ip_documents if isinstance(ip_documents, dict) else {}
 
-        # For new IP sessions, always start with default document
-        selected_doc_id = ip_documents.get(ip_address, DEFAULT_DOC_ID)
-        print(f"Using document: {selected_doc_id}")
+        # Check if user has a custom document before falling back to default
+        selected_doc_id = None
+        if ip_address and ip_address in ip_documents:
+            selected_doc_id = ip_documents[ip_address]
+            if selected_doc_id != DEFAULT_DOC_ID:
+                print(f"Using user's custom document: {selected_doc_id}")
+            else:
+                selected_doc_id = None
+
+        # Only use default if no custom document exists
+        if not selected_doc_id:
+            selected_doc_id = DEFAULT_DOC_ID
+            print(f"Using default document: {selected_doc_id}")
 
         # Only update global doc_id if it's a new IP or doesn't have existing document
         if not (ip_address and ip_address in ip_documents):
