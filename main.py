@@ -17,8 +17,15 @@ def history():
 @app.route('/')
 def chat():
     print("\n=== Starting Chat Application ===")
-    print("Initializing embeddings with default document...")
-    initialize_embeddings(request.remote_addr)
+    ip_address = request.remote_addr
+    
+    # Always initialize with default doc for new sessions
+    if ip_address not in ip_documents:
+        print("New session - initializing with default document...")
+        initialize_embeddings(ip_address)
+    else:
+        print("Existing session - using current document...")
+        
     return render_template('chat.html')
 
 

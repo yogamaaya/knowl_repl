@@ -393,24 +393,5 @@ window.addEventListener('load', async function() {
         setTimeout(() => sourceToast.classList.add('show'), 10);
     }
 
-    // Then update embeddings in background
-    if (data.doc_id) {
-        try {
-            const updateResponse = await fetch('/update_embeddings', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ doc_id: savedDocId })
-            });
-            
-            const updateData = await updateResponse.json();
-            if (updateResponse.ok && updateData.success) {
-                localStorage.setItem('currentSourceTitle', updateData.title);
-                localStorage.setItem('currentDocId', savedDocId);
-            }
-        } catch (error) {
-            console.error('Error loading default document:', error);
-        }
-    }
+    // No need to update embeddings here since initialization is handled server-side
 });

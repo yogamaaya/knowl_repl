@@ -229,33 +229,9 @@ def initialize_embeddings(ip_address=None):
                                                       dict) else {}
         ip_documents = ip_documents if isinstance(ip_documents, dict) else {}
 
-        # Determine document source priority:
-        # 1. IP's existing document
-        # 2. Latest from history
-        # 3. Default document
-        selected_doc_id = None
-
-        if ip_address and ip_address in ip_documents:
-            selected_doc_id = ip_documents[ip_address]
-            print(f"Using IP's existing doc: {selected_doc_id}")
-        else:
-            try:
-                with open('doc_history.txt', 'r') as f:
-                    doc_history = json.load(f)
-                    if doc_history and isinstance(
-                            doc_history, list) and len(doc_history) > 0:
-                        latest_doc = doc_history[-1]
-                        selected_doc_id = latest_doc.get('id')
-                        print(
-                            f"Using latest doc from history: {selected_doc_id}"
-                        )
-            except (FileNotFoundError, json.JSONDecodeError, AttributeError,
-                    IndexError) as e:
-                print(f"Error reading doc history: {str(e)}")
-
-            if not selected_doc_id:
-                selected_doc_id = DEFAULT_DOC_ID
-                print(f"Using default doc: {selected_doc_id}")
+        # For new IP sessions, always start with default document
+        selected_doc_id = ip_documents.get(ip_address, DEFAULT_DOC_ID)
+        print(f"Using document: {selected_doc_id}")
 
         # Only update global doc_id if it's a new IP or doesn't have existing document
         if not (ip_address and ip_address in ip_documents):
