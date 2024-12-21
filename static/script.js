@@ -142,12 +142,12 @@ async function handleChangeText() {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to create document');
+            throw new Error('Failed to create document. Please retry again!');
         }
 
         const data = await response.json();
         if (!data.doc_id) {
-            throw new Error('No document ID received');
+            throw new Error('No document ID received. Please retry again!');
         }
 
         latestDocId = data.doc_id;
@@ -209,7 +209,7 @@ async function handleChangeText() {
                 });
 
                 if (!checkResponse.ok) {
-                    throw new Error('Failed to check document content');
+                    throw new Error('Failed to check document content. Please retry again!');
                 }
 
                 const checkData = await checkResponse.json();
@@ -237,12 +237,12 @@ async function handleChangeText() {
             });
 
             if (!updateResponse.ok) {
-                throw new Error('Failed to update knowledge base');
+                throw new Error('Failed to update knowledge base. Please retry again!');
             }
 
             const updateData = await updateResponse.json();
             if (!updateData.success) {
-                throw new Error('Failed to update knowledge base');
+                throw new Error('Failed to update knowledge base. Please retry again!');
             }
 
             // Document info now handled server-side per IP
@@ -368,7 +368,7 @@ async function updateDocumentToast() {
             const data = await response.json();
             
             if (!data.doc_id) {
-                throw new Error('No document ID received');
+                throw new Error('No document ID received. Please retry again!');
             }
             
             const doc_id = data.doc_id;
