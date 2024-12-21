@@ -255,20 +255,10 @@ async function handleChangeText() {
             
             // Save to file
             try {
-                const saveResponse = await fetch('/save_doc_history', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ docHistory: [newDoc] })
-                });
-                
-                if (saveResponse.ok) {
-                    // Broadcast refresh message to any open history windows
-                    window.postMessage('refreshHistory', '*');
-                }
+                // Broadcast refresh message to any open history windows
+                window.postMessage('refreshHistory', '*');
             } catch (error) {
-                console.error('Failed to save doc history:', error);
+                console.error('Failed to refresh history:', error);
             }
             
             currentLoadingToast.remove();
