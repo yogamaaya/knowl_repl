@@ -244,9 +244,7 @@ async function handleChangeText() {
                 throw new Error('Failed to update knowledge base');
             }
 
-            // Save current document info
-            localStorage.setItem('currentSourceTitle', updateData.title);
-            localStorage.setItem('currentDocId', data.doc_id);
+            // Document info now handled server-side per IP
             
             // Save to document history
             const docHistory = JSON.parse(localStorage.getItem('docHistory') || '[]');
@@ -377,26 +375,26 @@ window.addEventListener('load', async function() {
     ];
     updateChat(currentPageMessages);
     
-    const savedDocId = localStorage.getItem('currentDocId');
-    const savedTitle = localStorage.getItem('currentSourceTitle');
+    // Get current document info for this IP
+    const response = await fetch('/get_current_doc');
+    const data = await response.json();
     
-    // Show toast immediately if we have saved document info
-    if (savedDocId && savedTitle) {
-        const docUrl = `https://docs.google.com/document/d/${savedDocId}/edit`;
+    if (data.doc_id && data.title) {
+        const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
         const sourceToast = document.createElement('div');
         sourceToast.className = 'toast persistent source-toast';
         const link = document.createElement('a');
         link.href = docUrl;
         link.target = '_blank';
         link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
-        link.textContent = `Current source: ${savedTitle}`;
+        link.textContent = `Current source: ${data.title}`;
         sourceToast.appendChild(link);
         document.getElementById('toastContainer').appendChild(sourceToast);
         setTimeout(() => sourceToast.classList.add('show'), 10);
     }
 
     // Then update embeddings in background
-    if (savedDocId) {
+    if (data.doc_id) {
         try {
             const updateResponse = await fetch('/update_embeddings', {
                 method: 'POST',

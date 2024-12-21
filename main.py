@@ -92,6 +92,17 @@ def save_doc_history():
             return jsonify({'success': False, 'error': 'docHistory must be an array'}), 400
             
         with open('doc_history.txt', 'w') as f:
+
+@app.route('/get_current_doc', methods=['GET'])
+def get_current_doc():
+    ip_address = request.remote_addr
+    if ip_address in ip_documents:
+        doc_id = ip_documents[ip_address]
+        title = get_doc_title(doc_id)
+        return jsonify({"doc_id": doc_id, "title": title})
+    return jsonify({"doc_id": None, "title": None})
+
+
             json.dump(doc_history, f)
         return jsonify({'success': True}), 200
     except Exception as e:
