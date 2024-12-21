@@ -63,10 +63,10 @@ async function submitMessage(event) {
             <img src="/static/knowl_logo.png" alt="Knowl Logo" class="logo">
             <div class="message-bubble">
                 <div class="thinking-animation">
-                    <span>Thinking</span>
-                    <span class="dot">.</span>
-                    <span class="dot">.</span>
-                    <span class="dot">.</span>
+                    <span class="thinking-text">thinking</span>
+                    <span class="dot">•</span>
+                    <span class="dot">•</span>
+                    <span class="dot">•</span>
                 </div>
             </div>
         `;

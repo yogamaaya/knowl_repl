@@ -175,30 +175,45 @@ button[type="submit"]:active {
 .thinking-animation {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 4px;
+    font-family: "Georgia", serif;
 }
 
-.thinking-animation {
-    font-family: "Georgia", serif;
+.thinking-text {
     color: #740476;
-    opacity: 0.8;
+    margin-right: 4px;
 }
 
 .thinking-animation .dot {
     display: inline-block;
     animation: dotFade 1.4s infinite;
     opacity: 0;
-    font-size: 1.5em;
-    margin: 0 1px;
+    font-size: 2em;
+    line-height: 0.5;
+    background: linear-gradient(45deg, #740476, #f245af);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 5px rgba(116, 4, 118, 0.3);
 }
 
-.thinking-animation .dot:nth-child(2) { animation-delay: 0.2s; }
-.thinking-animation .dot:nth-child(3) { animation-delay: 0.4s; }
+.thinking-animation .dot:nth-child(2) { 
+    animation-delay: 0.2s;
+    background: linear-gradient(45deg, #8a0589, #f245af);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.thinking-animation .dot:nth-child(3) { 
+    animation-delay: 0.4s;
+    background: linear-gradient(45deg, #f245af, #740476);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
 
 @keyframes dotFade {
-    0% { opacity: 0; }
-    50% { opacity: 1; }
-    100% { opacity: 0; }
+    0% { opacity: 0; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+    100% { opacity: 0; transform: scale(0.8); }
 }
 
 .chatBox {
