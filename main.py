@@ -89,31 +89,21 @@ def update_embeddings():
 
 
 @app.route('/save_doc_history', methods=['POST'])
-def save_doc_history():
+def save_doc_history_endpoint():
     if not request.is_json:
         return jsonify({'success': False, 'error': 'Content-Type must be application/json'}), 400
         
     try:
-        new_doc = request.get_json().get('docHistory', {})
-        if not new_doc:
-            return jsonify({'success': False, 'error': 'No document data provided'}), 400
+        data = request.get_json()
+        doc_id = data.get('doc_id')
+        title = data.get('title')
+        
+        if not doc_id or not title:
+            return jsonify({'success': False, 'error': 'Missing doc_id or title'}), 400
             
-        # Load existing history
-        try:
-            with open('doc_history.txt', 'r') as f:
-                doc_history = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            doc_history = []
+        success = save_doc_history(doc_id, title)
+        return jsonify({'success': success}), 200 if success else 500
             
-        # Add new doc if not exists
-        if not any(doc.get('id') == new_doc.get('id') for doc in doc_history):
-            doc_history.insert(0, new_doc)
-            
-        # Save updated history
-        with open('doc_history.txt', 'w') as f:
-            json.dump(doc_history, f)
-            
-        return jsonify({'success': True}), 200
     except Exception as e:
         print(f"Error saving doc history: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500

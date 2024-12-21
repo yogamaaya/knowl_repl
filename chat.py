@@ -139,6 +139,11 @@ def change_text_source(new_doc_id, ip_address=None):
                 if ip_address not in qa_chains or qa_chains[ip_address] is None:
                     print("Error: QA chain not properly initialized")
                     return False
+                    
+                # Save to document history after successful embedding creation
+                title = get_doc_title(new_doc_id)
+                save_doc_history(new_doc_id, title)
+                
             except Exception as e:
                 print(f"Error creating embeddings: {str(e)}")
                 return False
@@ -149,6 +154,34 @@ def change_text_source(new_doc_id, ip_address=None):
         print(f"Error changing text source: {str(e)}")
         return False
 
+
+def save_doc_history(doc_id, title):
+    try:
+        # Load existing history
+        try:
+            with open('doc_history.txt', 'r') as f:
+                doc_history = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            doc_history = []
+            
+        # Add new doc if not exists
+        new_doc = {
+            'id': doc_id,
+            'title': title,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        if not any(doc.get('id') == doc_id for doc in doc_history):
+            doc_history.insert(0, new_doc)
+            
+        # Save updated history
+        with open('doc_history.txt', 'w') as f:
+            json.dump(doc_history, f)
+            
+        return True
+    except Exception as e:
+        print(f"Error saving doc history: {str(e)}")
+        return False
 
 def create_embeddings(text, ip_address=None):
     print("\n=== Creating Embeddings ===")
