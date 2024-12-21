@@ -41,14 +41,8 @@
                                 body: JSON.stringify({ doc_id: doc.id })
                             });
                             
-                            if (!contentResponse.ok || !contentResponse.has_content) {
-                                console.log(`Skipping doc ${doc.id} - not accessible or empty`);
-                                continue;
-                            }
-                            
-                            const contentData = await contentResponse.json();
-                            if (!contentData.has_content) {
-                                console.log(`Skipping doc ${doc.id} - no content`);
+                            if (!contentResponse.ok) {
+                                console.log(`Skipping doc ${doc.id} - not accessible`);
                                 continue;
                             }
                             

@@ -260,7 +260,7 @@ async function handleChangeText() {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ docHistory: newDoc })
+                    body: JSON.stringify({ docHistory: [newDoc] })
                 });
                 
                 if (saveResponse.ok) {
