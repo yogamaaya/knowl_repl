@@ -341,39 +341,66 @@ window.addEventListener('load', async function() {
     await updateDocumentToast();
 });
 async function updateDocumentToast() {
-    try {
-        const container = document.getElementById('toastContainer');
-        if (!container) {
-            console.error('Toast container not found');
+    let retries = 3;
+    while (retries > 0) {
+        try {
+            let container = document.getElementById('toastContainer');
+            if (!container) {
+                // Recreate container if missing
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+            
+            // Remove any existing source toasts
+            const existingToasts = container.querySelectorAll('.source-toast');
+            existingToasts.forEach(toast => toast.remove());
+            
+            // Get current document info for this IP
+            const response = await fetch('/get_current_doc');
+            const data = await response.json();
+            
+            if (!data.doc_id) {
+                throw new Error('No document ID received');
+            }
+            
+            const doc_id = data.doc_id;
+            const title = data.title || "Default Knowledge Base";
+            const docUrl = `https://docs.google.com/document/d/${doc_id}/edit`;
+            
+            const sourceToast = document.createElement('div');
+            sourceToast.className = 'toast persistent source-toast show';
+            const link = document.createElement('a');
+            link.href = docUrl;
+            link.target = '_blank';
+            link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
+            link.textContent = `Current source: ${title}`;
+            sourceToast.appendChild(link);
+            container.appendChild(sourceToast);
             return;
+        } catch (error) {
+            console.error('Error updating document toast:', error);
+            retries--;
+            if (retries === 0) {
+                // Show fallback toast with default document
+                const container = document.getElementById('toastContainer') || document.createElement('div');
+                if (!container.id) {
+                    container.id = 'toastContainer';
+                    container.className = 'toast-container';
+                    document.body.appendChild(container);
+                }
+                const sourceToast = document.createElement('div');
+                sourceToast.className = 'toast persistent source-toast show';
+                const link = document.createElement('a');
+                link.href = `https://docs.google.com/document/d/${DEFAULT_DOC_ID}/edit`;
+                link.target = '_blank';
+                link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
+                link.textContent = 'Current source: Default Knowledge Base';
+                sourceToast.appendChild(link);
+                container.appendChild(sourceToast);
+            }
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s between retries
         }
-        
-        // Remove any existing source toasts
-        const existingToasts = container.querySelectorAll('.source-toast');
-        existingToasts.forEach(toast => toast.remove());
-        
-        // Get current document info for this IP
-        const response = await fetch('/get_current_doc');
-        if (!response.ok) {
-            throw new Error('Failed to fetch current document');
-        }
-        
-        const data = await response.json();
-        const doc_id = data.doc_id || DEFAULT_DOC_ID;
-        const title = data.title || "Default Knowledge Base";
-        
-        const docUrl = `https://docs.google.com/document/d/${doc_id}/edit`;
-        const sourceToast = document.createElement('div');
-        sourceToast.className = 'toast persistent source-toast show';
-        const link = document.createElement('a');
-        link.href = docUrl;
-        link.target = '_blank';
-        link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
-        link.textContent = `Current source: ${title}`;
-        sourceToast.appendChild(link);
-        container.appendChild(sourceToast);
-    } catch (error) {
-        console.error('Error updating document toast:', error);
-        showToast('Error loading document source', 'error');
     }
 }
