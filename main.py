@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template
 from message_handler import receive_message
 import json
@@ -80,7 +81,6 @@ def update_embeddings():
     return jsonify({"success": False, "error": "No document ID provided"}), 400
 
 
-
 @app.route('/save_doc_history', methods=['POST'])
 def save_doc_history():
     if not request.is_json:
@@ -92,6 +92,11 @@ def save_doc_history():
             return jsonify({'success': False, 'error': 'docHistory must be an array'}), 400
             
         with open('doc_history.txt', 'w') as f:
+            json.dump(doc_history, f)
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        print(f"Error saving doc history: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/get_current_doc', methods=['GET'])
 def get_current_doc():
@@ -101,13 +106,6 @@ def get_current_doc():
         title = get_doc_title(doc_id)
         return jsonify({"doc_id": doc_id, "title": title})
     return jsonify({"doc_id": None, "title": None})
-
-
-            json.dump(doc_history, f)
-        return jsonify({'success': True}), 200
-    except Exception as e:
-        print(f"Error saving doc history: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/load_doc_history', methods=['GET'])
 def load_doc_history():
