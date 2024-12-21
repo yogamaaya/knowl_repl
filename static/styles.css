@@ -301,6 +301,7 @@ button[type="submit"]:active {
 .typing-text {
     display: inline-block;
     white-space: pre-wrap;
+    animation: fadeIn 0.3s ease-in-out;
 }
 
 .fade-in {

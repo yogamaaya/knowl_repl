@@ -127,12 +127,9 @@ function updateChat(messages) {
         
         function typeWriter() {
             if (index < text.length) {
-                const newChar = document.createElement('span');
-                newChar.textContent = text[index];
-                newChar.className = 'fade-in';
-                typingText.appendChild(newChar);
+                typingText.innerHTML = text.substring(0, index + 1);
                 index++;
-                setTimeout(typeWriter, 30); // Slightly slower for smoother animation
+                setTimeout(typeWriter, 30);
             } else {
                 copyBtn.style.display = 'block';
             }
