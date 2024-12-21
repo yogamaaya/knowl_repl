@@ -297,6 +297,17 @@ button[type="submit"]:active {
 .copy-btn.copied {
     background: rgba(116, 4, 118, 0.2);
 }
+
+.typing-text {
+    display: inline-block;
+    white-space: pre-wrap;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+    100% { opacity: 1; }
+}
 .messages {
   list-style-type: none;
   padding: 0;

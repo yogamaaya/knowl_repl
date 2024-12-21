@@ -103,14 +103,14 @@ function updateChat(messages) {
         `;
         chatBox.appendChild(questionDiv);
 
-        // Display last answer
+        // Display last answer with typewriter effect
         const answerDiv = document.createElement('div');
         answerDiv.className = 'chat-message';
         answerDiv.innerHTML = `
             <img src="/static/knowl_logo.png" alt="Knowl Logo" class="logo">
             <div class="message-bubble">
-                ${currentPageMessages[lastAnswerIndex]}
-                <button class="copy-btn" onclick="copyMessage(this)" aria-label="Copy message">
+                <span class="typing-text"></span>
+                <button class="copy-btn" onclick="copyMessage(this)" aria-label="Copy message" style="display: none;">
                     <div class="copy-tooltip">Copy</div>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                         <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
@@ -119,6 +119,23 @@ function updateChat(messages) {
             </div>
         `;
         chatBox.appendChild(answerDiv);
+
+        const typingText = answerDiv.querySelector('.typing-text');
+        const copyBtn = answerDiv.querySelector('.copy-btn');
+        const text = currentPageMessages[lastAnswerIndex];
+        let index = 0;
+        
+        function typeWriter() {
+            if (index < text.length) {
+                typingText.innerHTML += text.charAt(index);
+                index++;
+                setTimeout(typeWriter, 10); // Adjust speed by changing timeout
+            } else {
+                copyBtn.style.display = 'block';
+            }
+        }
+        
+        typeWriter();
     }
 }
 
