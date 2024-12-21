@@ -3,7 +3,7 @@ async function copyMessage(button) {
     const messageText = button.parentElement.innerText.replace('Copy', '').trim();
     try {
         await navigator.clipboard.writeText(messageText);
-        const tooltip = buttonFail.querySelector('.copy-tooltip');
+        const tooltip = button.querySelector('.copy-tooltip');
         const originalText = tooltip.textContent;
         button.classList.add('copied');
         tooltip.textContent = 'Copied!';
@@ -253,22 +253,28 @@ async function handleChangeText() {
                 timestamp: new Date().toISOString()
             };
             
+            // Save to file
             try {
-                // Broadcast refresh message to any open history windows
-                const bc = new BroadcastChannel('history_channel');
-                bc.postMessage('refreshHistory');
+                const saveResponse = await fetch('/save_doc_history', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ docHistory: newDoc })
+                });
                 
-                currentLoadingToast.remove();
-                showToast('Text Source Updated Successfully', 'success');
-                
-                const container = document.getElementById('toastContainer');
-            } catch (error) {
-                console.error('Failed to refresh history:', error);
-                if (currentLoadingToast) {
-                    currentLoadingToast.remove();
+                if (saveResponse.ok) {
+                    // Broadcast refresh message to any open history windows
+                    window.postMessage('refreshHistory', '*');
                 }
-                showToast('Failed to refresh history', 'error');
+            } catch (error) {
+                console.error('Failed to save doc history:', error);
             }
+            
+            currentLoadingToast.remove();
+            showToast('Text Source Updated Successfully', 'success');
+
+            const container = document.getElementById('toastContainer');
             const existingToast = container.querySelector('.source-toast');
             if (existingToast) {
                 existingToast.remove();

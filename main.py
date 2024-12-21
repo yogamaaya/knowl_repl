@@ -88,7 +88,22 @@ def update_embeddings():
     return jsonify({"success": False, "error": "No document ID provided"}), 400
 
 
-# Removed redundant save_doc_history endpoint since documents are recorded in chat.py
+@app.route('/save_doc_history', methods=['POST'])
+def save_doc_history():
+    if not request.is_json:
+        return jsonify({'success': False, 'error': 'Content-Type must be application/json'}), 400
+        
+    try:
+        doc_history = request.get_json().get('docHistory', [])
+        if not isinstance(doc_history, list):
+            return jsonify({'success': False, 'error': 'docHistory must be an array'}), 400
+            
+        with open('doc_history.txt', 'w') as f:
+            json.dump(doc_history, f)
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        print(f"Error saving doc history: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/get_current_doc', methods=['GET'])
 def get_current_doc():

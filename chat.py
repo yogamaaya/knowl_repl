@@ -218,23 +218,6 @@ def create_embeddings(text, ip_address=None):
         return_source_documents=False,
         memory=None,
         combine_docs_chain_kwargs={'prompt': PROMPT})
-        
-    # Record document after successful QA chain creation
-    try:
-        with open('doc_history.txt', 'r') as f:
-            doc_history = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        doc_history = []
-        
-    if not any(doc['id'] == doc_id for doc in doc_history):
-        new_doc = {
-            'id': doc_id,
-            'title': get_doc_title(doc_id),
-            'timestamp': datetime.now().isoformat()
-        }
-        doc_history.append(new_doc)
-        with open('doc_history.txt', 'w') as f:
-            json.dump(doc_history, f)
 
 
 def initialize_embeddings(ip_address=None):
