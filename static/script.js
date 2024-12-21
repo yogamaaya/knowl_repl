@@ -24,6 +24,7 @@ let latestDocId = null;
 let currentAudio = null;
 let isPlaying = false;
 let currentPageMessages = [];
+const DEFAULT_DOC_ID = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A';
 
 // Previous functions remain unchanged
 

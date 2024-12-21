@@ -92,10 +92,14 @@ def update_embeddings():
 
 @app.route('/get_current_doc', methods=['GET'])
 def get_current_doc():
-    ip_address = request.remote_addr
-    doc_id = ip_documents.get(ip_address, DEFAULT_DOC_ID)
-    title = get_doc_title(doc_id)
-    return jsonify({"doc_id": doc_id, "title": title})
+    try:
+        ip_address = request.remote_addr
+        doc_id = ip_documents.get(ip_address, DEFAULT_DOC_ID)
+        title = get_doc_title(doc_id) or "Default Knowledge Base"
+        return jsonify({"doc_id": doc_id, "title": title})
+    except Exception as e:
+        print(f"Error in get_current_doc: {str(e)}")
+        return jsonify({"doc_id": DEFAULT_DOC_ID, "title": "Default Knowledge Base"}), 200
 
 @app.route('/load_doc_history', methods=['GET'])
 def load_doc_history():
