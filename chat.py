@@ -124,11 +124,13 @@ def change_text_source(new_doc_id, ip_address=None):
             print(f"Error getting text from new doc: {str(e)}")
             return False
 
-        # Update globals and IP document mapping
+        # Update globals and ensure IP document mapping persistence
         doc_id = new_doc_id
         text = new_text
         if ip_address:
             ip_documents[ip_address] = new_doc_id
+            # Force create embeddings for new document
+            create_embeddings(new_text, ip_address)
         print(f"New document ID: {doc_id}")
         print(f"First 100 characters of new text: {text[:100]}")
 
@@ -409,6 +411,7 @@ def get_prioritized_doc_id(ip_address):
     """Helper function to consistently determine document priority"""
     if ip_address and ip_address in ip_documents:
         doc_id = ip_documents[ip_address]
-        if doc_id and doc_id != DEFAULT_DOC_ID:
+        if doc_id:  # If any document exists for this IP, use it
             return doc_id
+    # Only use default for completely new sessions
     return DEFAULT_DOC_ID
