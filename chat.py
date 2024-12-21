@@ -157,11 +157,18 @@ def change_text_source(new_doc_id, ip_address=None):
 
 def save_doc_history(doc_id, title):
     try:
-        # Load existing history
-        try:
-            with open('doc_history.txt', 'r') as f:
-                doc_history = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
+        # Ensure atomic file operations
+        doc_history = []
+        if os.path.exists('doc_history.txt'):
+            try:
+                with open('doc_history.txt', 'r') as f:
+                    content = f.read().strip()
+                    doc_history = json.loads(content) if content else []
+            except (json.JSONDecodeError, FileNotFoundError):
+                doc_history = []
+        
+        # Ensure doc_history is a list
+        if not isinstance(doc_history, list):
             doc_history = []
             
         # Add new doc if not exists
@@ -174,9 +181,10 @@ def save_doc_history(doc_id, title):
         if not any(doc.get('id') == doc_id for doc in doc_history):
             doc_history.insert(0, new_doc)
             
-        # Save updated history
-        with open('doc_history.txt', 'w') as f:
-            json.dump(doc_history, f)
+        # Atomic write
+        with open('doc_history.txt.tmp', 'w') as f:
+            json.dump(doc_history, f, indent=2)
+        os.replace('doc_history.txt.tmp', 'doc_history.txt')
             
         return True
     except Exception as e:

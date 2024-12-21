@@ -20,16 +20,16 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
-                if (!data.success) {
-                    throw new Error(data.error || 'Failed to load history');
-                }
-
                 const docHistory = data.docHistory || [];
-                localStorage.setItem('docHistory', JSON.stringify(docHistory));
                 const docList = document.getElementById('docList');
+                docList.innerHTML = ''; // Clear existing content
                 
-                // Only populate if empty
-                if (docList.children.length === 0) {
+                if (!docHistory.length) {
+                    docList.innerHTML = '<p>No documents in history yet.</p>';
+                    return;
+                }
+                
+                // Populate with latest data
                     for (const doc of docHistory) {
                         try {
                             // Check if document has content
