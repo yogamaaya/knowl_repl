@@ -88,25 +88,7 @@ def update_embeddings():
     return jsonify({"success": False, "error": "No document ID provided"}), 400
 
 
-@app.route('/save_doc_history', methods=['POST'])
-def save_doc_history_endpoint():
-    if not request.is_json:
-        return jsonify({'success': False, 'error': 'Content-Type must be application/json'}), 400
-        
-    try:
-        data = request.get_json()
-        doc_id = data.get('doc_id')
-        title = data.get('title')
-        
-        if not doc_id or not title:
-            return jsonify({'success': False, 'error': 'Missing doc_id or title'}), 400
-            
-        success = save_doc_history(doc_id, title)
-        return jsonify({'success': success}), 200 if success else 500
-            
-    except Exception as e:
-        print(f"Error saving doc history: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @app.route('/get_current_doc', methods=['GET'])
 def get_current_doc():

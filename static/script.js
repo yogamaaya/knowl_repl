@@ -246,41 +246,8 @@ async function handleChangeText() {
 
             // Document info now handled server-side per IP
             
-            // Save to document history
-            try {
-                // First get existing history
-                const historyResponse = await fetch('/load_doc_history');
-                const historyData = await historyResponse.json();
-                let docHistory = historyData.docHistory || [];
-                
-                // Add new doc to history
-                const newDoc = {
-                    id: data.doc_id,
-                    title: updateData.title,
-                    timestamp: new Date().toISOString()
-                };
-                
-                // Add to start of array if not already present
-                if (!docHistory.some(doc => doc.id === newDoc.id)) {
-                    docHistory.unshift(newDoc);
-                }
-                
-                // Save updated history
-                const saveResponse = await fetch('/save_doc_history', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ docHistory })
-                });
-                
-                if (saveResponse.ok) {
-                    // Broadcast refresh message to any open history windows
-                    window.postMessage('refreshHistory', '*');
-                }
-            } catch (error) {
-                console.error('Failed to save doc history:', error);
-            }
+            // Broadcast refresh message to any open history windows
+            window.postMessage('refreshHistory', '*');
             
             currentLoadingToast.remove();
             showToast('Text Source Updated Successfully', 'success');
