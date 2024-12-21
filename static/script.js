@@ -346,26 +346,41 @@ window.addEventListener('load', async function() {
     ];
     updateChat(currentPageMessages);
     
-    // Remove any existing source toasts
-    const container = document.getElementById('toastContainer');
-    const existingToasts = container.querySelectorAll('.source-toast');
-    existingToasts.forEach(toast => toast.remove());
-    
-    // Get current document info for this IP
-    const response = await fetch('/get_current_doc');
-    const data = await response.json();
-    
-    if (data.doc_id && data.title) {
-        const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
-        const sourceToast = document.createElement('div');
-        sourceToast.className = 'toast persistent source-toast';
-        const link = document.createElement('a');
-        link.href = docUrl;
-        link.target = '_blank';
-        link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
-        link.textContent = `Current source: ${data.title}`;
-        sourceToast.appendChild(link);
-        container.appendChild(sourceToast);
-        setTimeout(() => sourceToast.classList.add('show'), 10);
+    try {
+        // Remove any existing source toasts
+        const container = document.getElementById('toastContainer');
+        if (!container) {
+            console.error('Toast container not found');
+            return;
+        }
+        
+        const existingToasts = container.querySelectorAll('.source-toast');
+        existingToasts.forEach(toast => toast.remove());
+        
+        // Get current document info for this IP
+        const response = await fetch('/get_current_doc');
+        if (!response.ok) {
+            throw new Error('Failed to fetch current document');
+        }
+        
+        const data = await response.json();
+        
+        if (data && data.doc_id && data.title) {
+            const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
+            const sourceToast = document.createElement('div');
+            sourceToast.className = 'toast persistent source-toast show';
+            const link = document.createElement('a');
+            link.href = docUrl;
+            link.target = '_blank';
+            link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
+            link.textContent = `Current source: ${data.title}`;
+            sourceToast.appendChild(link);
+            container.appendChild(sourceToast);
+        } else {
+            console.warn('No document data available');
+        }
+    } catch (error) {
+        console.error('Error loading default document:', error);
+        showToast('Error loading document source', 'error');
     }
 });
