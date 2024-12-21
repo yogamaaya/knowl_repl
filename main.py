@@ -94,12 +94,24 @@ def update_embeddings():
 def get_current_doc():
     try:
         ip_address = request.remote_addr
-        doc_id = ip_documents.get(ip_address, DEFAULT_DOC_ID)
-        title = get_doc_title(doc_id) or "Default Knowledge Base"
+        from chat import DEFAULT_DOC_ID, ip_documents
+        
+        # Ensure we have a valid doc_id
+        doc_id = ip_documents.get(ip_address)
+        if not doc_id:
+            doc_id = DEFAULT_DOC_ID
+            ip_documents[ip_address] = doc_id
+            
+        # Get title with fallback
+        title = get_doc_title(doc_id)
+        if not title or title == "Untitled Document":
+            title = "Default Knowledge Base"
+            
         return jsonify({"doc_id": doc_id, "title": title})
     except Exception as e:
         print(f"Error in get_current_doc: {str(e)}")
-        return jsonify({"doc_id": DEFAULT_DOC_ID, "title": "Default Knowledge Base"}), 200
+        # Always return a valid response
+        return jsonify({"doc_id": DEFAULT_DOC_ID, "title": "Default Knowledge Base"})
 
 @app.route('/load_doc_history', methods=['GET'])
 def load_doc_history():
