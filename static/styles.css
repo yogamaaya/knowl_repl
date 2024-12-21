@@ -297,21 +297,6 @@ button[type="submit"]:active {
 .copy-btn.copied {
     background: rgba(116, 4, 118, 0.2);
 }
-
-.typing-text {
-    display: inline-block;
-    white-space: pre-wrap;
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-.fade-in {
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
 .messages {
   list-style-type: none;
   padding: 0;

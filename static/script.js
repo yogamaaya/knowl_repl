@@ -103,14 +103,14 @@ function updateChat(messages) {
         `;
         chatBox.appendChild(questionDiv);
 
-        // Display last answer with typewriter effect
+        // Display last answer
         const answerDiv = document.createElement('div');
         answerDiv.className = 'chat-message';
         answerDiv.innerHTML = `
             <img src="/static/knowl_logo.png" alt="Knowl Logo" class="logo">
             <div class="message-bubble">
-                <span class="typing-text"></span>
-                <button class="copy-btn" onclick="copyMessage(this)" aria-label="Copy message" style="display: none;">
+                ${currentPageMessages[lastAnswerIndex]}
+                <button class="copy-btn" onclick="copyMessage(this)" aria-label="Copy message">
                     <div class="copy-tooltip">Copy</div>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                         <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
@@ -119,32 +119,6 @@ function updateChat(messages) {
             </div>
         `;
         chatBox.appendChild(answerDiv);
-
-        const typingText = answerDiv.querySelector('.typing-text');
-        const copyBtn = answerDiv.querySelector('.copy-btn');
-        const text = currentPageMessages[lastAnswerIndex];
-        let index = 0;
-        
-        function typeWriter() {
-            if (index < text.length) {
-                // Process HTML tags as whole chunks
-                if (text[index] === '<') {
-                    const closeIndex = text.indexOf('>', index);
-                    if (closeIndex !== -1) {
-                        typingText.innerHTML = text.substring(0, closeIndex + 1);
-                        index = closeIndex + 1;
-                    }
-                } else {
-                    typingText.innerHTML = text.substring(0, index + 1);
-                    index++;
-                }
-                setTimeout(typeWriter, 30);
-            } else {
-                copyBtn.style.display = 'block';
-            }
-        }
-        
-        typeWriter();
     }
 }
 
@@ -354,17 +328,17 @@ function toggleAudio() {
 window.addEventListener('load', async function() {
     currentPageMessages = [
         "Who is Knowl and How to Use?",
-        `✨ Knowl is intented to be your fun partner to understand a text from a different perspective of your own ✨
+        `✨ Knowl is intented to be your fun partner to understand a text from a different perspective of your own ✨<br><br>
 
-🌕 Please check the current document source to get an idea of what prompts to give Knowl. The default is short paraphrased summary of <a href="https://docs.google.com/document/d/e/2PACX-1vTkbb2S4xGVc-BpD1KBYVQchaqxGKyCMALd18yflkx7W1bB6Oo0J2XxQ_NQD_7TP3jXMArCZAbqNa8r/pub" target="_blank" rel="noopener noreferrer">Bhagavad Gita</a>.
+🌕 Please check the current document source to get an idea of what prompts to give Knowl. The default is short paraphrased summary of <a href="https://docs.google.com/document/d/e/2PACX-1vTkbb2S4xGVc-BpD1KBYVQchaqxGKyCMALd18yflkx7W1bB6Oo0J2XxQ_NQD_7TP3jXMArCZAbqNa8r/pub" target="_blank" rel="noopener noreferrer">Bhagavad Gita</a>.<br><br>
 
-🌖 If you wish to change the text source, please have the new text ready to be pasted and click "Change Text Source" button which opens a blank document for you.
+🌖 If you wish to change the text source, please have the new text ready to be pasted and click "Change Text Source" button which opens a blank document for you.<br><br>
 
-🌗 Whenever you paste new text, please ask <b>new and specific questions to get new answers.</b> Knowl retains all information of text corpora given to date. Try to use direct keywords of the text.
+🌗 Whenever you paste new text, please ask <b>new and specific questions to get new answers.</b> Knowl retains all information of text corpora given to date. Try to use direct keywords of the text.<br><br>
 
-🌘 You can try rephrasing the same question or command if a response doesn't please you!
+🌘 You can try rephrasing the same question or command if a response doesn't please you!<br><br>
 
-🌑 Knowl is currently in Beta and might have a heavy diet of bugs 🐛 . Please report any bugs <a href="mailto:asknowl.ai@gmail.com?subject=Bug%20Report&body=Found%20a%20bug%20for%20Knowl%3F%20Please%20describe%20the%20bug%20and%20steps%20to%20reproduce%20it.%20Thank%20you!">here (asknowl.ai@gmail.com)</a>.
+🌑 Knowl is currently in Beta and might have a heavy diet of bugs 🐛 . Please report any bugs <a href="mailto:asknowl.ai@gmail.com?subject=Bug%20Report&body=Found%20a%20bug%20for%20Knowl%3F%20Please%20describe%20the%20bug%20and%20steps%20to%20reproduce%20it.%20Thank%20you!">here (asknowl.ai@gmail.com)</a>.<br><br>
 
 <p>PS: Please be patient with Knowl as she thinks~ 🦉</p>`
     ];
