@@ -64,6 +64,8 @@ def create_doc(title=None):
 
 def get_doc_title(doc_id):
     try:
+        if doc_id == DEFAULT_DOC_ID:
+            return "Default Knowledge Base"
         credentials = service_account.Credentials.from_service_account_info(
             creds, scopes=SCOPES)
         service = build('docs', 'v1', credentials=credentials)

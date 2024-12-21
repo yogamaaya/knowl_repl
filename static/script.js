@@ -368,6 +368,11 @@ window.addEventListener('load', async function() {
     ];
     updateChat(currentPageMessages);
     
+    // Remove any existing source toasts
+    const container = document.getElementById('toastContainer');
+    const existingToasts = container.querySelectorAll('.source-toast');
+    existingToasts.forEach(toast => toast.remove());
+    
     // Get current document info for this IP
     const response = await fetch('/get_current_doc');
     const data = await response.json();
@@ -382,9 +387,7 @@ window.addEventListener('load', async function() {
         link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
         link.textContent = `Current source: ${data.title}`;
         sourceToast.appendChild(link);
-        document.getElementById('toastContainer').appendChild(sourceToast);
+        container.appendChild(sourceToast);
         setTimeout(() => sourceToast.classList.add('show'), 10);
     }
-
-    // No need to update embeddings here since initialization is handled server-side
 });
