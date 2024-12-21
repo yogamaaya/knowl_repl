@@ -97,13 +97,14 @@
 
         window.addEventListener('load', loadDocHistory);
         
-        window.addEventListener('message', (event) => {
+        const bc = new BroadcastChannel('history_channel');
+        bc.onmessage = (event) => {
             if (event.data === 'refreshHistory') {
                 const docList = document.getElementById('docList');
                 docList.innerHTML = '';
                 loadDocHistory();
             }
-        });
+        };
     </script>
 </body>
 </html>

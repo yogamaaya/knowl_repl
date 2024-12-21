@@ -256,7 +256,8 @@ async function handleChangeText() {
             // Save to file
             try {
                 // Broadcast refresh message to any open history windows
-                window.postMessage('refreshHistory', '*');
+                const bc = new BroadcastChannel('history_channel');
+                bc.postMessage('refreshHistory');
             } catch (error) {
                 console.error('Failed to refresh history:', error);
             }
