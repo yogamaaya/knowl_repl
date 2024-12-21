@@ -43,8 +43,39 @@ async function submitMessage(event) {
     }
 
     if (message) {
+        // Immediately show user message
+        const chatBox = document.getElementById('chatBox');
+        chatBox.innerHTML = '';
+        
+        // Display user message
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'chat-message';
+        questionDiv.innerHTML = `
+            <img src="/static/user_logo.png" alt="User Logo" class="logo">
+            <div class="message-bubble">${message}</div>
+        `;
+        chatBox.appendChild(questionDiv);
+        
+        // Add Knowl thinking message
+        const thinkingDiv = document.createElement('div');
+        thinkingDiv.className = 'chat-message knowl-thinking';
+        thinkingDiv.innerHTML = `
+            <img src="/static/knowl_logo.png" alt="Knowl Logo" class="logo">
+            <div class="message-bubble">
+                <div class="thinking-animation">
+                    <span>Thinking</span>
+                    <span class="dot">.</span>
+                    <span class="dot">.</span>
+                    <span class="dot">.</span>
+                </div>
+            </div>
+        `;
+        chatBox.appendChild(thinkingDiv);
+        
+        // Clear input
+        messageInput.value = '';
+        
         try {
-            loadingElement.style.display = 'block';
             const response = await fetch('/submit', {
                 method: 'POST',
                 headers: {
@@ -58,8 +89,28 @@ async function submitMessage(event) {
                 console.log('Response received successfully');
                 console.log('Messages:', data.messages);
                 console.log('Audio URL:', data.audio_url);
-                updateChat(data.messages);
-                messageInput.value = '';
+                // Remove thinking animation
+                const thinkingElement = document.querySelector('.knowl-thinking');
+                if (thinkingElement) {
+                    thinkingElement.remove();
+                }
+                
+                // Add Knowl's response
+                const answerDiv = document.createElement('div');
+                answerDiv.className = 'chat-message';
+                answerDiv.innerHTML = `
+                    <img src="/static/knowl_logo.png" alt="Knowl Logo" class="logo">
+                    <div class="message-bubble">
+                        ${data.messages[data.messages.length - 1]}
+                        <button class="copy-btn" onclick="copyMessage(this)" aria-label="Copy message">
+                            <div class="copy-tooltip">Copy</div>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                chatBox.appendChild(answerDiv);
                 
                 if (data.audio_url) {
                     // Reset audio state
