@@ -127,8 +127,17 @@ function updateChat(messages) {
         
         function typeWriter() {
             if (index < text.length) {
-                typingText.innerHTML = text.substring(0, index + 1);
-                index++;
+                // Process HTML tags as whole chunks
+                if (text[index] === '<') {
+                    const closeIndex = text.indexOf('>', index);
+                    if (closeIndex !== -1) {
+                        typingText.innerHTML = text.substring(0, closeIndex + 1);
+                        index = closeIndex + 1;
+                    }
+                } else {
+                    typingText.innerHTML = text.substring(0, index + 1);
+                    index++;
+                }
                 setTimeout(typeWriter, 30);
             } else {
                 copyBtn.style.display = 'block';
