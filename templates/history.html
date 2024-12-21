@@ -25,11 +25,10 @@
                 }
 
                 const docHistory = data.docHistory || [];
-                localStorage.setItem('docHistory', JSON.stringify(docHistory));
                 const docList = document.getElementById('docList');
+                docList.innerHTML = ''; // Clear existing list
                 
-                // Only populate if empty
-                if (docList.children.length === 0) {
+                // Always populate with fresh content
                     for (const doc of docHistory) {
                         try {
                             // Check if document has content
