@@ -330,7 +330,7 @@ window.addEventListener('load', async function() {
         "Who is Knowl and How to Use?",
         `✨ Knowl is intented to be your fun partner to understand a text from a different perspective of your own ✨<br><br>
 
-🌕 Please check the current document source to get an idea of what prompts to give Knowl. The default is short paraphrased summary of <a href="https://docs.google.com/document/d/e/2PACX-1vTkbb2S4xGVc-BpD1KBYVQchaqxGKyCMALd18yflkx7W1bB6Oo0J2XxQ_NQD_7TP3jXMArCZAbqNa8r/pub">Bhagavad Gita</a>.<br><br>
+🌕 Please check the current document source to get an idea of what prompts to give Knowl. The default is short paraphrased summary of <a href="https://docs.google.com/document/d/e/2PACX-1vTkbb2S4xGVc-BpD1KBYVQchaqxGKyCMALd18yflkx7W1bB6Oo0J2XxQ_NQD_7TP3jXMArCZAbqNa8r/pub" target="_blank" rel="noopener noreferrer">Bhagavad Gita</a>.<br><br>
 
 🌖 If you wish to change the text source, please have the new text ready to be pasted and click "Change Text Source" button which opens a blank document for you.<br><br>
 
