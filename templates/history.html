@@ -41,8 +41,8 @@
                                 body: JSON.stringify({ doc_id: doc.id })
                             });
                             
-                            if (!contentResponse.ok || !contentResponse.has_content) {
-                                console.log(`Skipping doc ${doc.id} - not accessible or empty`);
+                            if (!contentResponse.ok) {
+                                console.log(`Skipping doc ${doc.id} - not accessible`);
                                 continue;
                             }
                             
@@ -51,6 +51,10 @@
                                 console.log(`Skipping doc ${doc.id} - no content`);
                                 continue;
                             }
+                        } catch (error) {
+                            console.error(`Error processing document ${doc.id}:`, error);
+                            continue;
+                        }
 
                             const docItem = document.createElement('article');
                             docItem.className = 'doc-item';

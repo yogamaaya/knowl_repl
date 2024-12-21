@@ -178,7 +178,7 @@ def save_doc_history(doc_id, title):
             'timestamp': datetime.now().isoformat()
         }
         
-        if not any(doc.get('id') == doc_id for doc in doc_history):
+        if not any(d['id'] == doc_id for d in doc_history):
             doc_history.insert(0, new_doc)
             
         # Atomic write
