@@ -16,8 +16,8 @@ def history():
 
 @app.route('/')
 def chat():
-    print("\n=== Starting Chat Application ===")
     ip_address = request.remote_addr
+    print(f"\n=== Starting Chat Application === IP: {ip_address}")
     
     # Always initialize with default doc for new sessions
     if ip_address not in ip_documents:
