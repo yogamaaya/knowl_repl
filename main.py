@@ -97,9 +97,20 @@ def save_doc_history():
         doc_history = request.get_json().get('docHistory', [])
         if not isinstance(doc_history, list):
             return jsonify({'success': False, 'error': 'docHistory must be an array'}), 400
+
+        # Verify document content before saving
+        verified_docs = []
+        for doc in doc_history:
+            try:
+                text = get_text_from_doc(doc['id'])
+                if text and len(text.strip()) > 0 and not "Sorry, the file you have requested has been deleted" in text:
+                    verified_docs.append(doc)
+            except Exception as e:
+                print(f"Error verifying doc {doc['id']}: {str(e)}")
+                continue
             
         with open('doc_history.txt', 'w') as f:
-            json.dump(doc_history, f)
+            json.dump(verified_docs, f)
         return jsonify({'success': True}), 200
     except Exception as e:
         print(f"Error saving doc history: {str(e)}")
