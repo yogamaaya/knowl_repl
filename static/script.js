@@ -247,19 +247,13 @@ async function handleChangeText() {
             // Document info now handled server-side per IP
             
             // Save to document history
-            const docHistory = JSON.parse(localStorage.getItem('docHistory') || '[]');
             const newDoc = {
                 id: data.doc_id,
                 title: updateData.title,
                 timestamp: new Date().toISOString()
             };
             
-            // Only add if doc doesn't exist
-            if (!docHistory.some(doc => doc.id === newDoc.id)) {
-                docHistory.push(newDoc);
-                localStorage.setItem('docHistory', JSON.stringify(docHistory));
-                
-                // Save to file
+            // Save to file
                 try {
                     const saveResponse = await fetch('/save_doc_history', {
                         method: 'POST',
