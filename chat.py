@@ -239,9 +239,6 @@ def initialize_embeddings(ip_address=None):
             if ip_address:
                 ip_documents[ip_address] = selected_doc_id
 
-            if ip_address:
-                ip_documents[ip_address] = doc_id
-
         # Get document text
         try:
             text = get_text_from_doc(doc_id)
