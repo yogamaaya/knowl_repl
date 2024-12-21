@@ -258,15 +258,7 @@ async function handleChangeText() {
                 existingToast.remove();
             }
 
-            const sourceToast = document.createElement('div');
-            sourceToast.className = 'toast persistent source-toast';
-            sourceToast.innerHTML = `
-                <a href="${docUrl}" target="_blank" style="color: white; text-decoration: underline;">
-                    Current source: ${updateData.title}
-                </a>
-            `;
-            container.appendChild(sourceToast);
-            setTimeout(() => sourceToast.classList.add('show'), 10);
+            await updateDocumentToast();
         }
     } catch (error) {
         console.error('Error:', error);
@@ -345,15 +337,17 @@ window.addEventListener('load', async function() {
         <p>PS: Please be patient with Knowl as she thinks~ 🦉</p>`
     ];
     updateChat(currentPageMessages);
-    
+    await updateDocumentToast();
+});
+async function updateDocumentToast() {
     try {
-        // Remove any existing source toasts
         const container = document.getElementById('toastContainer');
         if (!container) {
             console.error('Toast container not found');
             return;
         }
         
+        // Remove any existing source toasts
         const existingToasts = container.querySelectorAll('.source-toast');
         existingToasts.forEach(toast => toast.remove());
         
@@ -364,23 +358,21 @@ window.addEventListener('load', async function() {
         }
         
         const data = await response.json();
+        const doc_id = data.doc_id || DEFAULT_DOC_ID;
+        const title = data.title || "Default Knowledge Base";
         
-        if (data && data.doc_id && data.title) {
-            const docUrl = `https://docs.google.com/document/d/${data.doc_id}/edit`;
-            const sourceToast = document.createElement('div');
-            sourceToast.className = 'toast persistent source-toast show';
-            const link = document.createElement('a');
-            link.href = docUrl;
-            link.target = '_blank';
-            link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
-            link.textContent = `Current source: ${data.title}`;
-            sourceToast.appendChild(link);
-            container.appendChild(sourceToast);
-        } else {
-            console.warn('No document data available');
-        }
+        const docUrl = `https://docs.google.com/document/d/${doc_id}/edit`;
+        const sourceToast = document.createElement('div');
+        sourceToast.className = 'toast persistent source-toast show';
+        const link = document.createElement('a');
+        link.href = docUrl;
+        link.target = '_blank';
+        link.style.cssText = 'color: white; text-decoration: underline; cursor: pointer;';
+        link.textContent = `Current source: ${title}`;
+        sourceToast.appendChild(link);
+        container.appendChild(sourceToast);
     } catch (error) {
-        console.error('Error loading default document:', error);
+        console.error('Error updating document toast:', error);
         showToast('Error loading document source', 'error');
     }
-});
+}
