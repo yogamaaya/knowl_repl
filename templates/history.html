@@ -29,65 +29,64 @@
                 docList.innerHTML = ''; // Clear existing list
                 
                 // Always populate with fresh content
-                    for (const doc of docHistory) {
-                        try {
-                            // Check if document has content
-                            const contentResponse = await fetch('/check_doc_content', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({ doc_id: doc.id })
-                            });
-                            
-                            if (!contentResponse.ok) {
-                                console.log(`Skipping doc ${doc.id} - not accessible`);
-                                continue;
-                            }
-                            
-                            const contentData = await contentResponse.json();
-                            if (!contentData.has_content) {
-                                console.log(`Skipping doc ${doc.id} - no content`);
-                                continue;
-                            }
-
-                            const docItem = document.createElement('article');
-                            docItem.className = 'doc-item';
-                            
-                            const title = document.createElement('h2');
-                            title.className = 'doc-title';
-                            title.textContent = doc.title;
-                            
-                            const preview = document.createElement('div');
-                            preview.className = 'doc-preview';
-                            
-                            docItem.appendChild(title);
-                            docItem.appendChild(preview);
-                            
-                            const previewResponse = await fetch('/get_doc_preview', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({ doc_id: doc.id })
-                            });
-
-                            if (previewResponse.ok) {
-                                const previewData = await previewResponse.json();
-                                if (!previewData.preview.includes("Sorry, the file you have requested has been deleted")) {
-                                    preview.innerHTML = `
-                                        <p>${previewData.preview}</p>
-                                        <a href="https://docs.google.com/document/d/${doc.id}/edit" target="_blank" class="read-more">Read More →</a>
-                                    `;
-                                    docList.appendChild(docItem);
-                                } else {
-                                    console.log(`Skipping deleted doc ${doc.id}`);
-                                }
-                            }
-                        } catch (error) {
-                            console.error('Error processing doc:', doc.id, error);
+                for (const doc of docHistory) {
+                    try {
+                        // Check if document has content
+                        const contentResponse = await fetch('/check_doc_content', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ doc_id: doc.id })
+                        });
+                        
+                        if (!contentResponse.ok) {
+                            console.log(`Skipping doc ${doc.id} - not accessible`);
                             continue;
                         }
+                        
+                        const contentData = await contentResponse.json();
+                        if (!contentData.has_content) {
+                            console.log(`Skipping doc ${doc.id} - no content`);
+                            continue;
+                        }
+
+                        const docItem = document.createElement('article');
+                        docItem.className = 'doc-item';
+                        
+                        const title = document.createElement('h2');
+                        title.className = 'doc-title';
+                        title.textContent = doc.title;
+                        
+                        const preview = document.createElement('div');
+                        preview.className = 'doc-preview';
+                        
+                        docItem.appendChild(title);
+                        docItem.appendChild(preview);
+                        
+                        const previewResponse = await fetch('/get_doc_preview', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ doc_id: doc.id })
+                        });
+
+                        if (previewResponse.ok) {
+                            const previewData = await previewResponse.json();
+                            if (!previewData.preview.includes("Sorry, the file you have requested has been deleted")) {
+                                preview.innerHTML = `
+                                    <p>${previewData.preview}</p>
+                                    <a href="https://docs.google.com/document/d/${doc.id}/edit" target="_blank" class="read-more">Read More →</a>
+                                `;
+                                docList.appendChild(docItem);
+                            } else {
+                                console.log(`Skipping deleted doc ${doc.id}`);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error processing doc:', doc.id, error);
+                        continue;
                     }
                 }
             } catch (error) {

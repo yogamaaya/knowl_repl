@@ -3,7 +3,7 @@ async function copyMessage(button) {
     const messageText = button.parentElement.innerText.replace('Copy', '').trim();
     try {
         await navigator.clipboard.writeText(messageText);
-        const tooltip = button.querySelector('.copy-tooltip');
+        const tooltip = buttonFail.querySelector('.copy-tooltip');
         const originalText = tooltip.textContent;
         button.classList.add('copied');
         tooltip.textContent = 'Copied!';
@@ -253,19 +253,22 @@ async function handleChangeText() {
                 timestamp: new Date().toISOString()
             };
             
-            // Save to file
             try {
                 // Broadcast refresh message to any open history windows
                 const bc = new BroadcastChannel('history_channel');
                 bc.postMessage('refreshHistory');
+                
+                currentLoadingToast.remove();
+                showToast('Text Source Updated Successfully', 'success');
+                
+                const container = document.getElementById('toastContainer');
             } catch (error) {
                 console.error('Failed to refresh history:', error);
+                if (currentLoadingToast) {
+                    currentLoadingToast.remove();
+                }
+                showToast('Failed to refresh history', 'error');
             }
-            
-            currentLoadingToast.remove();
-            showToast('Text Source Updated Successfully', 'success');
-
-            const container = document.getElementById('toastContainer');
             const existingToast = container.querySelector('.source-toast');
             if (existingToast) {
                 existingToast.remove();
