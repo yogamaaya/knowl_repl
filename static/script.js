@@ -341,7 +341,8 @@ window.addEventListener('load', async function() {
     await updateDocumentToast();
 });
 async function updateDocumentToast() {
-    let retries = 3;
+    let retries = 5;  // Increased retries
+    const RETRY_DELAY = 2000;  // 2 second delay between retries
     while (retries > 0) {
         try {
             let container = document.getElementById('toastContainer');

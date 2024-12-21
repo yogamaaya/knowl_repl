@@ -94,21 +94,25 @@ def update_embeddings():
 def get_current_doc():
     try:
         ip_address = request.remote_addr
-        from chat import DEFAULT_DOC_ID, ip_documents
+        from chat import DEFAULT_DOC_ID, ip_documents, qa_chains
         
-        # Use consistent document priority helper
-        from chat import get_prioritized_doc_id
-        doc_id = get_prioritized_doc_id(ip_address)
+        # If QA chain exists for this IP, use its document
+        if ip_address in qa_chains and qa_chains[ip_address] is not None:
+            doc_id = ip_documents.get(ip_address, DEFAULT_DOC_ID)
+        else:
+            # Use consistent document priority helper
+            from chat import get_prioritized_doc_id
+            doc_id = get_prioritized_doc_id(ip_address)
             
         # Get title with fallback
         title = get_doc_title(doc_id)
         if not title or title == "Untitled Document":
             title = "Default Knowledge Base"
             
+        print(f"Current doc for IP {ip_address}: {doc_id}")
         return jsonify({"doc_id": doc_id, "title": title})
     except Exception as e:
         print(f"Error in get_current_doc: {str(e)}")
-        # Always return a valid response
         return jsonify({"doc_id": DEFAULT_DOC_ID, "title": "Default Knowledge Base"})
 
 @app.route('/load_doc_history', methods=['GET'])
