@@ -247,28 +247,30 @@ async function handleChangeText() {
             // Document info now handled server-side per IP
             
             // Save to document history
-            const newDoc = {
-                id: data.doc_id,
-                title: updateData.title,
-                timestamp: new Date().toISOString()
-            };
-            
-            // Save to file
-            try {
-                const saveResponse = await fetch('/save_doc_history', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ docHistory: newDoc })
-                });
+            // Only save to history if embeddings were successfully created
+            if (updateData.success) {
+                const newDoc = {
+                    id: data.doc_id,
+                    title: updateData.title,
+                    timestamp: new Date().toISOString()
+                };
                 
-                if (saveResponse.ok) {
-                    // Broadcast refresh message to any open history windows
-                    window.postMessage('refreshHistory', '*');
+                try {
+                    const saveResponse = await fetch('/save_doc_history', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ docHistory: newDoc })
+                    });
+                    
+                    if (saveResponse.ok) {
+                        // Broadcast refresh message to any open history windows
+                        window.postMessage('refreshHistory', '*');
+                    }
+                } catch (error) {
+                    console.error('Failed to save doc history:', error);
                 }
-            } catch (error) {
-                console.error('Failed to save doc history:', error);
             }
             
             currentLoadingToast.remove();
