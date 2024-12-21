@@ -332,10 +332,9 @@ window.addEventListener('load', async function() {
 
 🌕 Please check the current document source to get an idea of what prompts to give Knowl. You can update the source by clicking Change Text Source button, and retrying if the updating doesn't work.<br><br>
 
-🌖 Knowl is currently in beta and may have some bugs. Please report any bugs <a href="mailto:asknowl.ai@gmail.com?&subject=Bug Report&body=Found a bug for Knowl? Please describe the bug and steps to reproduce it. Thank you!" target="_blank" rel="noopener noreferrer">here</a><br><br>
+🌖 Knowl is currently in beta and may have some bugs. Please report any bugs <a href="mailto:asknowl.ai@gmail.com?&subject=Bug Report&body=Found a bug for Knowl? Please describe the bug and steps to reproduce it. Thank you!" target="_blank" rel="noopener noreferrer">here.</a><br><br>
 
-🌗 Whenever you paste new text, please ask <b>new and specific questions to get new answers.</b><br>
-Knowl retains all information of text corpora given to date.<br><br>
+🌗 Whenever you paste new text, please ask <b>new and specific questions to get new answers.</b> Knowl retains all information of text corpora given to date.<br><br>
 
 🌘 You can try rephrasing the same question or command if a response doesn't please you!<br><br>
 
