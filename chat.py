@@ -272,18 +272,11 @@ def initialize_embeddings(ip_address=None):
                                                       dict) else {}
         ip_documents = ip_documents if isinstance(ip_documents, dict) else {}
 
-        # Check if user has a custom document before falling back to default
-        selected_doc_id = None
-        if ip_address and ip_address in ip_documents:
-            selected_doc_id = ip_documents[ip_address]
-            if selected_doc_id != DEFAULT_DOC_ID:
-                print(f"Using user's custom document: {selected_doc_id}")
-            else:
-                selected_doc_id = None
-
-        # Only use default if no custom document exists
-        if not selected_doc_id:
-            selected_doc_id = DEFAULT_DOC_ID
+        # Use consistent document priority helper
+        selected_doc_id = get_prioritized_doc_id(ip_address)
+        if selected_doc_id != DEFAULT_DOC_ID:
+            print(f"Using user's custom document: {selected_doc_id}")
+        else:
             print(f"Using default document: {selected_doc_id}")
 
         # Only update global doc_id if it's a new IP or doesn't have existing document
@@ -412,3 +405,10 @@ def on_submit(query, ip_address):
         out.write(response.audio_content)
 
     return {"text": answer, "audio_url": "/static/response.mp3"}
+def get_prioritized_doc_id(ip_address):
+    """Helper function to consistently determine document priority"""
+    if ip_address and ip_address in ip_documents:
+        doc_id = ip_documents[ip_address]
+        if doc_id and doc_id != DEFAULT_DOC_ID:
+            return doc_id
+    return DEFAULT_DOC_ID

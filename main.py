@@ -96,13 +96,9 @@ def get_current_doc():
         ip_address = request.remote_addr
         from chat import DEFAULT_DOC_ID, ip_documents
         
-        # Prioritize user's custom document
-        doc_id = ip_documents.get(ip_address)
-        if not doc_id or doc_id == DEFAULT_DOC_ID:
-            # Only set default if no custom document exists
-            if ip_address not in ip_documents:
-                ip_documents[ip_address] = DEFAULT_DOC_ID
-            doc_id = DEFAULT_DOC_ID
+        # Use consistent document priority helper
+        from chat import get_prioritized_doc_id
+        doc_id = get_prioritized_doc_id(ip_address)
             
         # Get title with fallback
         title = get_doc_title(doc_id)
