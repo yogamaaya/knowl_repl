@@ -127,7 +127,7 @@ function updateChat(messages) {
         
         function typeWriter() {
             if (index < text.length) {
-                typingText.innerHTML += text.charAt(index);
+                typingText.innerHTML = text.substring(0, index + 1);
                 index++;
                 setTimeout(typeWriter, 10); // Adjust speed by changing timeout
             } else {
