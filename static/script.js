@@ -330,15 +330,15 @@ window.addEventListener('load', async function() {
         "Who is Knowl and How to Use?",
         `✨ Knowl is intented to be your fun partner to understand a text from a different perspective of your own ✨<br><br>
 
-🌕 Please check the current document source to get an idea of what prompts to give Knowl. You can update the source by clicking Change Text Source button, and retrying if the updating doesn't work.<br><br>
+🌕 Please check the current document source to get an idea of what prompts to give Knowl. 
 
-🌖 Knowl is currently in beta and may have some bugs. Please report any bugs <a href="mailto:asknowl.ai@gmail.com?subject=Bug%20Report&body=Found%20a%20bug%20for%20Knowl%3F%20Please%20describe%20the%20bug%20and%20steps%20to%20reproduce%20it.%20Thank%20you!">here</a>.<br><br>
+🌖 If you wish to change the text source, please have the text ready to be pasted in a blank document and click "Change Text Source" button.
 
-🌗 Whenever you paste new text, please ask <b>new and specific questions to get new answers.</b> Knowl retains all information of text corpora given to date.<br><br>
+🌗 Whenever you paste new text, please ask <b>new and specific questions to get new answers.</b> Knowl retains all information of text corpora given to date. Try to use direct keywords of the text.<br><br>
 
 🌘 You can try rephrasing the same question or command if a response doesn't please you!<br><br>
 
-🌑 Try to use keywords of the text, and reference the current context as much as possible.<br><br>
+🌑 Knowl is currently in beta and may have some bugs. Please report any bugs <a href="mailto:asknowl.ai@gmail.com?subject=Bug%20Report&body=Found%20a%20bug%20for%20Knowl%3F%20Please%20describe%20the%20bug%20and%20steps%20to%20reproduce%20it.%20Thank%20you!">here (asknowl.ai@gmail.com)</a>.<br><br>
 
 <p>PS: Please be patient with Knowl as she thinks~ 🦉</p>`
     ];
