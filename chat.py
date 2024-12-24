@@ -370,13 +370,18 @@ def on_submit(query, ip_address):
             "audio_url": None
         }
 
-    # Only generate TTS for latest message
+    # Generate TTS for the answer
+    audio_url = generate_tts(answer)
+    return {"text": answer, "audio_url": audio_url}
+
+def generate_tts(text):
+    """Generate text-to-speech audio for given text"""
     from google.cloud import texttospeech
     credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
     client = texttospeech.TextToSpeechClient.from_service_account_info(
         credentials_dict)
 
-    synthesis_input = texttospeech.SynthesisInput(text=answer)
+    synthesis_input = texttospeech.SynthesisInput(text=text)
     voice = texttospeech.VoiceSelectionParams(
         language_code="en-US",
         name="en-US-Studio-O",
@@ -388,14 +393,16 @@ def on_submit(query, ip_address):
         pitch=0.0)
 
     response = client.synthesize_speech(input=synthesis_input,
-                                        voice=voice,
-                                        audio_config=audio_config)
+                                      voice=voice,
+                                      audio_config=audio_config)
 
-    audio_path = "static/response.mp3"
+    # Use timestamp to prevent caching
+    timestamp = int(datetime.now().timestamp())
+    audio_path = f"static/response_{timestamp}.mp3"
     with open(audio_path, "wb") as out:
         out.write(response.audio_content)
 
-    return {"text": answer, "audio_url": "/static/response.mp3"}
+    return f"/{audio_path}"
 
 
 def get_prioritized_doc_id(ip_address):

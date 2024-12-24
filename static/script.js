@@ -112,7 +112,7 @@ async function submitMessage(event) {
                 chatBox.appendChild(answerDiv);
                 
                 if (data.audio_url) {
-                    // Properly cleanup old audio
+                    // Cleanup old audio
                     if (currentAudio) {
                         currentAudio.pause();
                         currentAudio.src = '';
@@ -120,7 +120,9 @@ async function submitMessage(event) {
                         currentAudio = null;
                     }
                     isPlaying = false;
-                    window.lastAudioUrl = data.audio_url + '?t=' + Date.now(); // Prevent caching
+                    
+                    // Create new audio instance
+                    currentAudio = new Audio(data.audio_url);
                     const playButton = document.getElementById('playAudioBtn');
                     playButton.style.display = 'inline-block';
                     playButton.textContent = 'Play Response 🔊';
@@ -353,15 +355,11 @@ function showPersistentToast(message, isPersistent = false) {
 function toggleAudio() {
     const playButton = document.getElementById('playAudioBtn');
     
-    if (!currentAudio && window.lastAudioUrl) {
-        currentAudio = new Audio(window.lastAudioUrl);
+    if (currentAudio) {
         currentAudio.addEventListener('ended', () => {
             playButton.textContent = 'Play Response 🔊';
             isPlaying = false;
         });
-    }
-    
-    if (currentAudio) {
         if (isPlaying) {
             currentAudio.pause();
             playButton.textContent = 'Play Response 🔊';
