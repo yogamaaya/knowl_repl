@@ -121,8 +121,8 @@ async function submitMessage(event) {
                     }
                     isPlaying = false;
                     
-                    // Create new audio instance
-                    currentAudio = new Audio(data.audio_url);
+                    // Create new audio instance with cache-busting URL
+                    currentAudio = new Audio(data.audio_url + '?t=' + Date.now());
                     const playButton = document.getElementById('playAudioBtn');
                     playButton.style.display = 'inline-block';
                     playButton.textContent = 'Play Response 🔊';

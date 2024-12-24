@@ -396,13 +396,13 @@ def generate_tts(text):
                                       voice=voice,
                                       audio_config=audio_config)
 
-    # Use timestamp to prevent caching
-    timestamp = int(datetime.now().timestamp())
-    audio_path = f"static/response_{timestamp}.mp3"
+    # Always use the same audio file
+    audio_path = "static/response.mp3"
     with open(audio_path, "wb") as out:
         out.write(response.audio_content)
 
-    return f"/{audio_path}"
+    # Add timestamp to prevent browser caching
+    return f"/static/response.mp3?t={int(datetime.now().timestamp())}"
 
 
 def get_prioritized_doc_id(ip_address):
