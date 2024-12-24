@@ -385,10 +385,10 @@ def on_submit(query, ip_address):
     Returns:
         dict: Contains response text and audio URL
     """
+    global text, doc_id, qa_chains
     logger.info(f"\n=== Processing Query for IP: {ip_address} ===")
     logger.info(f"Current doc_id: {doc_id}")
     logger.info(f"Text preview: {text[:100] if text else 'No text available'}")
-    global text, doc_id, qa_chains
 
     # Ensure qa_chains exists
     if not isinstance(qa_chains, dict):
