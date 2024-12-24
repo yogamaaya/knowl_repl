@@ -22,12 +22,9 @@ def chat():
     ip_address = request.remote_addr
     print(f"\n=== Starting Chat Application === IP: {ip_address}")
     
-    # Initialize new sessions with default document
-    if ip_address not in ip_documents:
-        print("New session - initializing with default document...")
-        initialize_embeddings(ip_address)
-    else:
-        print("Existing session - using current document...")
+    # Initialize embeddings while preserving existing document
+    initialize_embeddings(ip_address)
+    print(f"Using document {ip_documents.get(ip_address, DEFAULT_DOC_ID)} for IP {ip_address}")
         
     return render_template('chat.html')
 

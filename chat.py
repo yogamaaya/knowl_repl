@@ -272,18 +272,15 @@ def initialize_embeddings(ip_address=None):
         qa_chains = qa_chains if isinstance(qa_chains, dict) else {}
         ip_documents = ip_documents if isinstance(ip_documents, dict) else {}
 
-        # Use consistent document priority helper
-        selected_doc_id = get_prioritized_doc_id(ip_address)
-        if selected_doc_id != DEFAULT_DOC_ID:
-            print(f"Using user's custom document: {selected_doc_id}")
-        else:
-            print(f"Using default document: {selected_doc_id}")
-
-        # Preserve existing document ID for IP
+        # First-time users get default doc, existing users keep their doc
         if ip_address:
-            if ip_address not in ip_documents:
-                ip_documents[ip_address] = selected_doc_id
-            doc_id = ip_documents[ip_address]
+            if ip_address in ip_documents:
+                doc_id = ip_documents[ip_address]
+                print(f"Using existing custom document: {doc_id}")
+            else:
+                doc_id = DEFAULT_DOC_ID
+                ip_documents[ip_address] = doc_id
+                print(f"New user - using default document: {doc_id}")
 
         # Get document text
         try:
