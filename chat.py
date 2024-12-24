@@ -22,8 +22,16 @@ openai_api_key = os.getenv('OPENAI_API_KEY')
 qa_chains = {}
 # Store Google document IDs per IP
 ip_documents = {}
-# Fallback document for initial load
+# Fallback document for initial load - ensure this matches frontend
 DEFAULT_DOC_ID = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A'
+
+# Validate document ID to prevent truncation
+def validate_doc_id(doc_id):
+    """Ensure document ID is complete and valid"""
+    if not doc_id or len(doc_id) < 20:  # Google Doc IDs are typically longer
+        logger.error(f"Invalid doc_id detected: {doc_id}")
+        return DEFAULT_DOC_ID
+    return doc_id
 
 # Declare placeholders
 text = ''
@@ -90,6 +98,7 @@ def get_doc_title(doc_id):
 # Extract the actual content within Google Doc to create embeddings
 def get_text_from_doc(doc_id):
     global text, qa_chain
+    doc_id = validate_doc_id(doc_id)
     try:
         print(f"\nChecking content for doc_id: {doc_id}")
         credentials = service_account.Credentials.from_service_account_info(
@@ -118,6 +127,7 @@ def change_text_source(new_doc_id, ip_address=None):
     global text, doc_id, ip_documents
 
     try:
+        new_doc_id = validate_doc_id(new_doc_id)
         if not new_doc_id:
             print("Error: Invalid document ID")
             return False
