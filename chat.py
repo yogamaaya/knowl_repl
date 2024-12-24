@@ -22,7 +22,7 @@ qa_chains = {}
 # Store minimal chat history
 chat_histories = {}
 # Store Google document IDs per IP
-ip_documents = {}  
+ip_documents = {}
 # Fallback document for initial load
 DEFAULT_DOC_ID = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A'
 
@@ -31,12 +31,13 @@ text = ''
 doc_id = ''
 
 # Connect to Google Drive API
-SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
+SCOPES = ['https://www.googleapis.com/auth/drive.file']
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 
 # For better console logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 # Create a Google Doc for user to provide their data
 # Used by script.js for /create_doc endpoint
@@ -71,7 +72,8 @@ def create_doc(title=None):
         print(f"Error creating document: {str(e)}")
         return None
 
-# Get the document title and help store it in document history fron frontend
+
+# Helper function to get the document title
 def get_doc_title(doc_id):
     try:
         if doc_id == DEFAULT_DOC_ID:
@@ -85,7 +87,8 @@ def get_doc_title(doc_id):
         print(f"Error getting document title: {str(e)}")
         return "Untitled Document"
 
-# Extract the actual content within Google Doc to create embeddings from
+
+# Extract the actual content within Google Doc to create embeddings
 def get_text_from_doc(doc_id):
     global text, qa_chain
     try:
@@ -109,12 +112,8 @@ def get_text_from_doc(doc_id):
         return str(e)
 
 
-def reset_qa_chain():
-    global qa_chain, chat_history
-    qa_chain = None
-    chat_history = []
-
-
+# Update embeddings for new document
+# Connected to frontend script.js for /update_embeddings endpoint
 def change_text_source(new_doc_id, ip_address=None):
     """Handle text source change and create new embeddings"""
     global text, doc_id, ip_documents
@@ -151,11 +150,11 @@ def change_text_source(new_doc_id, ip_address=None):
                 if ip_address not in qa_chains or qa_chains[ip_address] is None:
                     print("Error: QA chain not properly initialized")
                     return False
-                    
+
                 # Save to document history after successful embedding creation
                 title = get_doc_title(new_doc_id)
                 save_doc_history(new_doc_id, title)
-                
+
             except Exception as e:
                 print(f"Error creating embeddings: {str(e)}")
                 return False
@@ -167,6 +166,7 @@ def change_text_source(new_doc_id, ip_address=None):
         return False
 
 
+# Record all documents for whom embeddings were created
 def save_doc_history(doc_id, title):
     try:
         # Ensure atomic file operations
@@ -178,31 +178,33 @@ def save_doc_history(doc_id, title):
                     doc_history = json.loads(content) if content else []
             except (json.JSONDecodeError, FileNotFoundError):
                 doc_history = []
-        
+
         # Ensure doc_history is a list
         if not isinstance(doc_history, list):
             doc_history = []
-            
+
         # Add new doc if not exists
         new_doc = {
             'id': doc_id,
             'title': title,
             'timestamp': datetime.now().isoformat()
         }
-        
+
         if not any(d['id'] == doc_id for d in doc_history):
             doc_history.insert(0, new_doc)
-            
+
         # Atomic write
         with open('doc_history.txt.tmp', 'w') as f:
             json.dump(doc_history, f, indent=2)
         os.replace('doc_history.txt.tmp', 'doc_history.txt')
-            
+
         return True
     except Exception as e:
         print(f"Error saving doc history: {str(e)}")
         return False
 
+
+# Create embeddings
 def create_embeddings(text, ip_address=None):
     print("\n=== Creating Embeddings ===")
     print(f"Text preview (first 100 chars): {text[:100]}")
@@ -273,6 +275,7 @@ def create_embeddings(text, ip_address=None):
         combine_docs_chain_kwargs={'prompt': PROMPT})
 
 
+# Initialize embeddings properly with error handling
 def initialize_embeddings(ip_address=None):
     print("\n=== Initializing Embeddings ===")
     global text, doc_id, qa_chains, chat_histories, ip_documents
@@ -330,6 +333,7 @@ def initialize_embeddings(ip_address=None):
         return False
 
 
+# Return QA chain answer to front end
 def on_submit(query, ip_address):
     logger.info(f"\n=== Processing Query for IP: {ip_address} ===")
     global text, doc_id, qa_chains
@@ -417,6 +421,8 @@ def on_submit(query, ip_address):
         out.write(response.audio_content)
 
     return {"text": answer, "audio_url": "/static/response.mp3"}
+
+
 def get_prioritized_doc_id(ip_address):
     """Helper function to consistently determine document priority"""
     if ip_address and ip_address in ip_documents:
