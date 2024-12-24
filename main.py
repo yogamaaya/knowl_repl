@@ -89,6 +89,24 @@ def update_embeddings():
         else:
             print("Failed to get text from document")
             return jsonify({"success": False, "error": "No text found"}), 400
+
+@app.route('/generate_speech', methods=['POST'])
+def generate_speech():
+    try:
+        data = request.get_json()
+        text = data.get('text')
+        if not text:
+            return jsonify({"error": "No text provided"}), 400
+            
+        from chat import generate_speech as gen_speech
+        audio_url = gen_speech(text)
+        if audio_url:
+            return jsonify({"audio_url": audio_url})
+        return jsonify({"error": "Failed to generate speech"}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
     return jsonify({"success": False, "error": "No document ID provided"}), 400
 
 # Get current document information

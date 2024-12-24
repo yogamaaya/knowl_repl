@@ -351,27 +351,58 @@ function showPersistentToast(message, isPersistent = false) {
     return toast;
 }
 
-function toggleAudio() {
+async function toggleAudio() {
     const playButton = document.getElementById('playAudioBtn');
     
-    if (!currentAudio && window.lastAudioUrl) {
-        currentAudio = new Audio(window.lastAudioUrl);
-        currentAudio.addEventListener('ended', () => {
-            playButton.textContent = 'Play Response 🔊';
-            isPlaying = false;
-        });
+    if (isPlaying && currentAudio) {
+        currentAudio.pause();
+        playButton.textContent = 'Play Response 🔊';
+        isPlaying = false;
+        return;
     }
     
-    if (currentAudio) {
-        if (isPlaying) {
-            currentAudio.pause();
-            playButton.textContent = 'Play Response 🔊';
-            isPlaying = false;
-        } else {
+    // Get text from last Knowl response
+    const lastResponse = document.querySelector('.chat-message:last-child .message-bubble');
+    if (!lastResponse) return;
+    
+    const text = lastResponse.innerText.replace('Copy', '').trim();
+    
+    try {
+        playButton.textContent = 'Generating Audio...';
+        playButton.disabled = true;
+        
+        const response = await fetch('/generate_speech', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text: text })
+        });
+        
+        const data = await response.json();
+        if (response.ok && data.audio_url) {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            
+            currentAudio = new Audio(data.audio_url);
+            currentAudio.addEventListener('ended', () => {
+                playButton.textContent = 'Play Response 🔊';
+                isPlaying = false;
+            });
+            
             currentAudio.play();
             playButton.textContent = 'Pause Response ⏸️';
             isPlaying = true;
+        } else {
+            showToast('Failed to generate audio', 'error');
         }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Error generating audio', 'error');
+    } finally {
+        playButton.disabled = false;
     }
 }
 
