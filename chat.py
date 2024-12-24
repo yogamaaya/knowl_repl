@@ -19,12 +19,20 @@ openai_api_key = os.getenv('OPENAI_API_KEY')
 
 # Store sessions by IP address
 qa_chains = {}
-ip_documents = {}  # Store document IDs by IP
+# Store document IDs by IP
+ip_documents = {}
+# Fallback document for initial IP connects
 DEFAULT_DOC_ID = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A'
+
+# Global init variables
 text = ''
 doc_id = ''
+
+# Connection to GDrive API
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
+
+# Logging in console
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -72,6 +80,7 @@ def create_doc(title=None):
         return None
 
 
+# Helpful to sync the information displayed on front end about what document is being used
 def get_doc_title(doc_id):
     try:
         if doc_id == DEFAULT_DOC_ID:
@@ -86,6 +95,7 @@ def get_doc_title(doc_id):
         return "Untitled Document"
 
 
+# Gets the actual content fron the Google Document
 def get_text_from_doc(doc_id):
     global text, qa_chain
     try:
@@ -129,7 +139,7 @@ def change_text_source(new_doc_id, ip_address=None):
         bool: Success/failure of text source change
     """
     global text, doc_id, ip_documents
-    
+
     print(f"\n=== Changing Text Source ===")
     print(f"IP Address: {ip_address}")
     print(f"Current doc_id: {doc_id}")
@@ -137,7 +147,7 @@ def change_text_source(new_doc_id, ip_address=None):
 
     try:
         if not new_doc_id:
-            print("Error: Invalid document ID") 
+            print("Error: Invalid document ID")
             return False
 
         # Get document text
@@ -183,6 +193,7 @@ def change_text_source(new_doc_id, ip_address=None):
         return False
 
 
+# Saved all documents from whom embeddings were created upon server start
 def save_doc_history(doc_id, title):
     try:
         # Ensure atomic file operations
@@ -220,6 +231,7 @@ def save_doc_history(doc_id, title):
         return False
 
 
+# Make embeddings for the QA Chain
 def create_embeddings(text, ip_address=None):
     print("\n=== Creating Embeddings ===")
     print(f"Text preview (first 100 chars): {text[:100]}")
@@ -422,10 +434,7 @@ def on_submit(query, ip_address):
                 "I apologize, but I'm having trouble processing your request. Please try changing the text source by clicking the 'Change Text Source' button above and paste your text into the Google Doc that opens.",
                 "audio_url": None
             }
-        result = qa_chains[ip_address]({
-            "question": query,
-            "chat_history": []
-        })
+        result = qa_chains[ip_address]({"question": query, "chat_history": []})
         answer = result['answer']
     except (TypeError, AttributeError) as e:
         logger.error(f"QA chain error: {str(e)}")
@@ -457,11 +466,11 @@ def generate_tts(text):
 
         # Create synthesis input from current text only
         synthesis_input = texttospeech.SynthesisInput(text=text)
-        
+
         # Configure voice parameters
         voice = texttospeech.VoiceSelectionParams(
             language_code="en-US",
-            name="en-US-Studio-O", 
+            name="en-US-Studio-O",
             ssml_gender=texttospeech.SsmlVoiceGender.FEMALE)
 
         # Configure audio output
@@ -472,16 +481,16 @@ def generate_tts(text):
 
         # Generate speech
         response = client.synthesize_speech(input=synthesis_input,
-                                          voice=voice,
-                                          audio_config=audio_config)
+                                            voice=voice,
+                                            audio_config=audio_config)
 
         # Write only current response audio
         audio_path = "static/response.mp3"
         with open(audio_path, "wb") as out:
             out.write(response.audio_content)
-            
+
         return "/static/response.mp3"
-            
+
     except Exception as e:
         logger.error(f"TTS generation failed: {str(e)}")
         return None
