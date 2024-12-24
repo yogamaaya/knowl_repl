@@ -337,11 +337,11 @@ def initialize_embeddings(ip_address=None):
         else:
             print(f"Using default document: {selected_doc_id}")
 
-        # Only update global doc_id if it's a new IP or doesn't have existing document
-        if not (ip_address and ip_address in ip_documents):
-            doc_id = selected_doc_id
-            if ip_address:
+        # Preserve existing document ID for IP
+        if ip_address:
+            if ip_address not in ip_documents:
                 ip_documents[ip_address] = selected_doc_id
+            doc_id = ip_documents[ip_address]
 
         # Get document text
         try:
@@ -486,8 +486,5 @@ def generate_tts(text):
 def get_prioritized_doc_id(ip_address):
     """Helper function to consistently determine document priority"""
     if ip_address and ip_address in ip_documents:
-        doc_id = ip_documents[ip_address]
-        if doc_id:  # If any document exists for this IP, use it
-            return doc_id
-    # Only use default for completely new sessions
-    return DEFAULT_DOC_ID
+        return ip_documents[ip_address]  # Always return existing doc ID
+    return DEFAULT_DOC_ID  # Only use default for first-time users
