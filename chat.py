@@ -38,7 +38,8 @@ creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
+# Create a Google Doc for user to provide their data
+# Used by script.js for /create_doc endpoint
 def create_doc(title=None):
     print("\n=== Creating New Document ===")
     global doc_id, text, qa_chain
@@ -70,7 +71,7 @@ def create_doc(title=None):
         print(f"Error creating document: {str(e)}")
         return None
 
-
+# Get the document title and help store it in document history fron frontend
 def get_doc_title(doc_id):
     try:
         if doc_id == DEFAULT_DOC_ID:
@@ -84,7 +85,7 @@ def get_doc_title(doc_id):
         print(f"Error getting document title: {str(e)}")
         return "Untitled Document"
 
-
+# Extract the actual content within Google Doc to create embeddings from
 def get_text_from_doc(doc_id):
     global text, qa_chain
     try:
