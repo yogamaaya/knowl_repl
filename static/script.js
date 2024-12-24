@@ -113,13 +113,15 @@ async function submitMessage(event) {
                 chatBox.appendChild(answerDiv);
                 
                 if (data.audio_url) {
-                    // Reset audio state
+                    // Properly cleanup old audio
                     if (currentAudio) {
                         currentAudio.pause();
+                        currentAudio.src = '';
+                        currentAudio.load();
                         currentAudio = null;
                     }
                     isPlaying = false;
-                    window.lastAudioUrl = data.audio_url;
+                    window.lastAudioUrl = data.audio_url + '?t=' + Date.now(); // Prevent caching
                     const playButton = document.getElementById('playAudioBtn');
                     playButton.style.display = 'inline-block';
                     playButton.textContent = 'Play Response 🔊';
