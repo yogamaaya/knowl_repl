@@ -33,7 +33,6 @@ async function submitMessage(event) {
     event.preventDefault();
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value;
-    const loadingElement = document.getElementById('loading');
     
     console.log('Submitting message:', message);
     
@@ -131,8 +130,6 @@ async function submitMessage(event) {
             }
         } catch (error) {
             console.error('Error:', error);
-        } finally {
-            loadingElement.style.display = 'none';
         }
     }
 }
