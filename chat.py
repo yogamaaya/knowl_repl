@@ -284,21 +284,32 @@ def initialize_embeddings(ip_address=None):
         qa_chains = qa_chains if isinstance(qa_chains, dict) else {}
         ip_documents = ip_documents if isinstance(ip_documents, dict) else {}
 
-        # For new IPs, always start with default document
-        if not (ip_address and ip_address in ip_documents):
-            print(f"New IP detected - Using default document: {DEFAULT_DOC_ID}")
+        # Handle document selection
+        if not ip_address:
+            print("Error: No IP address provided")
+            return False
+            
+        # For new IPs, use default document
+        if ip_address not in ip_documents:
             doc_id = DEFAULT_DOC_ID
-            if ip_address:
-                ip_documents[ip_address] = DEFAULT_DOC_ID
+            ip_documents[ip_address] = DEFAULT_DOC_ID
+            print(f"New IP detected - Using default document: {DEFAULT_DOC_ID}")
         else:
             # Use existing document for known IPs
             doc_id = ip_documents[ip_address]
+            if not doc_id:
+                doc_id = DEFAULT_DOC_ID
+                ip_documents[ip_address] = DEFAULT_DOC_ID
             print(f"Using existing document for IP: {doc_id}")
 
         # Get document text
         try:
             text = get_text_from_doc(doc_id)
-            if not text:
+            if not text or "Requested entity was not found" in text:
+                print("Error: Invalid document, reverting to default")
+                doc_id = DEFAULT_DOC_ID
+                ip_documents[ip_address] = DEFAULT_DOC_ID
+                text = get_text_from_doc(DEFAULT_DOC_ID)
                 print("Error: No text retrieved from document")
                 return False
             print(f"Retrieved text (first 100 chars): {text[:100]}")
