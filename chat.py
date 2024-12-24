@@ -24,7 +24,7 @@ ip_documents = {}  # Store document IDs by IP
 DEFAULT_DOC_ID = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A'
 text = ''
 doc_id = ''
-SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
+SCOPES = ['https://www.googleapis.com/auth/drive.file']
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -99,12 +99,6 @@ def get_text_from_doc(doc_id):
         return str(e)
 
 
-def reset_qa_chain():
-    global qa_chain, chat_history
-    qa_chain = None
-    chat_history = []
-
-
 def change_text_source(new_doc_id, ip_address=None):
     """Handle text source change and create new embeddings"""
     global text, doc_id, ip_documents
@@ -141,11 +135,11 @@ def change_text_source(new_doc_id, ip_address=None):
                 if ip_address not in qa_chains or qa_chains[ip_address] is None:
                     print("Error: QA chain not properly initialized")
                     return False
-                    
+
                 # Save to document history after successful embedding creation
                 title = get_doc_title(new_doc_id)
                 save_doc_history(new_doc_id, title)
-                
+
             except Exception as e:
                 print(f"Error creating embeddings: {str(e)}")
                 return False
@@ -168,30 +162,31 @@ def save_doc_history(doc_id, title):
                     doc_history = json.loads(content) if content else []
             except (json.JSONDecodeError, FileNotFoundError):
                 doc_history = []
-        
+
         # Ensure doc_history is a list
         if not isinstance(doc_history, list):
             doc_history = []
-            
+
         # Add new doc if not exists
         new_doc = {
             'id': doc_id,
             'title': title,
             'timestamp': datetime.now().isoformat()
         }
-        
+
         if not any(d['id'] == doc_id for d in doc_history):
             doc_history.insert(0, new_doc)
-            
+
         # Atomic write
         with open('doc_history.txt.tmp', 'w') as f:
             json.dump(doc_history, f, indent=2)
         os.replace('doc_history.txt.tmp', 'doc_history.txt')
-            
+
         return True
     except Exception as e:
         print(f"Error saving doc history: {str(e)}")
         return False
+
 
 def create_embeddings(text, ip_address=None):
     print("\n=== Creating Embeddings ===")
@@ -407,6 +402,8 @@ def on_submit(query, ip_address):
         out.write(response.audio_content)
 
     return {"text": answer, "audio_url": "/static/response.mp3"}
+
+
 def get_prioritized_doc_id(ip_address):
     """Helper function to consistently determine document priority"""
     if ip_address and ip_address in ip_documents:
