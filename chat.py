@@ -17,15 +17,24 @@ from langchain.prompts import PromptTemplate
 load_dotenv()
 openai_api_key = os.getenv('OPENAI_API_KEY')
 
-# Store sessions by IP address
+# Store QA chain sessions per IP address
 qa_chains = {}
+# Store minimal chat history
 chat_histories = {}
-ip_documents = {}  # Store document IDs by IP
+# Store Google document IDs per IP
+ip_documents = {}  
+# Fallback document for initial load
 DEFAULT_DOC_ID = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A'
+
+# Declare placeholders
 text = ''
 doc_id = ''
+
+# Connect to Google Drive API
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
+
+# For better console logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
