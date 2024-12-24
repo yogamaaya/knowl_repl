@@ -372,8 +372,8 @@ def on_submit(query, ip_address):
                 "audio_url": None
             }
         result = qa_chains[ip_address]({
-            "question":
-            query,
+            "question": query,
+            "chat_history": []
         })
         answer = result['answer']
     except (TypeError, AttributeError) as e:
