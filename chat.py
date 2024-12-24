@@ -403,25 +403,12 @@ def on_submit(query, ip_address):
     if not isinstance(qa_chains, dict):
         qa_chains = {}
 
-    # Initialize or reinitialize if needed
-    max_retries = 3
-    retries = 0
-
-    while (ip_address not in qa_chains
-           or qa_chains[ip_address] is None) and retries < max_retries:
-        logger.info(
-            f"Attempt {retries + 1}/{max_retries} to initialize QA chain for IP: {ip_address}"
-        )
+    # Only initialize if qa_chain is missing or None
+    if ip_address not in qa_chains or qa_chains[ip_address] is None:
+        logger.info(f"Initializing QA chain for IP: {ip_address}")
         success = initialize_embeddings(ip_address)
-
-        if success and ip_address in qa_chains and qa_chains[
-                ip_address] is not None:
-            break
-
-        retries += 1
-        if retries == max_retries:
-            raise Exception(
-                "Failed to initialize QA chain after multiple attempts")
+        if not success:
+            raise Exception("Failed to initialize QA chain")
 
     print(f"Current doc_id: {doc_id}")
     print(f"Current text preview: {text[:100]}")
