@@ -391,43 +391,36 @@ def on_submit(query, ip_address):
             "audio_url": None
         }
 
-    # Update chat history
+    # Update chat history before TTS generation
     updated_history = chat_history + [(query, answer)]
     chat_histories[ip_address] = updated_history
 
-    return {"text": answer, "audio_url": None}
+    # Only generate TTS for latest message
+    from google.cloud import texttospeech
+    credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
+    client = texttospeech.TextToSpeechClient.from_service_account_info(
+        credentials_dict)
 
-def generate_speech(text):
-    """Generate text-to-speech audio file"""
-    try:
-        from google.cloud import texttospeech
-        credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
-        client = texttospeech.TextToSpeechClient.from_service_account_info(
-            credentials_dict)
+    synthesis_input = texttospeech.SynthesisInput(text=answer)
+    voice = texttospeech.VoiceSelectionParams(
+        language_code="en-US",
+        name="en-US-Studio-O",
+        ssml_gender=texttospeech.SsmlVoiceGender.FEMALE)
 
-        synthesis_input = texttospeech.SynthesisInput(text=text)
-        voice = texttospeech.VoiceSelectionParams(
-            language_code="en-US",
-            name="en-US-Studio-O",
-            ssml_gender=texttospeech.SsmlVoiceGender.FEMALE)
+    audio_config = texttospeech.AudioConfig(
+        audio_encoding=texttospeech.AudioEncoding.MP3,
+        speaking_rate=1.0,
+        pitch=0.0)
 
-        audio_config = texttospeech.AudioConfig(
-            audio_encoding=texttospeech.AudioEncoding.MP3,
-            speaking_rate=1.0,
-            pitch=0.0)
+    response = client.synthesize_speech(input=synthesis_input,
+                                        voice=voice,
+                                        audio_config=audio_config)
 
-        response = client.synthesize_speech(input=synthesis_input,
-                                          voice=voice,
-                                          audio_config=audio_config)
+    audio_path = "static/response.mp3"
+    with open(audio_path, "wb") as out:
+        out.write(response.audio_content)
 
-        audio_path = "static/response.mp3"
-        with open(audio_path, "wb") as out:
-            out.write(response.audio_content)
-
-        return "/static/response.mp3"
-    except Exception as e:
-        print(f"Error generating speech: {str(e)}")
-        return None
+    return {"text": answer, "audio_url": "/static/response.mp3"}
 
 
 def get_prioritized_doc_id(ip_address):
