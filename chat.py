@@ -19,7 +19,6 @@ openai_api_key = os.getenv('OPENAI_API_KEY')
 
 # Store sessions by IP address
 qa_chains = {}
-chat_histories = {}
 ip_documents = {}  # Store document IDs by IP
 DEFAULT_DOC_ID = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A'
 text = ''
@@ -271,8 +270,6 @@ def initialize_embeddings(ip_address=None):
     try:
         # Initialize dictionaries if not exist or None
         qa_chains = qa_chains if isinstance(qa_chains, dict) else {}
-        chat_histories = chat_histories if isinstance(chat_histories,
-                                                      dict) else {}
         ip_documents = ip_documents if isinstance(ip_documents, dict) else {}
 
         # Use consistent document priority helper
@@ -349,13 +346,10 @@ def on_submit(query, ip_address):
             raise Exception(
                 "Failed to initialize QA chain after multiple attempts")
 
-    chat_histories.setdefault(ip_address, [])
-
     print(f"Current doc_id: {doc_id}")
     print(f"Current text preview: {text[:100]}")
     print(f"Received query: {query}")
 
-    chat_history = chat_histories.get(ip_address, [])
     try:
         if not qa_chains[ip_address]:
             return {
@@ -364,10 +358,8 @@ def on_submit(query, ip_address):
                 "audio_url": None
             }
         result = qa_chains[ip_address]({
-            "question":
-            query,
-            "chat_history":
-            chat_history[-2:] if chat_history else []
+            "question": query,
+            "chat_history": []  # Always use empty chat history
         })
         answer = result['answer']
     except (TypeError, AttributeError) as e:
@@ -377,10 +369,6 @@ def on_submit(query, ip_address):
             "I apologize, but I'm having trouble processing your request. Please try changing the text source by clicking the 'Change Text Source' button above and paste your text into the Google Doc that opens.",
             "audio_url": None
         }
-
-    # Update chat history before TTS generation
-    updated_history = chat_history + [(query, answer)]
-    chat_histories[ip_address] = updated_history
 
     # Only generate TTS for latest message
     from google.cloud import texttospeech
