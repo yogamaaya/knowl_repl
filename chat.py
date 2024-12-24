@@ -284,18 +284,16 @@ def initialize_embeddings(ip_address=None):
         qa_chains = qa_chains if isinstance(qa_chains, dict) else {}
         ip_documents = ip_documents if isinstance(ip_documents, dict) else {}
 
-        # Use consistent document priority helper
-        selected_doc_id = get_prioritized_doc_id(ip_address)
-        if selected_doc_id != DEFAULT_DOC_ID:
-            print(f"Using user's custom document: {selected_doc_id}")
-        else:
-            print(f"Using default document: {selected_doc_id}")
-
-        # Only update global doc_id if it's a new IP or doesn't have existing document
+        # For new IPs, always start with default document
         if not (ip_address and ip_address in ip_documents):
-            doc_id = selected_doc_id
+            print(f"New IP detected - Using default document: {DEFAULT_DOC_ID}")
+            doc_id = DEFAULT_DOC_ID
             if ip_address:
-                ip_documents[ip_address] = selected_doc_id
+                ip_documents[ip_address] = DEFAULT_DOC_ID
+        else:
+            # Use existing document for known IPs
+            doc_id = ip_documents[ip_address]
+            print(f"Using existing document for IP: {doc_id}")
 
         # Get document text
         try:
