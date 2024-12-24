@@ -31,6 +31,17 @@ logger = logging.getLogger(__name__)
 
 
 def create_doc(title=None):
+    """
+    Creates a new Google Doc and sets public access.
+    Called by: main.py '/create_doc' endpoint when user clicks 'Change Text Source'
+    
+    Args:
+        title (str, optional): Title for new document. 
+        Defaults to timestamp-based title.
+        
+    Returns:
+        str: Document ID of created doc, or None if creation fails
+    """
     print("\n=== Creating New Document ===")
     global doc_id, text, qa_chain
     if title is None:
@@ -100,12 +111,34 @@ def get_text_from_doc(doc_id):
 
 
 def change_text_source(new_doc_id, ip_address=None):
-    """Handle text source change and create new embeddings"""
+    """
+    Updates text source and creates new embeddings.
+    Called by: main.py '/update_embeddings' endpoint after document content validation
+    
+    This function handles:
+    1. Document text retrieval 
+    2. Global state updates
+    3. IP-specific document mapping
+    4. Embedding creation
+    5. Document history saving
+    
+    Args:
+        new_doc_id (str): ID of new Google Doc to use
+        ip_address (str, optional): User's IP for session management
+        
+    Returns:
+        bool: Success/failure of text source change
+    """
     global text, doc_id, ip_documents
+    
+    print(f"\n=== Changing Text Source ===")
+    print(f"IP Address: {ip_address}")
+    print(f"Current doc_id: {doc_id}")
+    print(f"New doc_id: {new_doc_id}")
 
     try:
         if not new_doc_id:
-            print("Error: Invalid document ID")
+            print("Error: Invalid document ID") 
             return False
 
         # Get document text
@@ -259,7 +292,26 @@ def create_embeddings(text, ip_address=None):
 
 
 def initialize_embeddings(ip_address=None):
+    """
+    Initializes or reinitializes embeddings for user session.
+    Called by: 
+    - main.py '/' endpoint for new sessions
+    - on_submit() when QA chain needs reinitialization
+    
+    This function:
+    1. Sets up global state for new IP addresses
+    2. Determines document priority (custom vs default)
+    3. Retrieves document text
+    4. Creates embeddings if needed
+    
+    Args:
+        ip_address (str, optional): User's IP for session management
+        
+    Returns:
+        bool: Success/failure of initialization
+    """
     print("\n=== Initializing Embeddings ===")
+    print(f"IP Address: {ip_address}")
     global text, doc_id, qa_chains, chat_histories, ip_documents
 
     try:
@@ -316,7 +368,26 @@ def initialize_embeddings(ip_address=None):
 
 
 def on_submit(query, ip_address):
+    """
+    Processes user query and generates response.
+    Called by: message_handler.py receive_message() via main.py '/submit' endpoint
+    
+    This function:
+    1. Ensures QA chain initialization
+    2. Processes query using current document
+    3. Generates text-to-speech for response
+    4. Maintains minimal chat history for context
+    
+    Args:
+        query (str): User's question/prompt
+        ip_address (str): User's IP for session management
+        
+    Returns:
+        dict: Contains response text and audio URL
+    """
     logger.info(f"\n=== Processing Query for IP: {ip_address} ===")
+    logger.info(f"Current doc_id: {doc_id}")
+    logger.info(f"Text preview: {text[:100] if text else 'No text available'}")
     global text, doc_id, qa_chains
 
     # Ensure qa_chains exists
