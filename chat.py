@@ -12,42 +12,24 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import json
 from datetime import datetime
-import time
 from langchain.prompts import PromptTemplate
 
 load_dotenv()
 openai_api_key = os.getenv('OPENAI_API_KEY')
 
-# Store QA chain sessions per IP address
+# Store sessions by IP address
 qa_chains = {}
-# Store Google document IDs per IP
-ip_documents = {}
-# Fallback document for initial load - ensure this matches frontend
+chat_histories = {}
+ip_documents = {}  # Store document IDs by IP
 DEFAULT_DOC_ID = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A'
-
-# Validate document ID to prevent truncation
-def validate_doc_id(doc_id):
-    """Ensure document ID is complete and valid"""
-    if not doc_id or len(doc_id) < 20:  # Google Doc IDs are typically longer
-        logger.error(f"Invalid doc_id detected: {doc_id}")
-        return DEFAULT_DOC_ID
-    return doc_id
-
-# Declare placeholders
 text = ''
 doc_id = ''
-
-# Connect to Google Drive API
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
+SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
-
-# For better console logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# Create a Google Doc for user to provide their data
-# Used by script.js for /create_doc endpoint
 def create_doc(title=None):
     print("\n=== Creating New Document ===")
     global doc_id, text, qa_chain
@@ -80,7 +62,6 @@ def create_doc(title=None):
         return None
 
 
-# Helper function to get the document title
 def get_doc_title(doc_id):
     try:
         if doc_id == DEFAULT_DOC_ID:
@@ -95,10 +76,8 @@ def get_doc_title(doc_id):
         return "Untitled Document"
 
 
-# Extract the actual content within Google Doc to create embeddings
 def get_text_from_doc(doc_id):
     global text, qa_chain
-    doc_id = validate_doc_id(doc_id)
     try:
         print(f"\nChecking content for doc_id: {doc_id}")
         credentials = service_account.Credentials.from_service_account_info(
@@ -120,14 +99,17 @@ def get_text_from_doc(doc_id):
         return str(e)
 
 
-# Update embeddings for new document
-# Connected to frontend script.js for /update_embeddings endpoint
+def reset_qa_chain():
+    global qa_chain, chat_history
+    qa_chain = None
+    chat_history = []
+
+
 def change_text_source(new_doc_id, ip_address=None):
     """Handle text source change and create new embeddings"""
     global text, doc_id, ip_documents
 
     try:
-        new_doc_id = validate_doc_id(new_doc_id)
         if not new_doc_id:
             print("Error: Invalid document ID")
             return False
@@ -159,11 +141,11 @@ def change_text_source(new_doc_id, ip_address=None):
                 if ip_address not in qa_chains or qa_chains[ip_address] is None:
                     print("Error: QA chain not properly initialized")
                     return False
-
+                    
                 # Save to document history after successful embedding creation
                 title = get_doc_title(new_doc_id)
                 save_doc_history(new_doc_id, title)
-
+                
             except Exception as e:
                 print(f"Error creating embeddings: {str(e)}")
                 return False
@@ -175,7 +157,6 @@ def change_text_source(new_doc_id, ip_address=None):
         return False
 
 
-# Record all documents for whom embeddings were created
 def save_doc_history(doc_id, title):
     try:
         # Ensure atomic file operations
@@ -187,37 +168,35 @@ def save_doc_history(doc_id, title):
                     doc_history = json.loads(content) if content else []
             except (json.JSONDecodeError, FileNotFoundError):
                 doc_history = []
-
+        
         # Ensure doc_history is a list
         if not isinstance(doc_history, list):
             doc_history = []
-
+            
         # Add new doc if not exists
         new_doc = {
             'id': doc_id,
             'title': title,
             'timestamp': datetime.now().isoformat()
         }
-
+        
         if not any(d['id'] == doc_id for d in doc_history):
             doc_history.insert(0, new_doc)
-
+            
         # Atomic write
         with open('doc_history.txt.tmp', 'w') as f:
             json.dump(doc_history, f, indent=2)
         os.replace('doc_history.txt.tmp', 'doc_history.txt')
-
+            
         return True
     except Exception as e:
         print(f"Error saving doc history: {str(e)}")
         return False
 
-
-# Create embeddings
 def create_embeddings(text, ip_address=None):
     print("\n=== Creating Embeddings ===")
     print(f"Text preview (first 100 chars): {text[:100]}")
-    global qa_chains
+    global qa_chains, chat_histories
 
     if ip_address is None:
         return
@@ -284,14 +263,15 @@ def create_embeddings(text, ip_address=None):
         combine_docs_chain_kwargs={'prompt': PROMPT})
 
 
-# Initialize embeddings properly with error handling
 def initialize_embeddings(ip_address=None):
     print("\n=== Initializing Embeddings ===")
-    global text, doc_id, qa_chains, ip_documents
+    global text, doc_id, qa_chains, chat_histories, ip_documents
 
     try:
         # Initialize dictionaries if not exist or None
         qa_chains = qa_chains if isinstance(qa_chains, dict) else {}
+        chat_histories = chat_histories if isinstance(chat_histories,
+                                                      dict) else {}
         ip_documents = ip_documents if isinstance(ip_documents, dict) else {}
 
         # Use consistent document priority helper
@@ -340,7 +320,6 @@ def initialize_embeddings(ip_address=None):
         return False
 
 
-# Return QA chain answer to front end
 def on_submit(query, ip_address):
     logger.info(f"\n=== Processing Query for IP: {ip_address} ===")
     global text, doc_id, qa_chains
@@ -369,12 +348,13 @@ def on_submit(query, ip_address):
             raise Exception(
                 "Failed to initialize QA chain after multiple attempts")
 
-
+    chat_histories.setdefault(ip_address, [])
 
     print(f"Current doc_id: {doc_id}")
     print(f"Current text preview: {text[:100]}")
     print(f"Received query: {query}")
 
+    chat_history = chat_histories.get(ip_address, [])
     try:
         if not qa_chains[ip_address]:
             return {
@@ -383,8 +363,10 @@ def on_submit(query, ip_address):
                 "audio_url": None
             }
         result = qa_chains[ip_address]({
-            "question": query,
-            "chat_history": []
+            "question":
+            query,
+            "chat_history":
+            chat_history[-2:] if chat_history else []
         })
         answer = result['answer']
     except (TypeError, AttributeError) as e:
@@ -395,50 +377,36 @@ def on_submit(query, ip_address):
             "audio_url": None
         }
 
+    # Update chat history before TTS generation
+    updated_history = chat_history + [(query, answer)]
+    chat_histories[ip_address] = updated_history
 
-    # Only generate TTS for latest message with resource cleanup
-    try:
-        # Remove old audio file if exists
-        audio_path = "static/response.mp3"
-        if os.path.exists(audio_path):
-            os.remove(audio_path)
-            
-        # Initialize TTS client
-        from google.cloud import texttospeech
-        credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
-        client = texttospeech.TextToSpeechClient.from_service_account_info(
-            credentials_dict)
+    # Only generate TTS for latest message
+    from google.cloud import texttospeech
+    credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
+    client = texttospeech.TextToSpeechClient.from_service_account_info(
+        credentials_dict)
 
-        # Optimize text for TTS by removing extra whitespace
-        tts_text = ' '.join(answer.split())
-        synthesis_input = texttospeech.SynthesisInput(text=tts_text)
-        
-        voice = texttospeech.VoiceSelectionParams(
-            language_code="en-US",
-            name="en-US-Studio-O",
-            ssml_gender=texttospeech.SsmlVoiceGender.FEMALE)
+    synthesis_input = texttospeech.SynthesisInput(text=answer)
+    voice = texttospeech.VoiceSelectionParams(
+        language_code="en-US",
+        name="en-US-Studio-O",
+        ssml_gender=texttospeech.SsmlVoiceGender.FEMALE)
 
-        audio_config = texttospeech.AudioConfig(
-            audio_encoding=texttospeech.AudioEncoding.MP3,
-            speaking_rate=1.0,
-            pitch=0.0,
-            sample_rate_hertz=24000)  # Optimize audio quality vs size
+    audio_config = texttospeech.AudioConfig(
+        audio_encoding=texttospeech.AudioEncoding.MP3,
+        speaking_rate=1.0,
+        pitch=0.0)
 
-        response = client.synthesize_speech(input=synthesis_input,
-                                         voice=voice,
-                                         audio_config=audio_config)
+    response = client.synthesize_speech(input=synthesis_input,
+                                        voice=voice,
+                                        audio_config=audio_config)
 
-        # Write new audio file
-        with open(audio_path, "wb") as out:
-            out.write(response.audio_content)
-        
-        del response  # Explicitly free memory
-        return {"text": answer, "audio_url": f"/static/response.mp3?t={int(time.time())}"}
-    except Exception as e:
-        logger.error(f"TTS generation error: {str(e)}")
-        return {"text": answer, "audio_url": None}
+    audio_path = "static/response.mp3"
+    with open(audio_path, "wb") as out:
+        out.write(response.audio_content)
 
-
+    return {"text": answer, "audio_url": "/static/response.mp3"}
 def get_prioritized_doc_id(ip_address):
     """Helper function to consistently determine document priority"""
     if ip_address and ip_address in ip_documents:
