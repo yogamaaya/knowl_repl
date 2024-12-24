@@ -19,8 +19,6 @@ openai_api_key = os.getenv('OPENAI_API_KEY')
 
 # Store QA chain sessions per IP address
 qa_chains = {}
-# Store minimal chat history
-chat_histories = {}
 # Store Google document IDs per IP
 ip_documents = {}
 # Fallback document for initial load
@@ -208,7 +206,7 @@ def save_doc_history(doc_id, title):
 def create_embeddings(text, ip_address=None):
     print("\n=== Creating Embeddings ===")
     print(f"Text preview (first 100 chars): {text[:100]}")
-    global qa_chains, chat_histories
+    global qa_chains
 
     if ip_address is None:
         return
@@ -278,13 +276,11 @@ def create_embeddings(text, ip_address=None):
 # Initialize embeddings properly with error handling
 def initialize_embeddings(ip_address=None):
     print("\n=== Initializing Embeddings ===")
-    global text, doc_id, qa_chains, chat_histories, ip_documents
+    global text, doc_id, qa_chains, ip_documents
 
     try:
         # Initialize dictionaries if not exist or None
         qa_chains = qa_chains if isinstance(qa_chains, dict) else {}
-        chat_histories = chat_histories if isinstance(chat_histories,
-                                                      dict) else {}
         ip_documents = ip_documents if isinstance(ip_documents, dict) else {}
 
         # Use consistent document priority helper
@@ -362,13 +358,12 @@ def on_submit(query, ip_address):
             raise Exception(
                 "Failed to initialize QA chain after multiple attempts")
 
-    chat_histories.setdefault(ip_address, [])
+
 
     print(f"Current doc_id: {doc_id}")
     print(f"Current text preview: {text[:100]}")
     print(f"Received query: {query}")
 
-    chat_history = chat_histories.get(ip_address, [])
     try:
         if not qa_chains[ip_address]:
             return {
@@ -379,8 +374,6 @@ def on_submit(query, ip_address):
         result = qa_chains[ip_address]({
             "question":
             query,
-            "chat_history":
-            chat_history[-2:] if chat_history else []
         })
         answer = result['answer']
     except (TypeError, AttributeError) as e:
@@ -391,9 +384,6 @@ def on_submit(query, ip_address):
             "audio_url": None
         }
 
-    # Update chat history before TTS generation
-    updated_history = chat_history + [(query, answer)]
-    chat_histories[ip_address] = updated_history
 
     # Only generate TTS for latest message
     from google.cloud import texttospeech
