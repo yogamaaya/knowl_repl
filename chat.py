@@ -12,7 +12,6 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import json
 from datetime import datetime
-import time
 from langchain.prompts import PromptTemplate
 
 load_dotenv()
@@ -284,32 +283,23 @@ def initialize_embeddings(ip_address=None):
         qa_chains = qa_chains if isinstance(qa_chains, dict) else {}
         ip_documents = ip_documents if isinstance(ip_documents, dict) else {}
 
-        # Handle document selection
-        if not ip_address:
-            print("Error: No IP address provided")
-            return False
-            
-        # For new IPs, use default document
-        if ip_address not in ip_documents:
-            doc_id = DEFAULT_DOC_ID
-            ip_documents[ip_address] = DEFAULT_DOC_ID
-            print(f"New IP detected - Using default document: {DEFAULT_DOC_ID}")
+        # Use consistent document priority helper
+        selected_doc_id = get_prioritized_doc_id(ip_address)
+        if selected_doc_id != DEFAULT_DOC_ID:
+            print(f"Using user's custom document: {selected_doc_id}")
         else:
-            # Use existing document for known IPs
-            doc_id = ip_documents[ip_address]
-            if not doc_id:
-                doc_id = DEFAULT_DOC_ID
-                ip_documents[ip_address] = DEFAULT_DOC_ID
-            print(f"Using existing document for IP: {doc_id}")
+            print(f"Using default document: {selected_doc_id}")
+
+        # Only update global doc_id if it's a new IP or doesn't have existing document
+        if not (ip_address and ip_address in ip_documents):
+            doc_id = selected_doc_id
+            if ip_address:
+                ip_documents[ip_address] = selected_doc_id
 
         # Get document text
         try:
             text = get_text_from_doc(doc_id)
-            if not text or "Requested entity was not found" in text:
-                print("Error: Invalid document, reverting to default")
-                doc_id = DEFAULT_DOC_ID
-                ip_documents[ip_address] = DEFAULT_DOC_ID
-                text = get_text_from_doc(DEFAULT_DOC_ID)
+            if not text:
                 print("Error: No text retrieved from document")
                 return False
             print(f"Retrieved text (first 100 chars): {text[:100]}")
@@ -395,47 +385,32 @@ def on_submit(query, ip_address):
         }
 
 
-    # Only generate TTS for latest message with resource cleanup
-    try:
-        # Remove old audio file if exists
-        audio_path = "static/response.mp3"
-        if os.path.exists(audio_path):
-            os.remove(audio_path)
-            
-        # Initialize TTS client
-        from google.cloud import texttospeech
-        credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
-        client = texttospeech.TextToSpeechClient.from_service_account_info(
-            credentials_dict)
+    # Only generate TTS for latest message
+    from google.cloud import texttospeech
+    credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
+    client = texttospeech.TextToSpeechClient.from_service_account_info(
+        credentials_dict)
 
-        # Optimize text for TTS by removing extra whitespace
-        tts_text = ' '.join(answer.split())
-        synthesis_input = texttospeech.SynthesisInput(text=tts_text)
-        
-        voice = texttospeech.VoiceSelectionParams(
-            language_code="en-US",
-            name="en-US-Studio-O",
-            ssml_gender=texttospeech.SsmlVoiceGender.FEMALE)
+    synthesis_input = texttospeech.SynthesisInput(text=answer)
+    voice = texttospeech.VoiceSelectionParams(
+        language_code="en-US",
+        name="en-US-Studio-O",
+        ssml_gender=texttospeech.SsmlVoiceGender.FEMALE)
 
-        audio_config = texttospeech.AudioConfig(
-            audio_encoding=texttospeech.AudioEncoding.MP3,
-            speaking_rate=1.0,
-            pitch=0.0,
-            sample_rate_hertz=24000)  # Optimize audio quality vs size
+    audio_config = texttospeech.AudioConfig(
+        audio_encoding=texttospeech.AudioEncoding.MP3,
+        speaking_rate=1.0,
+        pitch=0.0)
 
-        response = client.synthesize_speech(input=synthesis_input,
-                                         voice=voice,
-                                         audio_config=audio_config)
+    response = client.synthesize_speech(input=synthesis_input,
+                                        voice=voice,
+                                        audio_config=audio_config)
 
-        # Write new audio file
-        with open(audio_path, "wb") as out:
-            out.write(response.audio_content)
-        
-        del response  # Explicitly free memory
-        return {"text": answer, "audio_url": f"/static/response.mp3?t={int(time.time())}"}
-    except Exception as e:
-        logger.error(f"TTS generation error: {str(e)}")
-        return {"text": answer, "audio_url": None}
+    audio_path = "static/response.mp3"
+    with open(audio_path, "wb") as out:
+        out.write(response.audio_content)
+
+    return {"text": answer, "audio_url": "/static/response.mp3"}
 
 
 def get_prioritized_doc_id(ip_address):

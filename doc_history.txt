@@ -1,10 +1,5 @@
 [
   {
-    "id": "1FiHbslqSzhcuG_3TXjzPyIAy2203ZJjwBcykVTP3T1I",
-    "title": "Knowledge Source 2024-12-24 10:20:25",
-    "timestamp": "2024-12-24T10:20:57.003782"
-  },
-  {
     "id": "1fLC8gnaRXA0BzqG3ltQ3fPH-iVc8LhBpj1VphvfJsfY",
     "title": "Knowledge Source 2024-12-21 14:44:51",
     "timestamp": "2024-12-21T14:45:19.442425"
