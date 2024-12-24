@@ -1,4 +1,5 @@
 
+# Flask application main entry point
 from flask import Flask, render_template
 from message_handler import receive_message
 import json
@@ -6,20 +7,22 @@ import os
 from chat import initialize_embeddings, create_doc, get_text_from_doc, create_embeddings, change_text_source, get_doc_title, ip_documents
 from flask import jsonify, request
 
+# Initialize Flask app
 app = Flask(__name__)
 messages = []
 
-
+# Route for document history page
 @app.route('/history')
 def history():
     return render_template('history.html')
 
+# Main chat interface route
 @app.route('/')
 def chat():
     ip_address = request.remote_addr
     print(f"\n=== Starting Chat Application === IP: {ip_address}")
     
-    # Always initialize with default doc for new sessions
+    # Initialize new sessions with default document
     if ip_address not in ip_documents:
         print("New session - initializing with default document...")
         initialize_embeddings(ip_address)
@@ -28,7 +31,7 @@ def chat():
         
     return render_template('chat.html')
 
-
+# Handle message submissions
 @app.route('/submit', methods=['POST', 'GET'])
 def submit_message():
     new_messages = receive_message()
@@ -36,7 +39,7 @@ def submit_message():
     messages = new_messages
     return new_messages
 
-
+# Create new Google Doc
 @app.route('/create_doc', methods=['POST'])
 def new_doc():
     try:
@@ -49,7 +52,7 @@ def new_doc():
         print(f"Error in create_doc: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-
+# Check if document has content
 @app.route('/check_doc_content', methods=['POST'])
 def check_doc_content():
     data = request.get_json()
@@ -59,7 +62,7 @@ def check_doc_content():
         return jsonify({"has_content": bool(text and len(text.strip()) > 0)})
     return jsonify({"has_content": False})
 
-
+# Get document preview
 @app.route('/get_doc_preview', methods=['POST'])
 def get_doc_preview():
     data = request.get_json()
@@ -71,6 +74,7 @@ def get_doc_preview():
         return jsonify({"preview": preview})
     return jsonify({"preview": "Preview not available"}), 404
 
+# Update embeddings for new document
 @app.route('/update_embeddings', methods=['POST'])
 def update_embeddings():
     data = request.get_json()
@@ -87,24 +91,21 @@ def update_embeddings():
             return jsonify({"success": False, "error": "No text found"}), 400
     return jsonify({"success": False, "error": "No document ID provided"}), 400
 
-
-
-
+# Get current document information
 @app.route('/get_current_doc', methods=['GET'])
 def get_current_doc():
     try:
         ip_address = request.remote_addr
         from chat import DEFAULT_DOC_ID, ip_documents, qa_chains
         
-        # If QA chain exists for this IP, use its document
+        # Use existing QA chain document if available
         if ip_address in qa_chains and qa_chains[ip_address] is not None:
             doc_id = ip_documents.get(ip_address, DEFAULT_DOC_ID)
         else:
-            # Use consistent document priority helper
             from chat import get_prioritized_doc_id
             doc_id = get_prioritized_doc_id(ip_address)
             
-        # Get title with fallback
+        # Get document title
         title = get_doc_title(doc_id)
         if not title or title == "Untitled Document":
             title = "Default Knowledge Base"
@@ -115,6 +116,7 @@ def get_current_doc():
         print(f"Error in get_current_doc: {str(e)}")
         return jsonify({"doc_id": DEFAULT_DOC_ID, "title": "Default Knowledge Base"})
 
+# Load document history
 @app.route('/load_doc_history', methods=['GET'])
 def load_doc_history():
     try:
@@ -127,5 +129,6 @@ def load_doc_history():
         print(f"Error loading doc history: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# Run the Flask application
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)
