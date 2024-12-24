@@ -1,4 +1,3 @@
-
 import logging
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents.base import Document
@@ -15,34 +14,23 @@ import json
 from datetime import datetime
 from langchain.prompts import PromptTemplate
 
-# Load environment variables and setup API keys
 load_dotenv()
 openai_api_key = os.getenv('OPENAI_API_KEY')
 
-# Global state management
-qa_chains = {}  # Store QA chains per IP address
-chat_histories = {}  # Store chat history per IP address  
-ip_documents = {}  # Store active document IDs per IP address
-DEFAULT_DOC_ID = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A'  # Bhagavad Gita default doc
-text = ''  # Current document text
-doc_id = ''  # Current document ID
-
-# Google API configuration
-SCOPES = ['https://www.googleapis.com/auth/drive.file']
+# Store sessions by IP address
+qa_chains = {}
+chat_histories = {}
+ip_documents = {}  # Store document IDs by IP
+DEFAULT_DOC_ID = '1noKTwTEgvl1G74vYutrdwBZ6dWMiNOuoZWjGR1mwC9A'
+text = ''
+doc_id = ''
+SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 creds = json.loads(os.environ['GOOGLE_CREDENTIALS'])
-
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def create_doc(title=None):
-    """
-    Create a new Google Doc with public write access
-    Args:
-        title: Optional custom title, defaults to timestamp-based name
-    Returns:
-        doc_id: ID of created document or None if failed
-    """
     print("\n=== Creating New Document ===")
     global doc_id, text, qa_chain
     if title is None:
@@ -64,6 +52,7 @@ def create_doc(title=None):
         drive_service.permissions().create(fileId=doc_id,
                                            body=permission).execute()
 
+        # Get initial content
         initial_content = get_text_from_doc(doc_id)
         print(f"Created new document with ID: {doc_id}")
         print(f"Initial content (first 100 chars): {initial_content[:100]}")
@@ -72,14 +61,8 @@ def create_doc(title=None):
         print(f"Error creating document: {str(e)}")
         return None
 
+
 def get_doc_title(doc_id):
-    """
-    Get title of Google Doc
-    Args:
-        doc_id: Google Doc ID
-    Returns:
-        title: Document title or fallback name
-    """
     try:
         if doc_id == DEFAULT_DOC_ID:
             return "Default Knowledge Base"
@@ -92,14 +75,8 @@ def get_doc_title(doc_id):
         print(f"Error getting document title: {str(e)}")
         return "Untitled Document"
 
+
 def get_text_from_doc(doc_id):
-    """
-    Extract text content from Google Doc
-    Args:
-        doc_id: Google Doc ID
-    Returns:
-        text: Extracted document text
-    """
     global text, qa_chain
     try:
         print(f"\nChecking content for doc_id: {doc_id}")
@@ -108,7 +85,6 @@ def get_text_from_doc(doc_id):
         service = build('docs', 'v1', credentials=credentials)
         document = service.documents().get(documentId=doc_id).execute()
         textLst = []
-        # Extract text from document elements
         for element in document.get('body', {}).get('content', []):
             if 'paragraph' in element:
                 line_content = ''
@@ -122,15 +98,9 @@ def get_text_from_doc(doc_id):
     except Exception as e:
         return str(e)
 
+
 def change_text_source(new_doc_id, ip_address=None):
-    """
-    Change active document and recreate embeddings
-    Args:
-        new_doc_id: New Google Doc ID to use
-        ip_address: IP address of requesting user
-    Returns:
-        bool: Success status
-    """
+    """Handle text source change and create new embeddings"""
     global text, doc_id, ip_documents
 
     try:
@@ -148,16 +118,17 @@ def change_text_source(new_doc_id, ip_address=None):
             print(f"Error getting text from new doc: {str(e)}")
             return False
 
-        # Update global state
+        # Update globals and ensure IP document mapping persistence
         doc_id = new_doc_id
         text = new_text
         if ip_address:
             ip_documents[ip_address] = new_doc_id
+            # Force create embeddings for new document
             create_embeddings(new_text, ip_address)
         print(f"New document ID: {doc_id}")
         print(f"First 100 characters of new text: {text[:100]}")
 
-        # Create embeddings for IP
+        # Create embeddings if IP provided
         if ip_address:
             try:
                 create_embeddings(text, ip_address)
@@ -165,7 +136,7 @@ def change_text_source(new_doc_id, ip_address=None):
                     print("Error: QA chain not properly initialized")
                     return False
 
-                # Save document history
+                # Save to document history after successful embedding creation
                 title = get_doc_title(new_doc_id)
                 save_doc_history(new_doc_id, title)
 
@@ -179,17 +150,10 @@ def change_text_source(new_doc_id, ip_address=None):
         print(f"Error changing text source: {str(e)}")
         return False
 
+
 def save_doc_history(doc_id, title):
-    """
-    Save document to history file
-    Args:
-        doc_id: Google Doc ID
-        title: Document title
-    Returns:
-        bool: Success status
-    """
     try:
-        # Load existing history
+        # Ensure atomic file operations
         doc_history = []
         if os.path.exists('doc_history.txt'):
             try:
@@ -199,10 +163,11 @@ def save_doc_history(doc_id, title):
             except (json.JSONDecodeError, FileNotFoundError):
                 doc_history = []
 
+        # Ensure doc_history is a list
         if not isinstance(doc_history, list):
             doc_history = []
 
-        # Add new document entry
+        # Add new doc if not exists
         new_doc = {
             'id': doc_id,
             'title': title,
@@ -212,7 +177,7 @@ def save_doc_history(doc_id, title):
         if not any(d['id'] == doc_id for d in doc_history):
             doc_history.insert(0, new_doc)
 
-        # Atomic write to history file
+        # Atomic write
         with open('doc_history.txt.tmp', 'w') as f:
             json.dump(doc_history, f, indent=2)
         os.replace('doc_history.txt.tmp', 'doc_history.txt')
@@ -222,13 +187,8 @@ def save_doc_history(doc_id, title):
         print(f"Error saving doc history: {str(e)}")
         return False
 
+
 def create_embeddings(text, ip_address=None):
-    """
-    Create text embeddings and QA chain for document
-    Args:
-        text: Document text content
-        ip_address: IP address to associate embeddings with
-    """
     print("\n=== Creating Embeddings ===")
     print(f"Text preview (first 100 chars): {text[:100]}")
     global qa_chains, chat_histories
@@ -236,7 +196,7 @@ def create_embeddings(text, ip_address=None):
     if ip_address is None:
         return
 
-    # Initialize text processing
+    # Ensure clean initialization
     if text.strip():
         print("Initializing tokenizer...")
     tokenizer = DistilBertTokenizerFast.from_pretrained(
@@ -246,11 +206,9 @@ def create_embeddings(text, ip_address=None):
         chunk_overlap=20,
         length_function=lambda x: len(tokenizer.encode(x)))
 
-    # Split text into chunks and create documents
     text_chunks = text_splitter.split_text(text)
     documents = [Document(page_content=chunk) for chunk in text_chunks]
 
-    # Configure embedding model
     model_name = "paraphrase-MiniLM-L3-v2"
     model_kwargs = {'device': 'cpu'}
     encode_kwargs = {'normalize_embeddings': False}
@@ -259,7 +217,6 @@ def create_embeddings(text, ip_address=None):
                                                model_kwargs=model_kwargs,
                                                encode_kwargs=encode_kwargs)
 
-    # Configure language model
     llm = OpenAI(
         temperature=0.2,
         max_tokens=1500,
@@ -267,11 +224,9 @@ def create_embeddings(text, ip_address=None):
         presence_penalty=0.1,
     )
 
-    # Create vector store and retriever
     db = Chroma.from_documents(documents, embedding_function)
     retriever = db.as_retriever(search_kwargs={"k": 2})
 
-    # Define conversation prompt
     prompt_template = """You are Knowl, an AI wise owl who acknowledges how interesting the current source text knowledge is. You regard the current text and author very highly and are excited to  story tell and discuss about what the text says at length, by frequently referencing the direct text as much as possible. You are extremely humble, kind, helpful, egoless and respond with very long essays that are detailed, analytical, interesting and span the depth and breath of the current source material provided. 
 
     Context: {context}
@@ -286,7 +241,7 @@ def create_embeddings(text, ip_address=None):
     6) Only use specific, accurate and context-relevant knowledge from the text source provided alone
     7) Discard mentioning any information that is not directly present in the text, and remove all personal statements. Make it all about the text itself, and the ask.
     8) End with a fun follow-up question about the text or a gratitude statement
-    
+
 
     Remember: All responses should be long, minimum 150 words, story telling paraphrases of the current source text alone, with accurate details that make the text feel interesting. Ensure that the text is directly quoted multiple times!
     """
@@ -294,7 +249,6 @@ def create_embeddings(text, ip_address=None):
     PROMPT = PromptTemplate(template=prompt_template,
                             input_variables=["context", "question"])
 
-    # Create QA chain for IP
     qa_chains[ip_address] = ConversationalRetrievalChain.from_llm(
         llm=llm,
         retriever=retriever,
@@ -303,32 +257,26 @@ def create_embeddings(text, ip_address=None):
         memory=None,
         combine_docs_chain_kwargs={'prompt': PROMPT})
 
+
 def initialize_embeddings(ip_address=None):
-    """
-    Initialize or reinitialize embeddings for IP address
-    Args:
-        ip_address: IP to initialize embeddings for
-    Returns:
-        bool: Success status
-    """
     print("\n=== Initializing Embeddings ===")
     global text, doc_id, qa_chains, chat_histories, ip_documents
 
     try:
-        # Initialize state dictionaries
+        # Initialize dictionaries if not exist or None
         qa_chains = qa_chains if isinstance(qa_chains, dict) else {}
         chat_histories = chat_histories if isinstance(chat_histories,
                                                       dict) else {}
         ip_documents = ip_documents if isinstance(ip_documents, dict) else {}
 
-        # Get document ID to use
+        # Use consistent document priority helper
         selected_doc_id = get_prioritized_doc_id(ip_address)
         if selected_doc_id != DEFAULT_DOC_ID:
             print(f"Using user's custom document: {selected_doc_id}")
         else:
             print(f"Using default document: {selected_doc_id}")
 
-        # Update doc ID for new sessions
+        # Only update global doc_id if it's a new IP or doesn't have existing document
         if not (ip_address and ip_address in ip_documents):
             doc_id = selected_doc_id
             if ip_address:
@@ -345,7 +293,7 @@ def initialize_embeddings(ip_address=None):
             print(f"Error getting text from doc: {str(e)}")
             return False
 
-        # Create embeddings if needed
+        # Create embeddings for IP if needed
         if ip_address:
             if ip_address not in qa_chains:
                 try:
@@ -366,23 +314,16 @@ def initialize_embeddings(ip_address=None):
         print(f"Initialization error: {str(e)}")
         return False
 
+
 def on_submit(query, ip_address):
-    """
-    Process user query and generate response
-    Args:
-        query: User's question text
-        ip_address: IP address of requesting user
-    Returns:
-        dict: Response text and audio URL
-    """
     logger.info(f"\n=== Processing Query for IP: {ip_address} ===")
     global text, doc_id, qa_chains
 
-    # Initialize QA chain
+    # Ensure qa_chains exists
     if not isinstance(qa_chains, dict):
         qa_chains = {}
 
-    # Retry initialization if needed
+    # Initialize or reinitialize if needed
     max_retries = 3
     retries = 0
 
@@ -408,7 +349,6 @@ def on_submit(query, ip_address):
     print(f"Current text preview: {text[:100]}")
     print(f"Received query: {query}")
 
-    # Generate answer using QA chain
     chat_history = chat_histories.get(ip_address, [])
     try:
         if not qa_chains[ip_address]:
@@ -432,11 +372,11 @@ def on_submit(query, ip_address):
             "audio_url": None
         }
 
-    # Update chat history
+    # Update chat history before TTS generation
     updated_history = chat_history + [(query, answer)]
     chat_histories[ip_address] = updated_history
 
-    # Generate text-to-speech audio
+    # Only generate TTS for latest message
     from google.cloud import texttospeech
     credentials_dict = json.loads(os.environ['GOOGLE_CLOUD_CREDENTIALS'])
     client = texttospeech.TextToSpeechClient.from_service_account_info(
@@ -457,21 +397,15 @@ def on_submit(query, ip_address):
                                         voice=voice,
                                         audio_config=audio_config)
 
-    # Save audio file
     audio_path = "static/response.mp3"
     with open(audio_path, "wb") as out:
         out.write(response.audio_content)
 
     return {"text": answer, "audio_url": "/static/response.mp3"}
 
+
 def get_prioritized_doc_id(ip_address):
-    """
-    Get document ID to use based on IP priority
-    Args:
-        ip_address: IP address to check
-    Returns:
-        str: Document ID to use
-    """
+    """Helper function to consistently determine document priority"""
     if ip_address and ip_address in ip_documents:
         doc_id = ip_documents[ip_address]
         if doc_id:  # If any document exists for this IP, use it
